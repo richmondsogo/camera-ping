@@ -1,17 +1,17 @@
 {
-    "timestamp": "2026-09-21 15:07:14",
+    "timestamp": "2026-09-28 11:47:29",
     "summary": {
         "total_cameras_monitored": 1,
-        "online_cameras": 0,
-        "offline_cameras": 1
+        "online_cameras": 1,
+        "offline_cameras": 0
     },
     "cameras": [
         {
             "camera_name": "Front Gate Bullet",
-            "ip_address": "192.168.1.50",
+            "ip_address": "192.168.1.102",
             "location": "Main Entrance Gate",
-            "status": "Offline",
-            "last_successful_check": "N/A (Never detected online since script start)"
+            "status": "Online",
+            "last_successful_check": "2026-09-28 11:47:29"
         }
     ]
 }

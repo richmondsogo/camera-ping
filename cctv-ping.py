@@ -13,7 +13,7 @@ from datetime import datetime
 CAMERAS = [
     {
         "name": "Front Gate Bullet",
-        "ip": "192.168.1.50",
+        "ip": "192.168.1.102",
         "location": "Main Entrance Gate",
     },
     # {"name": "Backyard Dome", "ip": "192.168.1.51", "location": "Rear Perimeter Wall"},
