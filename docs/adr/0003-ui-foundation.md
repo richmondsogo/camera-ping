@@ -11,6 +11,7 @@ Camera Monitor requires a minimal, quiet, offline-first admin interface with zer
 - Declarative client routing via `react-router` v7 (`BrowserRouter` in `main.tsx`) without data routers or loaders.
 - Single source of truth in `frontend/src/index.css` using Tailwind CSS v4 `@theme`, `@utility`, `:root`, and `.dark`.
 - Strict design limits: 1200px container (`max-w-page`), 4px spacing grid, 32px/28px controls, 6px/8px radii, no shadows except dialog overlay, no gradients, minimal palette with one blue accent.
+- Class name merging uses standard `clsx` and `tailwind-merge` v3 (with Tailwind v4 support) configured with custom utility class groups in `src/lib/utils.ts`, replacing the compiled `cn` npm package to guarantee predictable conflict resolution.
 
 ## Consequences & Cost
 - All primitives must be restyled to project tokens; default library styles cannot be used directly.
