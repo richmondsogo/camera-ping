@@ -187,3 +187,12 @@ The following items were explicitly out of scope for Step 01 and have **not** be
 - Design tokens and component styling (deferred to Step 02)
 - App shell and navigation
 - Libraries deferred to subsequent steps: `shadcn`, `TanStack Table`, `React Hook Form`, `Zod`
+
+---
+
+## Post-merge Addendum
+Following the initial merge of Step 01, two late fix commits were applied to ensure clean bootstrapping from a fresh clone:
+1. `c54df5b` (`build: fix setuptools package discovery and windows setup execution`): Configured package discovery in backend setup and addressed subprocess execution on Windows.
+2. `638c817` (`ci: specify frontend/package.json for pnpm action-setup`): Pointed the GitHub Actions pnpm setup action explicitly to `frontend/package.json` to resolve packageManager parsing in CI.
+
+**Lesson Learned:** Automated and manual validation must test bootstrapping from an entirely fresh checkout to catch environment and path discovery regressions early.
