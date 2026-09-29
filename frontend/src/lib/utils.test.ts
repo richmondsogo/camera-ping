@@ -30,4 +30,12 @@ describe("cn helper", () => {
     // (e) cn("text-page-title","text-sm") keeps only text-sm (same font-size group)
     expect(cn("text-page-title", "text-sm")).toBe("text-sm");
   });
+
+  it("overrides spacing and width tokens within extended tailwind-merge groups", () => {
+    expect(cn("px-gutter", "px-4")).toBe("px-4");
+    expect(cn("px-button-x", "px-control-x")).toBe("px-control-x");
+    expect(cn("h-8", "h-row-body")).toBe("h-row-body");
+    expect(cn("gap-tight", "gap-inline")).toBe("gap-inline");
+    expect(cn("w-dialog", "w-full")).toBe("w-full");
+  });
 });
