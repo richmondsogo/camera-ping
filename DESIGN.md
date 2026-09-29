@@ -77,35 +77,116 @@ Semantic typography utilities defined in `frontend/src/index.css`:
 
 ### 2.5 Colors & Contrast (WCAG 2.1 AA Compliance)
 
-All color combinations must meet or exceed WCAG 2.1 AA contrast requirements (minimum 4.5:1 for normal text).
+All color combinations must meet or exceed WCAG 2.1 AA contrast requirements (minimum 4.5:1 for normal text, 3:1 for control borders, status dots, and focus rings). Decorative borders are exempt and kept subtle (low-contrast).
 
-#### Neutral Tokens
-| Token | Light Mode Value | Dark Mode Value | Usage | Light Contrast | Dark Contrast |
+#### Token Values
+| Token | Light Value | Dark Value | Usage |
+| :--- | :--- | :--- | :--- |
+| `--background` | `#ffffff` | `#09090b` | Base canvas background |
+| `--foreground` | `#09090b` | `#fafafa` | Primary text |
+| `--muted` | `#f4f4f5` | `#27272a` | Subdued surface / secondary fill |
+| `--muted-foreground` | `#71717a` | `#a1a1aa` | Secondary / metadata text |
+| `--border` | `#e4e4e7` | `#27272a` | Structural borders (decorative, low-contrast) |
+| `--input` | `#84848a` | `#5e5e66` | Form control borders (>= 3:1) |
+| `--ring` | `#2358e1` | `#3b82f6` | 2px focus ring (>= 3:1) |
+| `--primary` | `#2358e1` | `#2358e1` | Primary blue accent fill |
+| `--primary-foreground`| `#ffffff` | `#ffffff` | Text on primary button/badge |
+| `--destructive` | `#c81e1e` | `#c81e1e` | Error / destructive fill |
+| `--destructive-foreground` | `#ffffff`| `#ffffff`| Text on destructive button/badge |
+| `--overlay` | `rgba(0,0,0,0.45)` | `rgba(0,0,0,0.70)` | Dialog modal backdrop |
+| `--status-online` | `#16a34a` | `#22c55e` | Reachable camera status dot |
+| `--status-offline` | `#dc2626` | `#ef4444` | Unreachable camera status dot |
+| `--status-unknown` | `#71717a` | `#a1a1aa` | Unchecked camera status dot |
+
+#### Measured Contrast Ratios (WCAG 2.1 AA)
+
+Measured via automated headless browser tests (`frontend/e2e/contrast.spec.ts`) using sRGB canvas normalization and layer alpha compositing:
+
+##### Light Mode Measurements
+| Element / Pair | Foreground | Background | Measured Ratio | Threshold | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `--background` | `#ffffff` | `#09090b` | Base canvas background | Canvas | Canvas |
-| `--foreground` | `#09090b` | `#fafafa` | Primary text | 19.8:1 (vs bg) | 19.2:1 (vs bg) |
-| `--muted` | `#f4f4f5` | `#27272a` | Subdued surface / zebra striping | Surface | Surface |
-| `--muted-foreground` | `#71717a` | `#a1a1aa` | Secondary / metadata text | 4.88:1 (vs bg) | 7.85:1 (vs bg) |
-| `--border` | `#e4e4e7` | `#27272a` | Structural borders | Border | Border |
-| `--input` | `#e4e4e7` | `#27272a` | Form control borders | Border | Border |
-| `--overlay` | `rgba(0,0,0,0.45)` | `rgba(0,0,0,0.70)` | Dialog modal backdrop | Overlay | Overlay |
+| Button: Default | `#ffffff` | `#2358e1` | **5.91:1** | 4.5:1 | PASS |
+| Button: Default (hover) | `#e9eefc` | `#2358e1` | **5.09:1** | 4.5:1 | PASS |
+| Button: Secondary | `#09090b` | `#f4f4f5` | **18.1:1** | 4.5:1 | PASS |
+| Button: Secondary (hover) | `#09090b` | `#f6f6f7` | **18.42:1** | 4.5:1 | PASS |
+| Button: Outline | `#09090b` | `#ffffff` | **19.9:1** | 4.5:1 | PASS |
+| Button: Outline (hover) | `#09090b` | `#f4f4f5` | **18.1:1** | 4.5:1 | PASS |
+| Button: Outline border | `#84848a` | `#ffffff` | **3.72:1** | 3:1 | PASS |
+| Button: Ghost | `#09090b` | `#ffffff` | **19.9:1** | 4.5:1 | PASS |
+| Button: Ghost (hover) | `#09090b` | `#f4f4f5` | **18.1:1** | 4.5:1 | PASS |
+| Button: Destructive | `#ffffff` | `#c81e1e` | **5.74:1** | 4.5:1 | PASS |
+| Button: Destructive (hover) | `#fae9e9` | `#c81e1e` | **4.89:1** | 4.5:1 | PASS |
+| Badge: Default | `#ffffff` | `#2358e1` | **5.91:1** | 4.5:1 | PASS |
+| Badge: Secondary | `#09090b` | `#f4f4f5` | **18.1:1** | 4.5:1 | PASS |
+| Badge: Outline | `#09090b` | `#ffffff` | **19.9:1** | 4.5:1 | PASS |
+| Badge: Destructive | `#ffffff` | `#c81e1e` | **5.74:1** | 4.5:1 | PASS |
+| Input: Value text | `#09090b` | `#ffffff` | **19.9:1** | 4.5:1 | PASS |
+| Input: Placeholder text | `#71717a` | `#ffffff` | **4.83:1** | 4.5:1 | PASS |
+| Input: Border | `#84848a` | `#ffffff` | **3.72:1** | 3:1 | PASS |
+| Select: Trigger text | `#09090b` | `#ffffff` | **19.9:1** | 4.5:1 | PASS |
+| Select: Trigger border | `#84848a` | `#ffffff` | **3.72:1** | 3:1 | PASS |
+| Select: Popup item text | `#09090b` | `#ffffff` | **19.9:1** | 4.5:1 | PASS |
+| Select: Popup item (highlighted) | `#09090b` | `#f4f4f5` | **18.1:1** | 4.5:1 | PASS |
+| Dialog: Trigger button | `#09090b` | `#ffffff` | **19.9:1** | 4.5:1 | PASS |
+| Dialog: Content text | `#71717a` | `#ffffff` | **4.83:1** | 4.5:1 | PASS |
+| Dialog: Overlay backdrop | `#8c8c8c` | `#ffffff` | **3.36:1** | 1:1 (Exempt) | PASS |
+| Typography: Foreground text | `#09090b` | `#ffffff` | **19.9:1** | 4.5:1 | PASS |
+| Typography: Muted-foreground text | `#71717a` | `#ffffff` | **4.83:1** | 4.5:1 | PASS |
+| Table: Header text | `#71717a` | `#ffffff` | **4.83:1** | 4.5:1 | PASS |
+| Table: Cell text | `#09090b` | `#ffffff` | **19.9:1** | 4.5:1 | PASS |
+| Table: Row hover cell text | `#09090b` | `#f9f9fa` | **18.91:1** | 4.5:1 | PASS |
+| Navigation: Active link | `#09090b` | `#ffffff` | **19.9:1** | 4.5:1 | PASS |
+| Navigation: Inactive link | `#71717a` | `#ffffff` | **4.83:1** | 4.5:1 | PASS |
+| Focus Ring: Button | `#2358e1` | `#ffffff` | **5.91:1** | 3:1 | PASS |
+| Focus Ring: Input | `#2358e1` | `#ffffff` | **5.91:1** | 3:1 | PASS |
+| Focus Ring: Select | `#2358e1` | `#ffffff` | **5.91:1** | 3:1 | PASS |
+| Status: Online dot | `#16a34a` | `#ffffff` | **3.3:1** | 3:1 | PASS |
+| Status: Offline dot | `#dc2626` | `#ffffff` | **4.83:1** | 3:1 | PASS |
+| Status: Unknown dot | `#71717a` | `#ffffff` | **4.83:1** | 3:1 | PASS |
 
-#### Accent & Semantic Tokens
-| Token | Light Value | Light Contrast | Dark Value | Dark Contrast | Note |
+##### Dark Mode Measurements
+| Element / Pair | Foreground | Background | Measured Ratio | Threshold | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `--primary` | `#2563eb` | 5.17:1 (on white bg) | `#3b82f6` | 5.41:1 (on dark bg) | Single blue accent |
-| `--primary-foreground`| `#ffffff` | 5.17:1 (on primary) | `#09090b` | 5.41:1 (on primary) | In dark mode, `#09090b` text guarantees >4.5:1 (white text on `#3b82f6` fails at ~3.7:1) |
-| `--destructive` | `#dc2626` | 4.83:1 (on white bg) | `#ef4444` | 5.25:1 (on dark bg) | Error / deletion action |
-| `--destructive-foreground` | `#ffffff`| 4.83:1 (on destructive)| `#09090b` | 5.25:1 (on destructive)| High-contrast action text |
-| `--ring` | `#2563eb` | Focus ring | `#3b82f6` | Focus ring | 2px focus ring |
+| Button: Default | `#ffffff` | `#2358e1` | **5.91:1** | 4.5:1 | PASS |
+| Button: Default (hover) | `#e9eefc` | `#2358e1` | **5.09:1** | 4.5:1 | PASS |
+| Button: Secondary | `#fafafa` | `#27272a` | **14.27:1** | 4.5:1 | PASS |
+| Button: Secondary (hover) | `#fafafa` | `#212124` | **15.39:1** | 4.5:1 | PASS |
+| Button: Outline | `#fafafa` | `#09090b` | **19.06:1** | 4.5:1 | PASS |
+| Button: Outline (hover) | `#fafafa` | `#27272a` | **14.27:1** | 4.5:1 | PASS |
+| Button: Outline border | `#5e5e66` | `#09090b` | **3.1:1** | 3:1 | PASS |
+| Button: Ghost | `#fafafa` | `#09090b` | **19.06:1** | 4.5:1 | PASS |
+| Button: Ghost (hover) | `#fafafa` | `#27272a` | **14.27:1** | 4.5:1 | PASS |
+| Button: Destructive | `#ffffff` | `#c81e1e` | **5.74:1** | 4.5:1 | PASS |
+| Button: Destructive (hover) | `#fae9e9` | `#c81e1e` | **4.89:1** | 4.5:1 | PASS |
+| Badge: Default | `#ffffff` | `#2358e1` | **5.91:1** | 4.5:1 | PASS |
+| Badge: Secondary | `#fafafa` | `#27272a` | **14.27:1** | 4.5:1 | PASS |
+| Badge: Outline | `#fafafa` | `#09090b` | **19.06:1** | 4.5:1 | PASS |
+| Badge: Destructive | `#ffffff` | `#c81e1e` | **5.74:1** | 4.5:1 | PASS |
+| Input: Value text | `#fafafa` | `#09090b` | **19.06:1** | 4.5:1 | PASS |
+| Input: Placeholder text | `#a1a1aa` | `#09090b` | **7.76:1** | 4.5:1 | PASS |
+| Input: Border | `#5e5e66` | `#09090b` | **3.1:1** | 3:1 | PASS |
+| Select: Trigger text | `#fafafa` | `#09090b` | **19.06:1** | 4.5:1 | PASS |
+| Select: Trigger border | `#5e5e66` | `#09090b` | **3.1:1** | 3:1 | PASS |
+| Select: Popup item text | `#fafafa` | `#09090b` | **19.06:1** | 4.5:1 | PASS |
+| Select: Popup item (highlighted) | `#fafafa` | `#27272a` | **14.27:1** | 4.5:1 | PASS |
+| Dialog: Trigger button | `#fafafa` | `#09090b` | **19.06:1** | 4.5:1 | PASS |
+| Dialog: Content text | `#a1a1aa` | `#09090b` | **7.76:1** | 4.5:1 | PASS |
+| Dialog: Overlay backdrop | `#030303` | `#09090b` | **1.04:1** | 1:1 (Exempt) | PASS |
+| Typography: Foreground text | `#fafafa` | `#09090b` | **19.06:1** | 4.5:1 | PASS |
+| Typography: Muted-foreground text | `#a1a1aa` | `#09090b` | **7.76:1** | 4.5:1 | PASS |
+| Table: Header text | `#a1a1aa` | `#09090b` | **7.76:1** | 4.5:1 | PASS |
+| Table: Cell text | `#fafafa` | `#09090b` | **19.06:1** | 4.5:1 | PASS |
+| Table: Row hover cell text | `#fafafa` | `#19191b` | **16.82:1** | 4.5:1 | PASS |
+| Navigation: Active link | `#fafafa` | `#09090b` | **19.06:1** | 4.5:1 | PASS |
+| Navigation: Inactive link | `#a1a1aa` | `#09090b` | **7.76:1** | 4.5:1 | PASS |
+| Focus Ring: Button | `#3b82f6` | `#09090b` | **5.41:1** | 3:1 | PASS |
+| Focus Ring: Input | `#3b82f6` | `#09090b` | **5.41:1** | 3:1 | PASS |
+| Focus Ring: Select | `#3b82f6` | `#09090b` | **5.41:1** | 3:1 | PASS |
+| Status: Online dot | `#22c55e` | `#09090b` | **8.73:1** | 3:1 | PASS |
+| Status: Offline dot | `#ef4444` | `#09090b` | **5.29:1** | 3:1 | PASS |
+| Status: Unknown dot | `#a1a1aa` | `#09090b` | **7.76:1** | 3:1 | PASS |
 
-#### Status Colors
-Status indicators indicate device reachability:
-- **Online:** `#16a34a` (light) / `#22c55e` (dark)
-- **Offline:** `#dc2626` (light) / `#ef4444` (dark)
-- **Unknown:** `#71717a` (light) / `#a1a1aa` (dark)
-
-**Strict Usage Rule for Status:**
+#### Strict Usage Rule for Status
 Status color is applied **only to the 8px dot** of the `StatusIndicator` component. The accompanying label text always uses standard `--foreground` or `--muted-foreground`. Green and gray status colors fail 4.5:1 text contrast and must never be applied to typography, row backgrounds, or large badges.
 
 ---
