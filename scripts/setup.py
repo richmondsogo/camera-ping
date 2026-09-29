@@ -15,12 +15,13 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 BACKEND_DIR = REPO_ROOT / "backend"
 FRONTEND_DIR = REPO_ROOT / "frontend"
 VENV_DIR = BACKEND_DIR / ".venv"
+IS_WINDOWS = platform.system() == "Windows"
 
 
 def run_command(cmd: list[str], cwd: Path, description: str) -> None:
     print(f"\n==> {description}...")
     print(f"    Running: {' '.join(cmd)} (in {cwd.name}/)")
-    result = subprocess.run(cmd, cwd=cwd)
+    result = subprocess.run(cmd, cwd=cwd, shell=IS_WINDOWS)
     if result.returncode != 0:
         print(f"\n[ERROR] Command failed with exit code {result.returncode}: {' '.join(cmd)}")
         sys.exit(result.returncode)
@@ -28,8 +29,7 @@ def run_command(cmd: list[str], cwd: Path, description: str) -> None:
 
 def get_python_launcher() -> list[str]:
     """Find Python 3.12+ executable for virtual environment creation."""
-    is_windows = platform.system() == "Windows"
-    if is_windows:
+    if IS_WINDOWS:
         # Check if py launcher has 3.12
         try:
             res = subprocess.run(["py", "-3.12", "-V"], capture_output=True, text=True)
@@ -59,8 +59,7 @@ def main() -> None:
         print(f"Backend virtual environment already exists at {VENV_DIR.relative_to(REPO_ROOT)}")
 
     # 2. Locate pip in venv
-    is_windows = platform.system() == "Windows"
-    pip_bin = VENV_DIR / "Scripts" / "pip.exe" if is_windows else VENV_DIR / "bin" / "pip"
+    pip_bin = VENV_DIR / "Scripts" / "pip.exe" if IS_WINDOWS else VENV_DIR / "bin" / "pip"
 
     if not pip_bin.exists():
         print(f"[ERROR] Could not find pip in {pip_bin}")
