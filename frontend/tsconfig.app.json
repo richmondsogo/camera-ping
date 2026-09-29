@@ -15,6 +15,12 @@
     "jsx": "react-jsx",
     "types": ["@testing-library/jest-dom/vitest"],
 
+    /* Path Alias */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
     /* Linting / Strict */
     "strict": true,
     "noImplicitAny": true,
