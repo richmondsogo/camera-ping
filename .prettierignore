@@ -1,0 +1,7 @@
+node_modules
+dist
+build
+.venv
+pnpm-lock.yaml
+alembic/versions
+*.log
