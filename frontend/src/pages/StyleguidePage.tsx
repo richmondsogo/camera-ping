@@ -255,20 +255,22 @@ export function StyleguidePage() {
           <span className="text-xs text-muted-foreground block font-medium">
             Select (32px default, 28px small)
           </span>
-          <div className="flex flex-wrap items-center gap-4 rounded-control border border-border bg-background p-4">
-            <div className="w-48">
+          <div className="flex flex-wrap items-center gap-inline rounded-control border border-border bg-background p-4">
+            <div className="w-52">
               <Select defaultValue="60">
                 <SelectTrigger data-testid="select-default">
                   <SelectValue placeholder="Check interval" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="30">Every 30 seconds</SelectItem>
-                  <SelectItem value="60">Every 60 seconds</SelectItem>
-                  <SelectItem value="120">Every 2 minutes</SelectItem>
+                  <SelectItem value="30">30 seconds</SelectItem>
+                  <SelectItem value="60">1 minute</SelectItem>
+                  <SelectItem value="120">2 minutes</SelectItem>
+                  <SelectItem value="300">5 minutes</SelectItem>
+                  <SelectItem value="600">10 minutes</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div className="w-40">
+            <div className="w-44">
               <Select defaultValue="all">
                 <SelectTrigger size="sm" data-testid="select-sm">
                   <SelectValue placeholder="Filter status" />
@@ -277,6 +279,7 @@ export function StyleguidePage() {
                   <SelectItem value="all">All statuses</SelectItem>
                   <SelectItem value="online">Online only</SelectItem>
                   <SelectItem value="offline">Offline only</SelectItem>
+                  <SelectItem value="unknown">Unknown only</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -288,7 +291,7 @@ export function StyleguidePage() {
           <span className="text-xs text-muted-foreground block font-medium">
             Badges (Compact, 6px radius, neutral)
           </span>
-          <div className="flex flex-wrap items-center gap-2 rounded-control border border-border bg-background p-4">
+          <div className="flex flex-wrap items-center gap-tight rounded-control border border-border bg-background p-4">
             <Badge data-testid="badge-default" variant="default">
               Primary
             </Badge>
@@ -307,18 +310,22 @@ export function StyleguidePage() {
         {/* Table */}
         <div className="space-y-2">
           <span className="text-xs text-muted-foreground block font-medium">
-            Table (13px/18px text-table, tabular-nums)
+            Table (13px/18px text-table, fixed layout, 6-row contract)
           </span>
           <div className="rounded-control border border-border bg-background">
             <Table data-testid="table-demo">
               <TableHeader>
                 <TableRow>
-                  <TableHead data-testid="table-head-name">
+                  <TableHead className="w-2/12" data-testid="table-head-name">
                     Camera Name
                   </TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>IP Address</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead className="w-2/12">Location</TableHead>
+                  <TableHead className="w-4/12" data-testid="table-head-description">
+                    Description
+                  </TableHead>
+                  <TableHead className="w-2/12">IP Address</TableHead>
+                  <TableHead className="w-1/12">Status</TableHead>
+                  <TableHead className="w-1/12">Last Checked</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -327,18 +334,90 @@ export function StyleguidePage() {
                     Front Entrance Cam
                   </TableCell>
                   <TableCell>Main Gate</TableCell>
-                  <TableCell>192.0.2.10</TableCell>
+                  <TableCell>
+                    <div
+                      className="truncate"
+                      title="Primary pan-tilt-zoom optical camera covering south perimeter entry and truck weighbridge"
+                      data-testid="table-cell-description"
+                    >
+                      Primary pan-tilt-zoom optical camera covering south perimeter entry and truck weighbridge
+                    </div>
+                  </TableCell>
+                  <TableCell className="tabular-nums">192.0.2.10</TableCell>
                   <TableCell>
                     <StatusIndicator status="online" />
                   </TableCell>
+                  <TableCell className="tabular-nums">10:42:01</TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell>Loading Dock North</TableCell>
+                  <TableCell>Visitor Parking North</TableCell>
+                  <TableCell>Main Gate</TableCell>
+                  <TableCell>
+                    <div className="truncate" title="Fixed dome camera">
+                      Fixed dome camera
+                    </div>
+                  </TableCell>
+                  <TableCell className="tabular-nums">192.0.2.11</TableCell>
+                  <TableCell>
+                    <StatusIndicator status="online" />
+                  </TableCell>
+                  <TableCell className="tabular-nums">10:42:01</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Staff Turnstile East</TableCell>
+                  <TableCell>Main Gate</TableCell>
+                  <TableCell>
+                    <div className="truncate" title="Pedestrian access gate">
+                      Pedestrian access gate
+                    </div>
+                  </TableCell>
+                  <TableCell className="tabular-nums">192.0.2.12</TableCell>
+                  <TableCell>
+                    <StatusIndicator status="online" />
+                  </TableCell>
+                  <TableCell className="tabular-nums">10:42:00</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Loading Dock Bay 1</TableCell>
                   <TableCell>Warehouse</TableCell>
-                  <TableCell>192.0.2.11</TableCell>
+                  <TableCell>
+                    <div className="truncate" title="Overhead bay view">
+                      Overhead bay view
+                    </div>
+                  </TableCell>
+                  <TableCell className="tabular-nums">192.0.2.13</TableCell>
                   <TableCell>
                     <StatusIndicator status="offline" />
                   </TableCell>
+                  <TableCell className="tabular-nums">10:41:45</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Server Room Rack A</TableCell>
+                  <TableCell>Data Center</TableCell>
+                  <TableCell>
+                    <div className="truncate" title="Interior environmental view">
+                      Interior environmental view
+                    </div>
+                  </TableCell>
+                  <TableCell className="tabular-nums">192.0.2.14</TableCell>
+                  <TableCell>
+                    <StatusIndicator status="online" />
+                  </TableCell>
+                  <TableCell className="tabular-nums">10:42:02</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Perimeter Fence West</TableCell>
+                  <TableCell>Backlot</TableCell>
+                  <TableCell>
+                    <div className="truncate" title="Infrared boundary sensor">
+                      Infrared boundary sensor
+                    </div>
+                  </TableCell>
+                  <TableCell className="tabular-nums">192.0.2.15</TableCell>
+                  <TableCell>
+                    <StatusIndicator status="unknown" />
+                  </TableCell>
+                  <TableCell className="tabular-nums">Never</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
@@ -348,7 +427,7 @@ export function StyleguidePage() {
         {/* Dialog */}
         <div className="space-y-2">
           <span className="text-xs text-muted-foreground block font-medium">
-            Dialog (8px rounded-dialog, bg-overlay)
+            Dialog (8px rounded-dialog, bg-overlay, 480px width)
           </span>
           <div className="rounded-control border border-border bg-background p-4">
             <Dialog>
@@ -369,8 +448,8 @@ export function StyleguidePage() {
                   </DialogDescription>
                 </DialogHeader>
                 <p className="text-sm text-foreground">
-                  Dialog content conforms to the 8px radius token and zero
-                  elevation specifications.
+                  Dialog content conforms to the 8px radius token, 24px padding,
+                  and zero elevation specifications.
                 </p>
                 <DialogFooter showCloseButton>
                   <Button variant="default" size="default">
@@ -380,6 +459,199 @@ export function StyleguidePage() {
               </DialogContent>
             </Dialog>
           </div>
+        </div>
+      </section>
+
+      {/* 5. Layout Specimens (Previews to be replaced by real screens) */}
+      <section className="space-y-6" data-testid="section-layout-specimens">
+        <h2 className="text-section-heading text-foreground">
+          5. Layout Specimens (Design Previews)
+        </h2>
+
+        {/* Specimen 1: Page Composition */}
+        <div className="rounded-control border border-border bg-background p-6 space-y-stack">
+          <div className="border-b border-border pb-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
+              Layout Specimen 1: Page Composition (To be replaced by real screen)
+            </span>
+          </div>
+
+          <div>
+            <h3 className="text-page-title text-foreground">Camera Monitor</h3>
+          </div>
+
+          <div className="space-y-toolbar">
+            {/* Toolbar */}
+            <div className="flex flex-wrap items-center justify-between gap-inline">
+              <div className="flex flex-wrap items-center gap-inline">
+                <Input
+                  placeholder="Search cameras..."
+                  className="w-64"
+                  data-testid="specimen-search-input"
+                />
+                <div className="w-40">
+                  <Select defaultValue="all">
+                    <SelectTrigger size="default">
+                      <SelectValue placeholder="All Statuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      <SelectItem value="online">Online</SelectItem>
+                      <SelectItem value="offline">Offline</SelectItem>
+                      <SelectItem value="unknown">Unknown</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="w-44">
+                  <Select defaultValue="all">
+                    <SelectTrigger size="default">
+                      <SelectValue placeholder="All Locations" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Locations</SelectItem>
+                      <SelectItem value="main-gate">Main Gate</SelectItem>
+                      <SelectItem value="warehouse">Warehouse</SelectItem>
+                      <SelectItem value="data-center">Data Center</SelectItem>
+                      <SelectItem value="backlot">Backlot</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-tight">
+                <Button variant="outline">Export CSV</Button>
+                <Button variant="default">Add Camera</Button>
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="rounded-control border border-border bg-background">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-2/12">Camera Name</TableHead>
+                    <TableHead className="w-2/12">Location</TableHead>
+                    <TableHead className="w-4/12">Description</TableHead>
+                    <TableHead className="w-2/12">IP Address</TableHead>
+                    <TableHead className="w-1/12">Status</TableHead>
+                    <TableHead className="w-1/12">Last Checked</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell>Front Entrance Cam</TableCell>
+                    <TableCell>Main Gate</TableCell>
+                    <TableCell>
+                      <div
+                        className="truncate"
+                        title="Primary pan-tilt-zoom optical camera covering south perimeter entry and truck weighbridge"
+                      >
+                        Primary pan-tilt-zoom optical camera covering south perimeter entry and truck weighbridge
+                      </div>
+                    </TableCell>
+                    <TableCell className="tabular-nums">192.0.2.10</TableCell>
+                    <TableCell>
+                      <StatusIndicator status="online" />
+                    </TableCell>
+                    <TableCell className="tabular-nums">10:42:01</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Visitor Parking North</TableCell>
+                    <TableCell>Main Gate</TableCell>
+                    <TableCell>
+                      <div className="truncate" title="Fixed dome camera">
+                        Fixed dome camera
+                      </div>
+                    </TableCell>
+                    <TableCell className="tabular-nums">192.0.2.11</TableCell>
+                    <TableCell>
+                      <StatusIndicator status="online" />
+                    </TableCell>
+                    <TableCell className="tabular-nums">10:42:01</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Staff Turnstile East</TableCell>
+                    <TableCell>Main Gate</TableCell>
+                    <TableCell>
+                      <div className="truncate" title="Pedestrian access gate">
+                        Pedestrian access gate
+                      </div>
+                    </TableCell>
+                    <TableCell className="tabular-nums">192.0.2.12</TableCell>
+                    <TableCell>
+                      <StatusIndicator status="online" />
+                    </TableCell>
+                    <TableCell className="tabular-nums">10:42:00</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </div>
+
+        {/* Specimen 2: Settings Form */}
+        <div className="rounded-control border border-border bg-background p-6 space-y-stack">
+          <div className="border-b border-border pb-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
+              Layout Specimen 2: Settings Form (To be replaced by real screen)
+            </span>
+          </div>
+
+          <form
+            className="max-w-md space-y-stack"
+            onSubmit={(e) => e.preventDefault()}
+          >
+            {/* Field 1 */}
+            <div className="space-y-tight">
+              <Label htmlFor="specimen-ip-range">Camera Subnet CIDR</Label>
+              <Input
+                id="specimen-ip-range"
+                defaultValue="192.0.2.0/24"
+                placeholder="192.0.2.0/24"
+              />
+              <p className="text-xs text-muted-foreground">
+                RFC 5737 subnet used for camera discovery scan.
+              </p>
+            </div>
+
+            {/* Field 2 */}
+            <div className="space-y-tight">
+              <Label htmlFor="specimen-interval">Check Interval</Label>
+              <Select defaultValue="60">
+                <SelectTrigger id="specimen-interval">
+                  <SelectValue placeholder="Select interval" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="30">30 seconds</SelectItem>
+                  <SelectItem value="60">1 minute</SelectItem>
+                  <SelectItem value="120">2 minutes</SelectItem>
+                  <SelectItem value="300">5 minutes</SelectItem>
+                  <SelectItem value="600">10 minutes</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Frequency of ICMP reachability checks.
+              </p>
+            </div>
+
+            {/* Field 3 */}
+            <div className="space-y-tight">
+              <Label htmlFor="specimen-email">Alert Email Recipient</Label>
+              <Input
+                id="specimen-email"
+                type="email"
+                placeholder="admin@local.office"
+                defaultValue="admin@local.office"
+              />
+              <p className="text-xs text-muted-foreground">
+                Receives alert email upon reaching 10 consecutive check failures.
+              </p>
+            </div>
+
+            <Button type="submit" variant="default">
+              Save Changes
+            </Button>
+          </form>
         </div>
       </section>
     </div>

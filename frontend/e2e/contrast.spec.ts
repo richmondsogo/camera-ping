@@ -479,7 +479,7 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
 
-    // 28-30 Table
+    // 28-31 Table
     results.push(
       await measureElement(page, '[data-testid="table-head-name"]', {
         name: "Table: Header text",
@@ -492,6 +492,12 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
         threshold: 4.5,
       })
     );
+    results.push(
+      await measureElement(page, '[data-testid="table-cell-description"]', {
+        name: "Table: Description cell text",
+        threshold: 4.5,
+      })
+    );
     await page.hover('[data-testid="table-row-sample"]');
     results.push(
       await measureElement(page, '[data-testid="table-cell-name"]', {
@@ -500,7 +506,7 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
 
-    // 31-32 Navigation (on /)
+    // 32-33 Navigation (on /)
     await page.goto("/");
     await page
       .locator('[data-testid="nav-dashboard"]')
@@ -519,7 +525,7 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
 
-    // 33-35 Focus Rings (return to /_design)
+    // 34-36 Focus Rings (return to /_design)
     await page.goto("/_design");
     await page
       .locator('[data-testid="styleguide-page"]')
@@ -553,7 +559,7 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
 
-    // 36-38 Status indicators
+    // 37-39 Status indicators
     results.push(
       await measureElement(page, '[data-testid="status-online"]', {
         name: "Status: Online dot",
@@ -576,8 +582,8 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
 
-    // Assert exact N pairs measured (non-vacuous)
-    expect(results.length).toBe(38);
+    // Assert exact N pairs measured (non-vacuous: 39 pairs with Description cell text)
+    expect(results.length).toBe(39);
 
     console.log(formatResultsTable("Light", results));
 
@@ -808,7 +814,7 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
 
-    // 28-30 Table
+    // 28-31 Table
     results.push(
       await measureElement(page, '[data-testid="table-head-name"]', {
         name: "Table: Header text",
@@ -821,6 +827,12 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
         threshold: 4.5,
       })
     );
+    results.push(
+      await measureElement(page, '[data-testid="table-cell-description"]', {
+        name: "Table: Description cell text",
+        threshold: 4.5,
+      })
+    );
     await page.hover('[data-testid="table-row-sample"]');
     results.push(
       await measureElement(page, '[data-testid="table-cell-name"]', {
@@ -829,7 +841,7 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
 
-    // 31-32 Navigation (on /)
+    // 32-33 Navigation (on /)
     await page.goto("/");
     await page
       .locator('[data-testid="nav-dashboard"]')
@@ -848,7 +860,7 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
 
-    // 33-35 Focus Rings (return to /_design)
+    // 34-36 Focus Rings (return to /_design)
     await page.goto("/_design");
     await page
       .locator('[data-testid="styleguide-page"]')
@@ -882,7 +894,7 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
 
-    // 36-38 Status indicators
+    // 37-39 Status indicators
     results.push(
       await measureElement(page, '[data-testid="status-online"]', {
         name: "Status: Online dot",
@@ -905,8 +917,8 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
 
-    // Assert exact N pairs measured (non-vacuous)
-    expect(results.length).toBe(38);
+    // Assert exact N pairs measured (non-vacuous: 39 pairs with Description cell text)
+    expect(results.length).toBe(39);
 
     console.log(formatResultsTable("Dark", results));
 
