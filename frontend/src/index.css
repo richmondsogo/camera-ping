@@ -1,2 +1,125 @@
 @import "tailwindcss";
 @import "@fontsource-variable/inter";
+
+@theme {
+  --font-sans: "Inter Variable", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --container-page: 1200px;
+  --radius-control: 6px;
+  --radius-dialog: 8px;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-overlay: var(--overlay);
+
+  --color-status-online: var(--status-online);
+  --color-status-offline: var(--status-offline);
+  --color-status-unknown: var(--status-unknown);
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #09090b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #2563eb;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --popover: #ffffff;
+  --popover-foreground: #09090b;
+  --accent: #f4f4f5;
+  --accent-foreground: #09090b;
+  --overlay: rgba(0, 0, 0, 0.45);
+
+  --status-online: #16a34a;
+  --status-offline: #dc2626;
+  --status-unknown: #71717a;
+}
+
+.dark {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #3b82f6;
+  --primary: #3b82f6;
+  --primary-foreground: #09090b;
+  --destructive: #ef4444;
+  --destructive-foreground: #09090b;
+  --popover: #09090b;
+  --popover-foreground: #fafafa;
+  --accent: #27272a;
+  --accent-foreground: #fafafa;
+  --overlay: rgba(0, 0, 0, 0.7);
+
+  --status-online: #22c55e;
+  --status-offline: #ef4444;
+  --status-unknown: #a1a1aa;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 20px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@utility max-w-page {
+  max-width: var(--container-page);
+}
+
+@utility rounded-control {
+  border-radius: var(--radius-control);
+}
+
+@utility rounded-dialog {
+  border-radius: var(--radius-dialog);
+}
+
+@utility text-page-title {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+}
+
+@utility text-section-heading {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+}
+
+@utility text-table {
+  font-size: 13px;
+  line-height: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
