@@ -209,13 +209,21 @@ export function StyleguidePage() {
             >
               Outline
             </Button>
-            <Button variant="secondary" size="default">
+            <Button
+              data-testid="button-secondary"
+              variant="secondary"
+              size="default"
+            >
               Secondary
             </Button>
-            <Button variant="ghost" size="default">
+            <Button data-testid="button-ghost" variant="ghost" size="default">
               Ghost
             </Button>
-            <Button variant="destructive" size="default">
+            <Button
+              data-testid="button-destructive"
+              variant="destructive"
+              size="default"
+            >
               Destructive
             </Button>
           </div>
@@ -233,6 +241,11 @@ export function StyleguidePage() {
               data-testid="input-default"
               placeholder="192.0.2.10"
               defaultValue="192.0.2.10"
+            />
+            <Input
+              id="demo-placeholder-input"
+              data-testid="input-placeholder"
+              placeholder="192.0.2.20"
             />
           </div>
         </div>
@@ -279,9 +292,15 @@ export function StyleguidePage() {
             <Badge data-testid="badge-default" variant="default">
               Primary
             </Badge>
-            <Badge variant="secondary">Secondary</Badge>
-            <Badge variant="outline">Outline</Badge>
-            <Badge variant="destructive">Destructive</Badge>
+            <Badge data-testid="badge-secondary" variant="secondary">
+              Secondary
+            </Badge>
+            <Badge data-testid="badge-outline" variant="outline">
+              Outline
+            </Badge>
+            <Badge data-testid="badge-destructive" variant="destructive">
+              Destructive
+            </Badge>
           </div>
         </div>
 
@@ -294,14 +313,16 @@ export function StyleguidePage() {
             <Table data-testid="table-demo">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Camera Name</TableHead>
+                  <TableHead data-testid="table-head-name">
+                    Camera Name
+                  </TableHead>
                   <TableHead>Location</TableHead>
                   <TableHead>IP Address</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <TableRow>
+                <TableRow data-testid="table-row-sample">
                   <TableCell data-testid="table-cell-name">
                     Front Entrance Cam
                   </TableCell>
@@ -343,7 +364,7 @@ export function StyleguidePage() {
                   <DialogTitle data-testid="dialog-title-box">
                     Confirm Action
                   </DialogTitle>
-                  <DialogDescription>
+                  <DialogDescription data-testid="dialog-description-box">
                     This is a verification modal rendered with project tokens.
                   </DialogDescription>
                 </DialogHeader>

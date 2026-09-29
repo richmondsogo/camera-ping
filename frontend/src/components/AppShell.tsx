@@ -14,6 +14,7 @@ export function AppShell() {
               <NavLink
                 to="/"
                 end
+                data-testid="nav-dashboard"
                 className={({ isActive }) =>
                   cn(
                     "inline-flex items-center h-12 border-b-2 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -27,6 +28,7 @@ export function AppShell() {
               </NavLink>
               <NavLink
                 to="/settings"
+                data-testid="nav-settings"
                 className={({ isActive }) =>
                   cn(
                     "inline-flex items-center h-12 border-b-2 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
