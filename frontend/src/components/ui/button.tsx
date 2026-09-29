@@ -10,14 +10,14 @@ const buttonVariants = cva(
         default: "bg-primary text-primary-foreground hover:opacity-90",
         outline: "border-input bg-background text-foreground hover:bg-muted",
         secondary: "bg-muted text-foreground hover:bg-muted/80",
-        ghost: "hover:bg-muted text-foreground",
+        ghost: "bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
         destructive:
           "bg-destructive text-destructive-foreground hover:opacity-90",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-8 gap-1.5 px-3",
-        sm: "h-7 gap-1 px-2.5 text-xs",
+        default: "h-8 gap-tight px-button-x",
+        sm: "h-7 gap-tight px-control-x text-xs",
         icon: "size-8",
         "icon-sm": "size-7",
       },
