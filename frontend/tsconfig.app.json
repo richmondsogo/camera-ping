@@ -13,13 +13,7 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["vite/client", "@testing-library/jest-dom/vitest"],
-
-    /* Path Alias */
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    },
+    "types": ["@testing-library/jest-dom/vitest"],
 
     /* Linting / Strict */
     "strict": true,
