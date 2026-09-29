@@ -148,7 +148,9 @@ async function captureInteractiveStates(page) {
 }
 
 async function main() {
-  console.log(`Starting screenshot capture from ${baseUrl} into ${screenshotsDir}...`);
+  console.log(
+    `Starting screenshot capture from ${baseUrl} into ${screenshotsDir}...`
+  );
   const browser = await chromium.launch();
   const context = await browser.newContext({
     viewport: { width: 1280, height: 900 },

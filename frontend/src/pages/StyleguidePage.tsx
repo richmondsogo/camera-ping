@@ -320,7 +320,10 @@ export function StyleguidePage() {
                     Camera Name
                   </TableHead>
                   <TableHead className="w-2/12">Location</TableHead>
-                  <TableHead className="w-4/12" data-testid="table-head-description">
+                  <TableHead
+                    className="w-4/12"
+                    data-testid="table-head-description"
+                  >
                     Description
                   </TableHead>
                   <TableHead className="w-2/12">IP Address</TableHead>
@@ -340,7 +343,8 @@ export function StyleguidePage() {
                       title="Primary pan-tilt-zoom optical camera covering south perimeter entry and truck weighbridge"
                       data-testid="table-cell-description"
                     >
-                      Primary pan-tilt-zoom optical camera covering south perimeter entry and truck weighbridge
+                      Primary pan-tilt-zoom optical camera covering south
+                      perimeter entry and truck weighbridge
                     </div>
                   </TableCell>
                   <TableCell className="tabular-nums">192.0.2.10</TableCell>
@@ -395,7 +399,10 @@ export function StyleguidePage() {
                   <TableCell>Server Room Rack A</TableCell>
                   <TableCell>Data Center</TableCell>
                   <TableCell>
-                    <div className="truncate" title="Interior environmental view">
+                    <div
+                      className="truncate"
+                      title="Interior environmental view"
+                    >
                       Interior environmental view
                     </div>
                   </TableCell>
@@ -472,7 +479,8 @@ export function StyleguidePage() {
         <div className="rounded-control border border-border bg-background p-6 space-y-stack">
           <div className="border-b border-border pb-2">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block">
-              Layout Specimen 1: Page Composition (To be replaced by real screen)
+              Layout Specimen 1: Page Composition (To be replaced by real
+              screen)
             </span>
           </div>
 
@@ -546,7 +554,8 @@ export function StyleguidePage() {
                         className="truncate"
                         title="Primary pan-tilt-zoom optical camera covering south perimeter entry and truck weighbridge"
                       >
-                        Primary pan-tilt-zoom optical camera covering south perimeter entry and truck weighbridge
+                        Primary pan-tilt-zoom optical camera covering south
+                        perimeter entry and truck weighbridge
                       </div>
                     </TableCell>
                     <TableCell className="tabular-nums">192.0.2.10</TableCell>
@@ -644,7 +653,8 @@ export function StyleguidePage() {
                 defaultValue="admin@local.office"
               />
               <p className="text-xs text-muted-foreground">
-                Receives alert email upon reaching 10 consecutive check failures.
+                Receives alert email upon reaching 10 consecutive check
+                failures.
               </p>
             </div>
 

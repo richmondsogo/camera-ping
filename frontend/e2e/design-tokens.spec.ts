@@ -26,7 +26,9 @@ test.describe("Design Tokens & Computed Styles Verification", () => {
     const titleBoxSettings = await titleOnSettings.boundingBox();
     expect(brandBoxSettings).not.toBeNull();
     expect(titleBoxSettings).not.toBeNull();
-    expect(Math.round(brandBoxSettings!.x)).toBe(Math.round(titleBoxSettings!.x));
+    expect(Math.round(brandBoxSettings!.x)).toBe(
+      Math.round(titleBoxSettings!.x)
+    );
 
     // 3. Header height 56px and Page container side padding 32px, max-width 1200px
     const header = page.locator("header");
@@ -138,12 +140,16 @@ test.describe("Design Tokens & Computed Styles Verification", () => {
 
     // 9. Table row heights and cell padding:
     // Header row 40px including 1px border, body row 48px including 1px border, cell px 16px
-    const tableHeaderRow = page.locator('[data-testid="table-demo"] thead tr').first();
+    const tableHeaderRow = page
+      .locator('[data-testid="table-demo"] thead tr')
+      .first();
     await expect(tableHeaderRow).toBeVisible();
     const headerRowBox = await tableHeaderRow.boundingBox();
     expect(headerRowBox?.height).toBe(40);
 
-    const tableBodyRow = page.locator('[data-testid="table-demo"] tbody tr').first();
+    const tableBodyRow = page
+      .locator('[data-testid="table-demo"] tbody tr')
+      .first();
     await expect(tableBodyRow).toBeVisible();
     const bodyRowBox = await tableBodyRow.boundingBox();
     expect(bodyRowBox?.height).toBe(48);
@@ -177,7 +183,9 @@ test.describe("Design Tokens & Computed Styles Verification", () => {
         title: el.getAttribute("title"),
       };
     });
-    expect(longDescProps.scrollWidth).toBeGreaterThan(longDescProps.clientWidth);
+    expect(longDescProps.scrollWidth).toBeGreaterThan(
+      longDescProps.clientWidth
+    );
     expect(longDescProps.textOverflow).toBe("ellipsis");
     expect(longDescProps.title).toBe(
       "Primary pan-tilt-zoom optical camera covering south perimeter entry and truck weighbridge"
@@ -185,14 +193,18 @@ test.describe("Design Tokens & Computed Styles Verification", () => {
 
     // Short description row: scrollWidth <= clientWidth (NOT truncated)
     const shortDesc = page
-      .locator('[data-testid="table-demo"] tbody tr:nth-child(2) td:nth-child(3) div')
+      .locator(
+        '[data-testid="table-demo"] tbody tr:nth-child(2) td:nth-child(3) div'
+      )
       .first();
     await expect(shortDesc).toBeVisible();
     const shortDescProps = await shortDesc.evaluate((el) => ({
       scrollWidth: el.scrollWidth,
       clientWidth: el.clientWidth,
     }));
-    expect(shortDescProps.scrollWidth).toBeLessThanOrEqual(shortDescProps.clientWidth);
+    expect(shortDescProps.scrollWidth).toBeLessThanOrEqual(
+      shortDescProps.clientWidth
+    );
 
     // 11. Select popup:
     // top equals trigger bottom plus 4px; padding 4px; item min-height 32px; gap between items 2px; min-width >= trigger width
@@ -209,10 +221,14 @@ test.describe("Design Tokens & Computed Styles Verification", () => {
     expect(popupBox).not.toBeNull();
 
     // Top equals trigger bottom plus 4px (Amendment 18)
-    expect(Math.round(popupBox!.y)).toBe(Math.round(triggerBox!.y + triggerBox!.height + 4));
+    expect(Math.round(popupBox!.y)).toBe(
+      Math.round(triggerBox!.y + triggerBox!.height + 4)
+    );
 
     // Min-width >= trigger width
-    expect(Math.round(popupBox!.width)).toBeGreaterThanOrEqual(Math.round(triggerBox!.width));
+    expect(Math.round(popupBox!.width)).toBeGreaterThanOrEqual(
+      Math.round(triggerBox!.width)
+    );
 
     // Popup padding 4px
     const popupPadding = await selectPopup.evaluate((el) => {
@@ -267,7 +283,7 @@ test.describe("Design Tokens & Computed Styles Verification", () => {
     await expect(dialogContent).toBeVisible();
     const smallDialogBox = await dialogContent.boundingBox();
     expect(smallDialogBox).not.toBeNull();
-    expect(smallDialogBox!.width).toBeLessThanOrEqual(400 * 0.90 + 0.5);
+    expect(smallDialogBox!.width).toBeLessThanOrEqual(400 * 0.9 + 0.5);
 
     await page.keyboard.press("Escape");
     await expect(dialogContent).not.toBeVisible();
