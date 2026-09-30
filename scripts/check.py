@@ -86,6 +86,29 @@ class CheckRunner:
     def run_frontend_tests(self) -> None:
         self.run_step("Frontend: Vitest", [self.pnpm, "run", "test"], FRONTEND_DIR)
 
+    def run_frontend_build_verification(self) -> None:
+        print("\n---> [Frontend: Build + Utility Verification]")
+        start = time.time()
+        build_cmd = [self.pnpm, "run", "build"]
+        print(f"     CMD: {' '.join(build_cmd)}")
+        result_build = subprocess.run(build_cmd, cwd=FRONTEND_DIR)
+        if result_build.returncode != 0:
+            elapsed = time.time() - start
+            print(f"     FAIL ({elapsed:.2f}s) - Exit code: {result_build.returncode}")
+            self.failures.append("Frontend: Build + Utility Verification")
+            return
+
+        node_cmd = shutil.which("node") or "node"
+        verify_cmd = [node_cmd, str(FRONTEND_DIR / "scripts" / "verify-css-utilities.mjs")]
+        print(f"     CMD: {' '.join(verify_cmd)}")
+        result_verify = subprocess.run(verify_cmd, cwd=FRONTEND_DIR)
+        elapsed = time.time() - start
+        if result_verify.returncode == 0:
+            print(f"     PASS ({elapsed:.2f}s)")
+        else:
+            print(f"     FAIL ({elapsed:.2f}s) - Exit code: {result_verify.returncode}")
+            self.failures.append("Frontend: Build + Utility Verification")
+
     def run_e2e_tests(self) -> None:
         self.run_step("E2E: Playwright Smoke Test", [self.pnpm, "run", "test:e2e"], FRONTEND_DIR)
 
@@ -119,6 +142,7 @@ def main() -> None:
         runner.run_frontend_lint()
         runner.run_frontend_typecheck()
         runner.run_frontend_tests()
+        runner.run_frontend_build_verification()
     elif args.only_lint:
         runner.run_backend_lint()
         runner.run_frontend_lint()
@@ -138,6 +162,7 @@ def main() -> None:
         runner.run_frontend_lint()
         runner.run_frontend_typecheck()
         runner.run_frontend_tests()
+        runner.run_frontend_build_verification()
 
     total_time = time.time() - start_total
     print("\n" + "=" * 60)

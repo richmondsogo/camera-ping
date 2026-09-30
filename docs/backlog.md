@@ -1,8 +1,34 @@
 # Notes for later steps
 
-## For Step 05 (ping discovery) and Step 06 (monitoring engine)
+## For Step 06 (ping discovery) and Step 07 (monitoring engine)
 - Sequential pings do not scale. One check can take up to ~2s, so 30 unreachable cameras take up to ~60s, which equals the whole default check interval. The engine must ping concurrently.
-- On Windows, ping.exe can exit with code 0 when a router replies "Destination host unreachable". Exit code alone is not proof of reachability. Step 05 must test this on the real Windows machine and decide whether to also require "TTL=" in the output, and verify that works on non-English Windows.
+- On Windows, ping.exe can exit with code 0 when a router replies "Destination host unreachable". Exit code alone is not proof of reachability. Step 06 must test this on the real Windows machine and decide whether to also require "TTL=" in the output, and verify that works on non-English Windows.
 - The v1 script (cctv-ping.py) keeps its state in memory only. The new design persists failure streaks and alert state in the database so restarts do not lose them. The restart test (failure #7, restart, failure #8) proves this.
+
+## CSV-first import (Step 05)
+- The owner says most cameras will be added by CSV import and manual entry is the exception.
+- Required headers are exactly: `camera_name,location,description,ip_address`.
+- Accept the file only if everything matches the contract, otherwise reject the whole file and commit nothing (no partial imports).
+- Open decisions to raise at that step:
+  - A preview-and-confirm step before committing imported rows to the database.
+  - How row-level errors are reported and displayed in the UI.
+
+## Ports and network binding (Steps 08 and 13)
+- The admin PC runs other software, so the app's port must not be assumed free.
+- Requirements:
+  - One configurable port from environment variable.
+  - An uncommon default port (not 8000 or 5173).
+  - Default bind to `127.0.0.1` (admin PC only, since there is no authentication).
+  - If the port is taken, fail at startup with a clear message naming the port and the env var to change.
+  - In production, the backend serves the built frontend on that single port.
+  - `dev.py`, the Vite proxy target, and the Playwright `webServer` config must read the ports from env vars instead of hardcoding them.
+- Whether LAN access is wanted is an open owner decision.
+- Note: Do not change any code for this in Step 03.
+
+## Housekeeping notes
+- Starlette's `httpx` deprecation warning in pytest (`StarletteDeprecationWarning: Using 'httpx' with 'starlette.testclient' is deprecated; install 'httpx2' instead.`) — revisit if it becomes an error.
+- `contrast.spec.ts` is ~900 lines; consider splitting it if it grows further.
+- The "Dialog: Overlay backdrop" contrast pair has a 1:1 threshold and can never fail (remove it or give it a real threshold).
+
 ## For Step 13 (deploy)
 - The admin PC will reboot. The app must auto-start (Task Scheduler or a service wrapper) and resume monitoring state.
