@@ -2,8 +2,8 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
 
+import app.models  # noqa: F401 - ensures all model definitions populate Base.metadata
 from alembic import context
-from app.config import settings
 from app.database import Base
 
 # this is the Alembic Config object, which provides
@@ -11,12 +11,26 @@ from app.database import Base
 config = context.config
 
 # Interpret the config file for Python logging.
-# This line sets up loggers basically.
-if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+# Keep existing loggers intact so programmatic invocation does not break caller logging.
+if config.config_file_name is not None and not config.attributes.get(
+    "skip_logging_config", False
+):
+    fileConfig(config.config_file_name, disable_existing_loggers=False)
 
-# Set database URL dynamically from app settings
-config.set_main_option("sqlalchemy.url", settings.database_url)
+# Take database URL from Alembic config if provided (lifespan and tests set it),
+# falling back to app settings for CLI usage.
+database_url = config.get_main_option("sqlalchemy.url")
+if not database_url or "driver://user:pass" in database_url:
+    from app.config import settings
+
+    database_url = settings.database_url
+    config.set_main_option("sqlalchemy.url", database_url)
+
+if database_url.startswith("sqlite"):
+    from pathlib import Path
+
+    db_file_str = database_url.replace("sqlite:///", "")
+    Path(db_file_str).parent.mkdir(parents=True, exist_ok=True)
 
 # Add Base metadata for migrations
 target_metadata = Base.metadata
@@ -39,8 +53,12 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
+    configuration = config.get_section(config.config_ini_section, {}) or {}
+    url_opt = config.get_main_option("sqlalchemy.url")
+    if url_opt is not None:
+        configuration["sqlalchemy.url"] = url_opt
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        configuration,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
