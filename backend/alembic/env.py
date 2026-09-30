@@ -20,11 +20,17 @@ if config.config_file_name is not None and not config.attributes.get(
 # Take database URL from Alembic config if provided (lifespan and tests set it),
 # falling back to app settings for CLI usage.
 database_url = config.get_main_option("sqlalchemy.url")
-if not database_url:
+if not database_url or "driver://user:pass" in database_url:
     from app.config import settings
 
     database_url = settings.database_url
     config.set_main_option("sqlalchemy.url", database_url)
+
+if database_url.startswith("sqlite"):
+    from pathlib import Path
+
+    db_file_str = database_url.replace("sqlite:///", "")
+    Path(db_file_str).parent.mkdir(parents=True, exist_ok=True)
 
 # Add Base metadata for migrations
 target_metadata = Base.metadata
