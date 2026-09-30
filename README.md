@@ -3,8 +3,8 @@
 Local network ICMP reachability monitor for Hikvision CCTV cameras running on an admin PC in the office server room.
 
 ## Status
-- **Phase**: Step 01 - Project Scaffold
-- **Foundation**: FastAPI (Backend) + React 19 / Vite / Tailwind CSS v4 (Frontend) + SQLite
+- **Phase**: Step 03 - Camera Model, Migration, and CRUD API
+- **Foundation**: FastAPI (Backend) + React 19 / Vite / Tailwind CSS v4 (Frontend) + SQLite / Alembic
 
 ## Prerequisites
 - **Python**: 3.12+ (Python 3.12 recommended)
