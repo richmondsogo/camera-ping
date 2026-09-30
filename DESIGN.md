@@ -49,10 +49,63 @@ Semantic typography utilities defined in `frontend/src/index.css`:
 ---
 
 ### 2.2 Spacing & Layout
-- **Base Grid:** 4px scale (Tailwind base unit: `p-1` = 4px, `p-2` = 8px, `p-3` = 12px, `p-4` = 16px, `p-6` = 24px).
-- **Page Container:** Max-width 1200px (`max-w-page`, via `--container-page: 1200px`).
-- **Page Padding:** 24px (`p-6` or `px-6`).
-- **Layout Alignment:** Left-aligned content within centered container.
+- **Base Grid:** 4px base scale.
+- **Page Container:** Max-width 1200px (`max-w-page`, via `--container-page: 1200px`), 32px side padding (`px-gutter`), 40px top padding (`pt-section`), 64px bottom padding (`pb-container-bottom`).
+- **Header:** Height 56px (`h-header`), 32px side padding (`px-gutter`), 24px brand-to-nav gap (`gap-stack`), 12px link padding (`px-control-x`), 4px link gap (`gap-1`).
+- **Layout Alignment:** Left-aligned content within centered container. Brand left edge aligns identically with page titles.
+- **Section & Layout Spacing:**
+  - Between major sections: 40px (`gap-section`, `space-y-section`).
+  - Page title to first content: 24px (`gap-stack`, `space-y-stack`).
+  - Toolbar to table: 16px (`gap-toolbar`, `space-y-toolbar`).
+  - Controls row gap: 12px (`gap-inline`).
+  - Button groups: 8px (`gap-tight`).
+  - Icon-to-label gap: 8px (`gap-tight`).
+  - Form spacing: label to control 8px (`gap-tight`), field to field 24px (`space-y-stack`), helper text 8px below control.
+- **Table Dimensions:**
+  - Header row: 40px (`h-row-header`).
+  - Body row: 48px (`h-row-body`).
+  - Cell horizontal padding: 16px (`px-cell-x`).
+  - Typography: 13px / 18px (`text-table`).
+  - Long descriptions truncate with ellipsis and title attribute.
+- **Controls & Buttons:**
+  - Default button (32px): horizontal padding 16px (`px-button-x`).
+  - Small button (28px): horizontal padding 12px (`px-control-x`).
+  - Form input and select trigger: horizontal padding 12px (`px-control-x`), height 32px (`h-8`).
+- **Select Popup:**
+  - Padding: 4px (`p-popup-pad`).
+  - Offset below trigger: 4px (`sideOffset={4}`).
+  - Min-width: equal to trigger width (`min-w-[var(--anchor-width)]`).
+  - Items: min-height 32px (`min-h-8`), horizontal padding 12px (`px-control-x`), 2px vertical gap (`gap-item-gap`).
+  - Radius: 8px (`rounded-dialog`), border: 1px (`border border-border`), shadow: none (`shadow-none`).
+- **Dialog:**
+  - Interior padding: 24px (`p-dialog-pad`).
+  - Header to body: 16px (`gap-toolbar`).
+  - Body to footer: 24px (`gap-stack`).
+  - Footer buttons gap: 8px (`gap-tight`).
+  - Dimensions: width 480px, max 90vw (`w-dialog`).
+- **Badge & Status:**
+  - Badge horizontal padding: 8px (`px-tight`).
+  - Status indicator: 8px dot (`size-2`), 8px gap to label (`gap-tight`).
+
+#### Semantic Spacing Token to Role Map
+| Token | Value | Role | Generated Utility Examples |
+| :--- | :--- | :--- | :--- |
+| `--spacing-header` | 56px | App shell header height | `h-header` |
+| `--spacing-gutter` | 32px | Page container side padding | `px-gutter` |
+| `--spacing-section` | 40px | Major section gap & page top padding | `pt-section`, `space-y-section`, `gap-section` |
+| `--spacing-container-bottom` | 64px | Page container bottom padding | `pb-container-bottom` |
+| `--spacing-stack` | 24px | Title-to-content, field-to-field, dialog body-to-footer | `gap-stack`, `space-y-stack` |
+| `--spacing-dialog-pad` | 24px | Dialog interior padding | `p-dialog-pad` |
+| `--spacing-toolbar` | 16px | Toolbar-to-table, dialog header-to-body | `gap-toolbar`, `space-y-toolbar` |
+| `--spacing-button-x` | 16px | Default button horizontal padding | `px-button-x` |
+| `--spacing-cell-x` | 16px | Table cell horizontal padding | `px-cell-x` |
+| `--spacing-row-header` | 40px | Table header row height | `h-row-header` |
+| `--spacing-row-body` | 48px | Table body row height | `h-row-body` |
+| `--spacing-control-x` | 12px | Horizontal padding for inputs, selects, nav links, small buttons | `px-control-x` |
+| `--spacing-inline` | 12px | Gap between controls in a row / toolbar | `gap-inline` |
+| `--spacing-tight` | 8px | Button groups, icon gap, label gap, helper text, badge px, status gap | `gap-tight`, `space-y-tight`, `px-tight` |
+| `--spacing-popup-pad` | 4px | Select popup container padding | `p-popup-pad` |
+| `--spacing-item-gap` | 2px | Vertical gap between items in select popup list | `gap-item-gap` |
 
 ---
 

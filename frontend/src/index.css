@@ -9,6 +9,23 @@
   --radius-control: 6px;
   --radius-dialog: 8px;
 
+  --spacing-header: 56px;
+  --spacing-gutter: 32px;
+  --spacing-section: 40px;
+  --spacing-container-bottom: 64px;
+  --spacing-stack: 24px;
+  --spacing-dialog-pad: 24px;
+  --spacing-toolbar: 16px;
+  --spacing-button-x: 16px;
+  --spacing-cell-x: 16px;
+  --spacing-row-header: 40px;
+  --spacing-row-body: 48px;
+  --spacing-control-x: 12px;
+  --spacing-inline: 12px;
+  --spacing-tight: 8px;
+  --spacing-popup-pad: 4px;
+  --spacing-item-gap: 2px;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
@@ -124,4 +141,9 @@
 
 @utility tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+@utility w-dialog {
+  width: 480px;
+  max-width: 90vw;
 }

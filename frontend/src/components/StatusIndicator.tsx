@@ -38,7 +38,7 @@ export function StatusIndicator({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-2 text-sm text-foreground",
+        "inline-flex items-center gap-tight text-sm text-foreground",
         className
       )}
       {...props}

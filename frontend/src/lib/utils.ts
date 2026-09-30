@@ -3,10 +3,31 @@ import { extendTailwindMerge } from "tailwind-merge";
 
 const customTwMerge = extendTailwindMerge({
   extend: {
+    theme: {
+      spacing: [
+        "header",
+        "gutter",
+        "section",
+        "container-bottom",
+        "stack",
+        "dialog-pad",
+        "toolbar",
+        "button-x",
+        "cell-x",
+        "row-header",
+        "row-body",
+        "control-x",
+        "inline",
+        "tight",
+        "popup-pad",
+        "item-gap",
+      ],
+    },
     classGroups: {
       "font-size": [{ text: ["page-title", "section-heading", "table"] }],
       rounded: [{ rounded: ["control", "dialog"] }],
       "max-w": [{ "max-w": ["page"] }],
+      w: ["w-dialog"],
     },
   },
 });
