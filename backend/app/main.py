@@ -3,13 +3,16 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from alembic.config import Config
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from sqlalchemy import Engine
 
 from alembic import command
+from app.api.cameras import router as cameras_router
 from app.api.health import router as health_router
 from app.config import BACKEND_DIR, Settings, settings
 from app.database import create_db_engine, create_sessionmaker
+from app.exceptions import CameraNotFoundError, DuplicateIpError
 
 
 @asynccontextmanager
@@ -56,7 +59,7 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
     """Application factory for Camera Monitor.
 
     Builds the database engine and sessionmaker, stores them on app.state,
-    and registers routers and the startup lifespan.
+    registers routers, exception handlers, and the startup lifespan.
     """
     if app_settings is None:
         app_settings = settings
@@ -74,7 +77,34 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
     application.state.engine = engine
     application.state.sessionmaker = session_factory
 
+    @application.exception_handler(CameraNotFoundError)
+    async def camera_not_found_handler(
+        request: Request, exc: CameraNotFoundError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=404,
+            content={"detail": "Camera not found."},
+        )
+
+    @application.exception_handler(DuplicateIpError)
+    async def duplicate_ip_handler(
+        request: Request, exc: DuplicateIpError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=409,
+            content={
+                "detail": [
+                    {
+                        "loc": ["body", "ip_address"],
+                        "msg": "A camera with this IP address already exists.",
+                        "type": "duplicate",
+                    }
+                ]
+            },
+        )
+
     application.include_router(health_router)
+    application.include_router(cameras_router)
 
     return application
 
