@@ -158,6 +158,12 @@ export function DashboardPage() {
     [queryClient, restoreFocus]
   );
 
+  const handleClearFilters = React.useCallback(() => {
+    setSearchQuery("");
+    setStatusFilter("all");
+    setLocationFilter(null);
+  }, []);
+
   const isExportDisabled = isPending || isError || cameras.length === 0;
 
   return (
@@ -191,6 +197,7 @@ export function DashboardPage() {
         onImportCameras={() => setImportDialogOpen(true)}
         importRef={importButtonRef}
         isExportDisabled={isExportDisabled}
+        onClearFilters={handleClearFilters}
       />
 
       <CameraTable
@@ -202,6 +209,7 @@ export function DashboardPage() {
         onEdit={handleEdit}
         onDelete={handleDelete}
         editButtonRefs={editButtonRefs}
+        onClearFilters={handleClearFilters}
       />
 
       {/* Add / Edit Dialog */}

@@ -14,3 +14,4 @@
 6. Added Import and Export buttons to `CameraToolbar` with Export disabled during loading, errors, or 0 cameras.
 7. Enhanced `frontend/e2e/contrast.spec.ts` to output formatted tables only on failure or when `CONTRAST_REPORT=1`.
 8. Added 10 Vitest tests in `ImportCamerasDialog.test.tsx` and 2 Playwright E2E tests validating 30-row sample import and export roundtrip.
+9. Fixed toolbar and select review bugs: resolved Select labels via Base UI `items` across toolbar and styleguide; added semantic spacing tokens (`--spacing-trigger-status`, `--spacing-trigger-location`, `--spacing-select-indicator`, `--spacing-popup-max`); refactored `SelectItem` with reserved indicator slot preventing check icon overlap and shift; enabled popup auto-expansion with truncation for 60+ char names; and moved camera count line to its own line with Clear filters buttons.

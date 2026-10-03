@@ -37,5 +37,6 @@ describe("cn helper", () => {
     expect(cn("h-8", "h-row-body")).toBe("h-row-body");
     expect(cn("gap-tight", "gap-inline")).toBe("gap-inline");
     expect(cn("w-dialog", "w-full")).toBe("w-full");
+    expect(cn("w-full", "w-trigger-status")).toBe("w-trigger-status");
   });
 });

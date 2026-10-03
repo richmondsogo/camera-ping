@@ -21,6 +21,10 @@ const customTwMerge = extendTailwindMerge({
         "tight",
         "popup-pad",
         "item-gap",
+        "trigger-status",
+        "trigger-location",
+        "select-indicator",
+        "popup-max",
       ],
     },
     classGroups: {

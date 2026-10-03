@@ -19,7 +19,7 @@ function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
   return (
     <SelectPrimitive.Value
       data-slot="select-value"
-      className={cn("flex flex-1 text-left", className)}
+      className={cn("flex flex-1 min-w-0 text-left truncate", className)}
       {...props}
     />
   );
@@ -61,6 +61,7 @@ function SelectContent({
   align = "start",
   alignOffset = 0,
   alignItemWithTrigger = false,
+  style,
   ...props
 }: SelectPrimitive.Popup.Props &
   Pick<
@@ -81,9 +82,14 @@ function SelectContent({
           data-slot="select-content"
           data-align-trigger={alignItemWithTrigger}
           className={cn(
-            "relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-[var(--anchor-width)] overflow-x-hidden overflow-y-auto rounded-dialog border border-border bg-popover p-popup-pad text-popover-foreground shadow-none outline-none",
+            "relative isolate z-50 max-h-(--available-height) min-w-(--anchor-width) w-max max-w-popup-max overflow-x-hidden overflow-y-auto rounded-dialog border border-border bg-popover p-popup-pad text-popover-foreground shadow-none outline-none",
             className
           )}
+          style={{
+            maxWidth:
+              "min(var(--available-width, 360px), var(--spacing-popup-max, 360px))",
+            ...style,
+          }}
           {...props}
         >
           <SelectScrollUpButton />
@@ -118,25 +124,35 @@ function SelectItem({
   children,
   ...props
 }: SelectPrimitive.Item.Props) {
+  const labelText = typeof children === "string" ? children : undefined;
+
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "relative flex w-full min-h-8 cursor-default items-center gap-tight rounded-control px-control-x pr-8 text-sm text-foreground outline-none select-none focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "relative flex w-full min-h-8 cursor-default items-center justify-between gap-tight rounded-control px-control-x text-sm text-foreground outline-none select-none focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}
     >
-      <SelectPrimitive.ItemText className="flex flex-1 shrink-0 gap-tight whitespace-nowrap">
-        {children}
+      <SelectPrimitive.ItemText className="min-w-0 flex-1 truncate">
+        <span
+          data-slot="select-item-label"
+          className="block truncate"
+          title={labelText}
+        >
+          {children}
+        </span>
       </SelectPrimitive.ItemText>
-      <SelectPrimitive.ItemIndicator
-        render={
-          <span className="pointer-events-none absolute right-2 flex size-4 items-center justify-center" />
-        }
+      <span
+        data-slot="select-item-indicator-slot"
+        className="flex size-4 w-select-indicator h-select-indicator shrink-0 items-center justify-center"
+        aria-hidden="true"
       >
-        <CheckIcon className="pointer-events-none size-4 text-foreground" />
-      </SelectPrimitive.ItemIndicator>
+        <SelectPrimitive.ItemIndicator>
+          <CheckIcon className="size-4 text-foreground" />
+        </SelectPrimitive.ItemIndicator>
+      </span>
     </SelectPrimitive.Item>
   );
 }

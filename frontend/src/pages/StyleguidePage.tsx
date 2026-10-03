@@ -30,6 +30,38 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { StatusIndicator } from "@/components/StatusIndicator";
 
+const STYLEGUIDE_INTERVAL_ITEMS = [
+  { value: "30", label: "30 seconds" },
+  { value: "60", label: "1 minute" },
+  { value: "120", label: "2 minutes" },
+  { value: "300", label: "5 minutes" },
+  { value: "600", label: "10 minutes" },
+];
+
+const STYLEGUIDE_LOCATION_ERROR_ITEMS = [{ value: "gate", label: "Main Gate" }];
+
+const STYLEGUIDE_STATUS_ITEMS = [
+  { value: "all", label: "All statuses" },
+  { value: "online", label: "Online only" },
+  { value: "offline", label: "Offline only" },
+  { value: "unknown", label: "Unknown only" },
+];
+
+const SPECIMEN_STATUS_ITEMS = [
+  { value: "all", label: "All Statuses" },
+  { value: "online", label: "Online" },
+  { value: "offline", label: "Offline" },
+  { value: "unknown", label: "Unknown" },
+];
+
+const SPECIMEN_LOCATION_ITEMS = [
+  { value: "all", label: "All Locations" },
+  { value: "main-gate", label: "Main Gate" },
+  { value: "warehouse", label: "Warehouse" },
+  { value: "data-center", label: "Data Center" },
+  { value: "backlot", label: "Backlot" },
+];
+
 export function StyleguidePage() {
   const [isDark, setIsDark] = React.useState(() =>
     typeof document !== "undefined"
@@ -312,7 +344,7 @@ export function StyleguidePage() {
             </div>
             <div className="space-y-1">
               <Label htmlFor="select-error">Select with error</Label>
-              <Select>
+              <Select items={STYLEGUIDE_LOCATION_ERROR_ITEMS}>
                 <SelectTrigger
                   id="select-error"
                   data-testid="select-error"
@@ -336,7 +368,7 @@ export function StyleguidePage() {
           </span>
           <div className="flex flex-wrap items-center gap-inline rounded-control border border-border bg-background p-4">
             <div className="w-52">
-              <Select defaultValue="60">
+              <Select items={STYLEGUIDE_INTERVAL_ITEMS} defaultValue="60">
                 <SelectTrigger data-testid="select-default">
                   <SelectValue placeholder="Check interval" />
                 </SelectTrigger>
@@ -350,7 +382,7 @@ export function StyleguidePage() {
               </Select>
             </div>
             <div className="w-44">
-              <Select defaultValue="all">
+              <Select items={STYLEGUIDE_STATUS_ITEMS} defaultValue="all">
                 <SelectTrigger size="sm" data-testid="select-sm">
                   <SelectValue placeholder="Filter status" />
                 </SelectTrigger>
@@ -583,7 +615,7 @@ export function StyleguidePage() {
                   data-testid="specimen-search-input"
                 />
                 <div className="w-40">
-                  <Select defaultValue="all">
+                  <Select items={SPECIMEN_STATUS_ITEMS} defaultValue="all">
                     <SelectTrigger size="default">
                       <SelectValue placeholder="All Statuses" />
                     </SelectTrigger>
@@ -596,7 +628,7 @@ export function StyleguidePage() {
                   </Select>
                 </div>
                 <div className="w-44">
-                  <Select defaultValue="all">
+                  <Select items={SPECIMEN_LOCATION_ITEMS} defaultValue="all">
                     <SelectTrigger size="default">
                       <SelectValue placeholder="All Locations" />
                     </SelectTrigger>
@@ -711,7 +743,7 @@ export function StyleguidePage() {
             {/* Field 2 */}
             <div className="space-y-tight">
               <Label htmlFor="specimen-interval">Check Interval</Label>
-              <Select defaultValue="60">
+              <Select items={STYLEGUIDE_INTERVAL_ITEMS} defaultValue="60">
                 <SelectTrigger id="specimen-interval">
                   <SelectValue placeholder="Select interval" />
                 </SelectTrigger>

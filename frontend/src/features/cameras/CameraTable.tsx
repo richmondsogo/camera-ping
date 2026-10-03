@@ -26,6 +26,7 @@ export interface CameraTableProps {
   onEdit: (camera: CameraRead) => void;
   onDelete: (camera: CameraRead) => void;
   editButtonRefs?: React.MutableRefObject<Map<number, HTMLButtonElement>>;
+  onClearFilters?: () => void;
 }
 
 export function CameraTable({
@@ -37,6 +38,7 @@ export function CameraTable({
   onEdit,
   onDelete,
   editButtonRefs,
+  onClearFilters,
 }: CameraTableProps) {
   const columns = React.useMemo<ColumnDef<CameraRead>[]>(
     () => [
@@ -281,9 +283,23 @@ export function CameraTable({
                   : "filtered-empty-cameras-state"
               }
             >
-              {totalCameras === 0
-                ? "No cameras yet. Add your first camera to start monitoring."
-                : "No cameras match the current filters."}
+              {totalCameras === 0 ? (
+                "No cameras yet. Add your first camera to start monitoring."
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-tight">
+                  <p>No cameras match the current filters.</p>
+                  {onClearFilters && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onClearFilters}
+                      data-testid="table-clear-filters-button"
+                    >
+                      Clear filters
+                    </Button>
+                  )}
+                </div>
+              )}
             </TableCell>
           </TableRow>
         ) : (

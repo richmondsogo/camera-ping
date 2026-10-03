@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { test, expect } from "@playwright/test";
-import { resetCameras } from "./helpers";
+import { resetCameras, seedCameras, LONG_SEED_LOCATION } from "./helpers";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -377,5 +377,281 @@ test.describe("Camera Management & Dashboard CRUD", () => {
     await expect(page.getByTestId("camera-count-line")).toHaveText(
       "Showing 0 of 0 cameras"
     );
+  });
+
+  test("toolbar layout geometry, non-overlapping controls, select labels and indicator alignment at viewports 1024, 1280, 1920", async ({
+    page,
+  }) => {
+    function boxesIntersect(
+      a: { x: number; y: number; width: number; height: number },
+      b: { x: number; y: number; width: number; height: number }
+    ): boolean {
+      return !(
+        a.x + a.width <= b.x ||
+        b.x + b.width <= a.x ||
+        a.y + a.height <= b.y ||
+        b.y + b.height <= a.y
+      );
+    }
+
+    await seedCameras(30);
+
+    const viewports = [1024, 1280, 1920];
+
+    for (const width of viewports) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/");
+      await expect(page.getByTestId("camera-count-line")).toHaveText(
+        "Showing 30 of 30 cameras"
+      );
+
+      // (a) No two toolbar controls and the count line have intersecting bounding boxes
+      const controls = [
+        page.getByTestId("camera-search-input"),
+        page.getByTestId("status-filter-trigger"),
+        page.getByTestId("location-filter-trigger"),
+        page.getByTestId("import-cameras-toolbar-button"),
+        page.getByTestId("export-cameras-toolbar-button"),
+        page.getByTestId("add-camera-toolbar-button"),
+        page.getByTestId("camera-count-line"),
+      ];
+
+      const boxes: Array<{
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+      }> = [];
+      for (const ctrl of controls) {
+        await expect(ctrl).toBeVisible();
+        const box = await ctrl.boundingBox();
+        expect(box).not.toBeNull();
+        boxes.push(box!);
+      }
+
+      for (let i = 0; i < boxes.length; i++) {
+        for (let j = i + 1; j < boxes.length; j++) {
+          const intersects = boxesIntersect(boxes[i], boxes[j]);
+          expect(
+            intersects,
+            `Control ${i} and Control ${j} intersect at viewport ${width}px`
+          ).toBe(false);
+        }
+      }
+
+      // (b) Count line is below toolbar and above table
+      const toolbarBox = await page
+        .locator('[data-slot="camera-toolbar"]')
+        .boundingBox();
+      const countBox = await page
+        .getByTestId("camera-count-line")
+        .boundingBox();
+      const tableBox = await page.getByRole("table").boundingBox();
+      expect(toolbarBox).not.toBeNull();
+      expect(countBox).not.toBeNull();
+      expect(tableBox).not.toBeNull();
+      expect(countBox!.y).toBeGreaterThanOrEqual(
+        toolbarBox!.y + toolbarBox!.height
+      );
+      expect(tableBox!.y).toBeGreaterThanOrEqual(
+        countBox!.y + countBox!.height
+      );
+
+      // (d) Each trigger's text equals expected label
+      await expect(
+        page
+          .getByTestId("status-filter-trigger")
+          .locator('[data-slot="select-value"]')
+      ).toHaveText("All Statuses");
+      await expect(
+        page
+          .getByTestId("location-filter-trigger")
+          .locator('[data-slot="select-value"]')
+      ).toHaveText("All Locations");
+
+      // (c) Test Status select popup geometry & indicator isolation
+      const statusTrigger = page.getByTestId("status-filter-trigger");
+      await statusTrigger.click();
+      const statusPopup = page.locator(
+        '[data-slot="select-content"][data-open]'
+      );
+      await expect(statusPopup).toBeVisible();
+
+      const statusItems = statusPopup.locator('[data-slot="select-item"]');
+      const statusItemCount = await statusItems.count();
+      expect(statusItemCount).toBeGreaterThan(0);
+
+      let prevLeft: number | null = null;
+      for (let i = 0; i < statusItemCount; i++) {
+        const item = statusItems.nth(i);
+        const label = item.locator('[data-slot="select-item-label"]');
+        const indicator = item.locator(
+          '[data-slot="select-item-indicator-slot"]'
+        );
+
+        const labelBox = await label.boundingBox();
+        const indicatorBox = await indicator.boundingBox();
+        expect(labelBox).not.toBeNull();
+        expect(indicatorBox).not.toBeNull();
+
+        // (a) bounding box of indicator does not intersect label box
+        expect(boxesIntersect(indicatorBox!, labelBox!)).toBe(false);
+        expect(indicatorBox!.x).toBeGreaterThanOrEqual(
+          labelBox!.x + labelBox!.width
+        );
+
+        // (b) label left edge is identical for selected and unselected items
+        if (prevLeft === null) {
+          prevLeft = labelBox!.x;
+        } else {
+          expect(Math.abs(labelBox!.x - prevLeft)).toBeLessThanOrEqual(1);
+        }
+
+        // label is never clipped
+        const notClipped = await label.evaluate(
+          (el) => el.scrollWidth <= el.clientWidth
+        );
+        expect(notClipped).toBe(true);
+      }
+
+      // Choose "Online"
+      await statusItems.filter({ hasText: "Online" }).first().click();
+      await expect(
+        page.locator('[data-slot="select-content"][data-open]')
+      ).not.toBeVisible();
+      await expect(
+        statusTrigger.locator('[data-slot="select-value"]')
+      ).toHaveText("Online");
+
+      // Now test Location select popup geometry & indicator isolation
+      const locationTrigger = page.getByTestId("location-filter-trigger");
+      await locationTrigger.click();
+      const locationPopup = page.locator(
+        '[data-slot="select-content"][data-open]'
+      );
+      await expect(locationPopup).toBeVisible();
+
+      const locItems = locationPopup.locator('[data-slot="select-item"]');
+      const locItemCount = await locItems.count();
+      expect(locItemCount).toBeGreaterThan(0);
+
+      prevLeft = null;
+      for (let i = 0; i < locItemCount; i++) {
+        const item = locItems.nth(i);
+        const label = item.locator('[data-slot="select-item-label"]');
+        const indicator = item.locator(
+          '[data-slot="select-item-indicator-slot"]'
+        );
+
+        const labelBox = await label.boundingBox();
+        const indicatorBox = await indicator.boundingBox();
+        expect(labelBox).not.toBeNull();
+        expect(indicatorBox).not.toBeNull();
+
+        // indicator does not intersect label
+        expect(boxesIntersect(indicatorBox!, labelBox!)).toBe(false);
+        expect(indicatorBox!.x).toBeGreaterThanOrEqual(
+          labelBox!.x + labelBox!.width
+        );
+
+        // label left edge is identical
+        if (prevLeft === null) {
+          prevLeft = labelBox!.x;
+        } else {
+          expect(Math.abs(labelBox!.x - prevLeft)).toBeLessThanOrEqual(1);
+        }
+
+        const text = (await label.innerText()).trim();
+        if (text === LONG_SEED_LOCATION) {
+          // For the 60+ character location:
+          const textOverflow = await label.evaluate(
+            (el) => getComputedStyle(el).textOverflow
+          );
+          expect(textOverflow).toBe("ellipsis");
+          const isTruncated = await label.evaluate(
+            (el) => el.scrollWidth > el.clientWidth
+          );
+          expect(isTruncated).toBe(true);
+          await expect(label).toHaveAttribute("title", LONG_SEED_LOCATION);
+        } else {
+          const notClipped = await label.evaluate(
+            (el) => el.scrollWidth <= el.clientWidth
+          );
+          expect(
+            notClipped,
+            `Location item "${text}" was unexpectedly clipped`
+          ).toBe(true);
+        }
+      }
+
+      // Choose the 60+ character location
+      const longItem = locItems.filter({ hasText: LONG_SEED_LOCATION }).first();
+      await longItem.click();
+      await expect(
+        page.locator('[data-slot="select-content"][data-open]')
+      ).not.toBeVisible();
+
+      // Trigger displays the location
+      await expect(
+        locationTrigger.locator('[data-slot="select-value"]')
+      ).toHaveText(LONG_SEED_LOCATION);
+
+      // Reset filters using Clear filters button
+      const clearBtn = page.getByTestId("clear-filters-toolbar-button");
+      await expect(clearBtn).toBeVisible();
+      await clearBtn.click();
+      await expect(clearBtn).not.toBeVisible();
+      await expect(
+        statusTrigger.locator('[data-slot="select-value"]')
+      ).toHaveText("All Statuses");
+      await expect(
+        locationTrigger.locator('[data-slot="select-value"]')
+      ).toHaveText("All Locations");
+    }
+
+    // Finally, verify Styleguide Selects
+    await page.goto("/_design");
+    const styleguideSelectTrigger = page.getByTestId("select-default");
+    await styleguideSelectTrigger.click();
+    const styleguidePopup = page.locator(
+      '[data-slot="select-content"][data-open]'
+    );
+    await expect(styleguidePopup).toBeVisible();
+
+    const styleguideItems = styleguidePopup.locator(
+      '[data-slot="select-item"]'
+    );
+    const sgCount = await styleguideItems.count();
+    expect(sgCount).toBeGreaterThan(0);
+
+    let sgPrevLeft: number | null = null;
+    for (let i = 0; i < sgCount; i++) {
+      const item = styleguideItems.nth(i);
+      const label = item.locator('[data-slot="select-item-label"]');
+      const indicator = item.locator(
+        '[data-slot="select-item-indicator-slot"]'
+      );
+
+      const labelBox = await label.boundingBox();
+      const indicatorBox = await indicator.boundingBox();
+      expect(labelBox).not.toBeNull();
+      expect(indicatorBox).not.toBeNull();
+
+      expect(boxesIntersect(indicatorBox!, labelBox!)).toBe(false);
+      expect(indicatorBox!.x).toBeGreaterThanOrEqual(
+        labelBox!.x + labelBox!.width
+      );
+
+      if (sgPrevLeft === null) {
+        sgPrevLeft = labelBox!.x;
+      } else {
+        expect(Math.abs(labelBox!.x - sgPrevLeft)).toBeLessThanOrEqual(1);
+      }
+
+      const notClipped = await label.evaluate(
+        (el) => el.scrollWidth <= el.clientWidth
+      );
+      expect(notClipped).toBe(true);
+    }
   });
 });
