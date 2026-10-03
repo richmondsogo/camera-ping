@@ -9,6 +9,11 @@ const pythonCmd = isWin
   ? path.join(backendDir, ".venv", "Scripts", "python.exe")
   : path.join(backendDir, ".venv", "bin", "python");
 
+const repoRootDir = path.resolve(__dirname, "..");
+const e2eBackendScript = path.join(repoRootDir, "scripts", "e2e_backend.py");
+const e2eBackendPort = Number(process.env.E2E_BACKEND_PORT || "18000");
+const e2eFrontendPort = Number(process.env.E2E_FRONTEND_PORT || "15173");
+
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false,
@@ -17,7 +22,7 @@ export default defineConfig({
   workers: 1,
   reporter: "list",
   use: {
-    baseURL: "http://localhost:5173",
+    baseURL: `http://localhost:${e2eFrontendPort}`,
     trace: "on-first-retry",
   },
   projects: [
@@ -28,16 +33,21 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: `"${pythonCmd}" -m uvicorn app.main:app --port 8000`,
-      cwd: backendDir,
-      port: 8000,
-      reuseExistingServer: !process.env.CI,
+      command: `"${pythonCmd}" "${e2eBackendScript}"`,
+      cwd: repoRootDir,
+      port: e2eBackendPort,
+      reuseExistingServer: false,
       timeout: 120 * 1000,
     },
     {
-      command: "pnpm dev",
-      port: 5173,
-      reuseExistingServer: !process.env.CI,
+      command: `pnpm dev --port ${e2eFrontendPort} --strictPort`,
+      cwd: __dirname,
+      port: e2eFrontendPort,
+      env: {
+        API_PROXY_TARGET: `http://127.0.0.1:${e2eBackendPort}`,
+        PORT: String(e2eFrontendPort),
+      },
+      reuseExistingServer: false,
       timeout: 120 * 1000,
     },
   ],
