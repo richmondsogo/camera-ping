@@ -65,6 +65,7 @@ function getFiles(dir) {
 
 const srcFiles = getFiles(srcDir);
 const usedUtils = new Set();
+const colorRoleUtils = ["text-error", "border-error"];
 
 const regexes = [
   /\b((?:p|px|py|pt|pr|pb|pl|m|mx|my|mt|mr|mb|ml|gap|gap-x|gap-y|h|w|min-h|max-h|min-w|max-w)-([a-z0-9-]+))\b/g,
@@ -85,6 +86,12 @@ for (const file of srcFiles) {
       if (util === "w-dialog") {
         usedUtils.add(util);
       }
+    }
+  }
+  for (const cu of colorRoleUtils) {
+    const cuRegex = new RegExp("(?:^|[\\s\"'`]|:)" + cu + "(?=[\\s\"'`]|$)");
+    if (cuRegex.test(content)) {
+      usedUtils.add(cu);
     }
   }
 }
@@ -115,13 +122,18 @@ for (const t of tokens) {
   }
 }
 
-console.log(`Found ${usedUtils.size} used spacing/size utilities in src:`);
+console.log(
+  `Found ${usedUtils.size} used spacing/size/color utilities in src:`
+);
 const sorted = Array.from(usedUtils).sort();
 
 // 7. Check 2: Fail if any utility USED in src has zero selectors in the built CSS
 for (const u of sorted) {
   const escaped = u.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
-  const selRegex = new RegExp("\\." + escaped + "(?=[^a-zA-Z0-9_-]|$)", "g");
+  const selRegex = new RegExp(
+    "(?:\\.|\\\\:)" + escaped + "(?=[^a-zA-Z0-9_-]|$)",
+    "g"
+  );
   const matches = cssContent.match(selRegex) || [];
   const count = matches.length;
   console.log(`${u.padEnd(25)} : ${count}`);

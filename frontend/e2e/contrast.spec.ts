@@ -403,7 +403,44 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
 
-    // 19-22 Select
+    // Textarea
+    results.push(
+      await measureElement(page, '[data-testid="textarea-default"]', {
+        name: "Textarea: Value text",
+        threshold: 4.5,
+      })
+    );
+    results.push(
+      await measureElement(page, '[data-testid="textarea-placeholder"]', {
+        name: "Textarea: Placeholder text",
+        threshold: 4.5,
+        pseudo: "::placeholder",
+      })
+    );
+    results.push(
+      await measureElement(page, '[data-testid="textarea-default"]', {
+        name: "Textarea: Border",
+        threshold: 3.0,
+        measureType: "border",
+      })
+    );
+
+    // Form states
+    results.push(
+      await measureElement(page, '[data-testid="form-error-text"]', {
+        name: "Form: Error text",
+        threshold: 4.5,
+      })
+    );
+    results.push(
+      await measureElement(page, '[data-testid="input-error"]', {
+        name: "Form: Invalid border",
+        threshold: 3.0,
+        measureType: "border",
+      })
+    );
+
+    // Select
     results.push(
       await measureElement(page, '[data-testid="select-default"]', {
         name: "Select: Trigger text",
@@ -436,7 +473,7 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
     );
     await page.keyboard.press("Escape");
 
-    // 23-25 Dialog
+    // Dialog
     results.push(
       await measureElement(page, '[data-testid="dialog-trigger-button"]', {
         name: "Dialog: Trigger button",
@@ -454,6 +491,12 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
     results.push(
+      await measureElement(page, '[data-testid="dialog-error-text"]', {
+        name: "Form: Error text (inside dialog)",
+        threshold: 4.5,
+      })
+    );
+    results.push(
       await measureElement(page, '[data-slot="dialog-overlay"]', {
         name: "Dialog: Overlay backdrop",
         threshold: 1.0,
@@ -465,7 +508,7 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       page.locator('[data-testid="dialog-content-box"]')
     ).not.toBeVisible();
 
-    // 26-27 Typography
+    // Typography
     results.push(
       await measureElement(page, '[data-testid="sample-body"]', {
         name: "Typography: Foreground text",
@@ -479,7 +522,7 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
 
-    // 28-31 Table
+    // Table
     results.push(
       await measureElement(page, '[data-testid="table-head-name"]', {
         name: "Table: Header text",
@@ -506,7 +549,7 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
 
-    // 32-33 Navigation (on /)
+    // Navigation (on /)
     await page.goto("/");
     await page
       .locator('[data-testid="nav-dashboard"]')
@@ -525,7 +568,7 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
 
-    // 34-36 Focus Rings (return to /_design)
+    // Focus Rings (return to /_design)
     await page.goto("/_design");
     await page
       .locator('[data-testid="styleguide-page"]')
@@ -549,6 +592,15 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
         measureType: "ring",
       })
     );
+    const txt = page.getByTestId("textarea-default");
+    await txt.focus();
+    results.push(
+      await measureElement(page, '[data-testid="textarea-default"]', {
+        name: "Textarea: Focus ring",
+        threshold: 3.0,
+        measureType: "ring",
+      })
+    );
     const sel = page.getByTestId("select-default");
     await sel.focus();
     results.push(
@@ -559,7 +611,7 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
 
-    // 37-39 Status indicators
+    // Status indicators
     results.push(
       await measureElement(page, '[data-testid="status-online"]', {
         name: "Status: Online dot",
@@ -582,8 +634,8 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
 
-    // Assert exact N pairs measured (non-vacuous: 39 pairs with Description cell text)
-    expect(results.length).toBe(39);
+    // Assert exact N pairs measured (non-vacuous: 46 pairs)
+    expect(results.length).toBe(46);
 
     console.log(formatResultsTable("Light", results));
 
@@ -739,7 +791,44 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
 
-    // 19-22 Select
+    // Textarea
+    results.push(
+      await measureElement(page, '[data-testid="textarea-default"]', {
+        name: "Textarea: Value text",
+        threshold: 4.5,
+      })
+    );
+    results.push(
+      await measureElement(page, '[data-testid="textarea-placeholder"]', {
+        name: "Textarea: Placeholder text",
+        threshold: 4.5,
+        pseudo: "::placeholder",
+      })
+    );
+    results.push(
+      await measureElement(page, '[data-testid="textarea-default"]', {
+        name: "Textarea: Border",
+        threshold: 3.0,
+        measureType: "border",
+      })
+    );
+
+    // Form states
+    results.push(
+      await measureElement(page, '[data-testid="form-error-text"]', {
+        name: "Form: Error text",
+        threshold: 4.5,
+      })
+    );
+    results.push(
+      await measureElement(page, '[data-testid="input-error"]', {
+        name: "Form: Invalid border",
+        threshold: 3.0,
+        measureType: "border",
+      })
+    );
+
+    // Select
     results.push(
       await measureElement(page, '[data-testid="select-default"]', {
         name: "Select: Trigger text",
@@ -771,7 +860,7 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
     );
     await page.keyboard.press("Escape");
 
-    // 23-25 Dialog
+    // Dialog
     results.push(
       await measureElement(page, '[data-testid="dialog-trigger-button"]', {
         name: "Dialog: Trigger button",
@@ -789,6 +878,12 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
     results.push(
+      await measureElement(page, '[data-testid="dialog-error-text"]', {
+        name: "Form: Error text (inside dialog)",
+        threshold: 4.5,
+      })
+    );
+    results.push(
       await measureElement(page, '[data-slot="dialog-overlay"]', {
         name: "Dialog: Overlay backdrop",
         threshold: 1.0,
@@ -800,7 +895,7 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       page.locator('[data-testid="dialog-content-box"]')
     ).not.toBeVisible();
 
-    // 26-27 Typography
+    // Typography
     results.push(
       await measureElement(page, '[data-testid="sample-body"]', {
         name: "Typography: Foreground text",
@@ -814,7 +909,7 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
 
-    // 28-31 Table
+    // Table
     results.push(
       await measureElement(page, '[data-testid="table-head-name"]', {
         name: "Table: Header text",
@@ -841,7 +936,7 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
 
-    // 32-33 Navigation (on /)
+    // Navigation (on /)
     await page.goto("/");
     await page
       .locator('[data-testid="nav-dashboard"]')
@@ -860,7 +955,7 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
 
-    // 34-36 Focus Rings (return to /_design)
+    // Focus Rings (return to /_design)
     await page.goto("/_design");
     await page
       .locator('[data-testid="styleguide-page"]')
@@ -884,6 +979,15 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
         measureType: "ring",
       })
     );
+    const txt = page.getByTestId("textarea-default");
+    await txt.focus();
+    results.push(
+      await measureElement(page, '[data-testid="textarea-default"]', {
+        name: "Textarea: Focus ring",
+        threshold: 3.0,
+        measureType: "ring",
+      })
+    );
     const sel = page.getByTestId("select-default");
     await sel.focus();
     results.push(
@@ -894,7 +998,7 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
 
-    // 37-39 Status indicators
+    // Status indicators
     results.push(
       await measureElement(page, '[data-testid="status-online"]', {
         name: "Status: Online dot",
@@ -917,8 +1021,8 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
       })
     );
 
-    // Assert exact N pairs measured (non-vacuous: 39 pairs with Description cell text)
-    expect(results.length).toBe(39);
+    // Assert exact N pairs measured (non-vacuous: 46 pairs)
+    expect(results.length).toBe(46);
 
     console.log(formatResultsTable("Dark", results));
 
