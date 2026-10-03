@@ -13,7 +13,6 @@ export function useCameras() {
   return useQuery<Camera[]>({
     queryKey: CAMERAS_QUERY_KEY,
     queryFn: () => api.listCameras(),
-    retry: 1,
   });
 }
 

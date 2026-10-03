@@ -5,7 +5,8 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div
       data-slot="table-container"
-      className="relative w-full overflow-x-auto"
+      data-testid="camera-table-container"
+      className="relative w-full overflow-x-auto rounded-control border border-border"
     >
       <table
         data-slot="table"

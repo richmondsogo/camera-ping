@@ -186,144 +186,135 @@ export function CameraTable({
   });
 
   return (
-    <div
-      data-slot="camera-table-container"
-      data-testid="camera-table-container"
-      className="w-full overflow-x-auto rounded-control border border-border"
-    >
-      <Table className="min-w-table-min table-fixed w-full">
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
+    <Table className="min-w-table-min table-fixed w-full">
+      <TableHeader>
+        {table.getHeaderGroups().map((headerGroup) => (
+          <TableRow key={headerGroup.id}>
+            {headerGroup.headers.map((header) => {
+              let widthClass = "";
+              if (header.id === "status") widthClass = "w-col-status";
+              else if (header.id === "ip_address") widthClass = "w-col-ip";
+              else if (header.id === "description") widthClass = "w-3/12";
+              else if (header.id === "last_checked")
+                widthClass = "w-col-checked";
+              else if (header.id === "actions")
+                widthClass = "w-col-actions text-right";
+
+              return (
+                <TableHead key={header.id} className={widthClass}>
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                </TableHead>
+              );
+            })}
+          </TableRow>
+        ))}
+      </TableHeader>
+
+      <TableBody>
+        {/* 1. First-time Loading Skeleton */}
+        {isPending ? (
+          Array.from({ length: 4 }).map((_, idx) => (
+            <TableRow
+              key={`skeleton-${idx}`}
+              data-testid="loading-cameras-skeleton"
+            >
+              <TableCell className="w-col-status">
+                <div className="h-4 w-16 animate-pulse rounded bg-muted" />
+              </TableCell>
+              <TableCell>
+                <div className="h-4 w-28 animate-pulse rounded bg-muted" />
+              </TableCell>
+              <TableCell className="w-col-ip">
+                <div className="h-4 w-24 animate-pulse rounded bg-muted" />
+              </TableCell>
+              <TableCell>
+                <div className="h-4 w-20 animate-pulse rounded bg-muted" />
+              </TableCell>
+              <TableCell className="w-3/12">
+                <div className="h-4 w-40 animate-pulse rounded bg-muted" />
+              </TableCell>
+              <TableCell className="w-col-checked">
+                <div className="h-4 w-32 animate-pulse rounded bg-muted" />
+              </TableCell>
+              <TableCell className="w-col-actions text-right">
+                <div className="ml-auto h-7 w-20 animate-pulse rounded bg-muted" />
+              </TableCell>
+            </TableRow>
+          ))
+        ) : isError && cameras.length === 0 ? (
+          /* 2. Error State with Retry */
+          <TableRow>
+            <TableCell
+              colSpan={7}
+              className="h-48 text-center"
+              data-testid="error-cameras-state"
+            >
+              <div className="flex flex-col items-center justify-center gap-tight">
+                <p className="text-sm text-muted-foreground">
+                  Failed to load cameras.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onRetry}
+                  data-testid="retry-cameras-button"
+                >
+                  Retry
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        ) : cameras.length === 0 ? (
+          /* 3. Empty States */
+          <TableRow>
+            <TableCell
+              colSpan={7}
+              className="h-48 text-center text-sm text-muted-foreground"
+              data-testid={
+                totalCameras === 0
+                  ? "empty-cameras-state"
+                  : "filtered-empty-cameras-state"
+              }
+            >
+              {totalCameras === 0
+                ? "No cameras yet. Add your first camera to start monitoring."
+                : "No cameras match the current filters."}
+            </TableCell>
+          </TableRow>
+        ) : (
+          /* 4. Data Rows */
+          table.getRowModel().rows.map((row) => (
+            <TableRow
+              key={row.id}
+              data-testid={`camera-row-${row.original.id}`}
+            >
+              {row.getVisibleCells().map((cell) => {
                 let widthClass = "";
-                if (header.id === "status") widthClass = "w-col-status";
-                else if (header.id === "ip_address") widthClass = "w-col-ip";
-                else if (header.id === "description") widthClass = "w-6/12";
-                else if (header.id === "last_checked")
+                if (cell.column.id === "status") widthClass = "w-col-status";
+                else if (cell.column.id === "ip_address")
+                  widthClass = "w-col-ip";
+                else if (cell.column.id === "description")
+                  widthClass = "w-3/12";
+                else if (cell.column.id === "last_checked")
                   widthClass = "w-col-checked";
-                else if (header.id === "actions")
-                  widthClass = "w-col-actions text-right";
+                else if (cell.column.id === "actions")
+                  widthClass = "w-col-actions";
 
                 return (
-                  <TableHead key={header.id} className={widthClass}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
+                  <TableCell key={cell.id} className={widthClass}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
                 );
               })}
             </TableRow>
-          ))}
-        </TableHeader>
-
-        <TableBody>
-          {/* 1. First-time Loading Skeleton */}
-          {isPending ? (
-            Array.from({ length: 4 }).map((_, idx) => (
-              <TableRow
-                key={`skeleton-${idx}`}
-                data-testid="loading-cameras-skeleton"
-              >
-                <TableCell className="w-col-status">
-                  <div className="h-4 w-16 animate-pulse rounded bg-muted" />
-                </TableCell>
-                <TableCell>
-                  <div className="h-4 w-28 animate-pulse rounded bg-muted" />
-                </TableCell>
-                <TableCell className="w-col-ip">
-                  <div className="h-4 w-24 animate-pulse rounded bg-muted" />
-                </TableCell>
-                <TableCell>
-                  <div className="h-4 w-20 animate-pulse rounded bg-muted" />
-                </TableCell>
-                <TableCell className="w-6/12">
-                  <div className="h-4 w-40 animate-pulse rounded bg-muted" />
-                </TableCell>
-                <TableCell className="w-col-checked">
-                  <div className="h-4 w-32 animate-pulse rounded bg-muted" />
-                </TableCell>
-                <TableCell className="w-col-actions text-right">
-                  <div className="ml-auto h-7 w-20 animate-pulse rounded bg-muted" />
-                </TableCell>
-              </TableRow>
-            ))
-          ) : isError && cameras.length === 0 ? (
-            /* 2. Error State with Retry */
-            <TableRow>
-              <TableCell
-                colSpan={7}
-                className="h-48 text-center"
-                data-testid="error-cameras-state"
-              >
-                <div className="flex flex-col items-center justify-center gap-tight">
-                  <p className="text-sm text-muted-foreground">
-                    Failed to load cameras.
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onRetry}
-                    data-testid="retry-cameras-button"
-                  >
-                    Retry
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ) : cameras.length === 0 ? (
-            /* 3. Empty States */
-            <TableRow>
-              <TableCell
-                colSpan={7}
-                className="h-48 text-center text-sm text-muted-foreground"
-                data-testid={
-                  totalCameras === 0
-                    ? "empty-cameras-state"
-                    : "filtered-empty-cameras-state"
-                }
-              >
-                {totalCameras === 0
-                  ? "No cameras yet. Add your first camera to start monitoring."
-                  : "No cameras match the current filters."}
-              </TableCell>
-            </TableRow>
-          ) : (
-            /* 4. Data Rows */
-            table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-testid={`camera-row-${row.original.id}`}
-              >
-                {row.getVisibleCells().map((cell) => {
-                  let widthClass = "";
-                  if (cell.column.id === "status") widthClass = "w-col-status";
-                  else if (cell.column.id === "ip_address")
-                    widthClass = "w-col-ip";
-                  else if (cell.column.id === "description")
-                    widthClass = "w-6/12";
-                  else if (cell.column.id === "last_checked")
-                    widthClass = "w-col-checked";
-                  else if (cell.column.id === "actions")
-                    widthClass = "w-col-actions";
-
-                  return (
-                    <TableCell key={cell.id} className={widthClass}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </div>
+          ))
+        )}
+      </TableBody>
+    </Table>
   );
 }

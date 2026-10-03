@@ -110,7 +110,7 @@ Semantic typography utilities defined in `frontend/src/index.css`:
 | `--spacing-col-ip` | 140px | Fixed column width: Longest IPv4 address | `w-col-ip` |
 | `--spacing-col-checked` | 170px | Fixed column width: Full ISO timestamp | `w-col-checked` |
 | `--spacing-col-actions` | 160px | Fixed column width: Edit & Delete button group | `w-col-actions` |
-| `--spacing-table-min` | 1000px | Minimum table width in horizontal scroll wrapper | `min-w-table-min` |
+| `--spacing-table-min` | 1080px | Minimum table width in horizontal scroll wrapper | `min-w-table-min` |
 
 ---
 
