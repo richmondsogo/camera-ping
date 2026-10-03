@@ -1,0 +1,297 @@
+[
+  {
+    "field": "ip_address",
+    "input": "",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "This field cannot be empty."
+  },
+  {
+    "field": "ip_address",
+    "input": "   ",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "This field cannot be empty."
+  },
+  {
+    "field": "ip_address",
+    "input": "abc",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "Enter a valid IPv4 address such as 192.168.1.64."
+  },
+  {
+    "field": "ip_address",
+    "input": "192.0.2",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "Enter a valid IPv4 address such as 192.168.1.64."
+  },
+  {
+    "field": "ip_address",
+    "input": "192.0.2.256",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "Enter a valid IPv4 address such as 192.168.1.64."
+  },
+  {
+    "field": "ip_address",
+    "input": "192.0.2.10/24",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "Enter a valid IPv4 address such as 192.168.1.64."
+  },
+  {
+    "field": "ip_address",
+    "input": "192.0.2.10:80",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "Enter a valid IPv4 address such as 192.168.1.64."
+  },
+  {
+    "field": "ip_address",
+    "input": "192.0.002.010",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "Leading zeros are not permitted in IP address octets."
+  },
+  {
+    "field": "ip_address",
+    "input": "::1",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "Enter a valid IPv4 address such as 192.168.1.64."
+  },
+  {
+    "field": "ip_address",
+    "input": "2001:db8::1",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "Enter a valid IPv4 address such as 192.168.1.64."
+  },
+  {
+    "field": "ip_address",
+    "input": "0.0.0.0",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "0.0.0.0 is not a valid camera host address."
+  },
+  {
+    "field": "ip_address",
+    "input": "224.0.0.1",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "Multicast addresses (224.0.0.0/4) cannot be used as camera addresses."
+  },
+  {
+    "field": "ip_address",
+    "input": "255.255.255.255",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "255.255.255.255 is a broadcast address and cannot be used as a camera address."
+  },
+  {
+    "field": "ip_address",
+    "input": "１９２.０.２.１０",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "Enter a valid IPv4 address such as 192.168.1.64."
+  },
+  {
+    "field": "ip_address",
+    "input": "127.0.0.1",
+    "expected": "valid",
+    "expected_stored": "127.0.0.1",
+    "expected_message": null
+  },
+  {
+    "field": "ip_address",
+    "input": "10.0.0.5",
+    "expected": "valid",
+    "expected_stored": "10.0.0.5",
+    "expected_message": null
+  },
+  {
+    "field": "ip_address",
+    "input": "169.254.1.1",
+    "expected": "valid",
+    "expected_stored": "169.254.1.1",
+    "expected_message": null
+  },
+  {
+    "field": "ip_address",
+    "input": "192.168.1.64",
+    "expected": "valid",
+    "expected_stored": "192.168.1.64",
+    "expected_message": null
+  },
+  {
+    "field": "ip_address",
+    "input": " 192.0.2.10 ",
+    "expected": "valid",
+    "expected_stored": "192.0.2.10",
+    "expected_message": null
+  },
+  {
+    "field": "ip_address",
+    "input": "\u00a0192.0.2.10\u00a0",
+    "expected": "valid",
+    "expected_stored": "192.0.2.10",
+    "expected_message": null
+  },
+  {
+    "field": "ip_address",
+    "input": "\u3000192.0.2.10\u3000",
+    "expected": "valid",
+    "expected_stored": "192.0.2.10",
+    "expected_message": null
+  },
+  {
+    "field": "ip_address",
+    "input": "\ufeff192.0.2.10\ufeff",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "Enter a valid IPv4 address such as 192.168.1.64."
+  },
+  {
+    "field": "ip_address",
+    "input": "\u0085192.0.2.10\u0085",
+    "expected": "valid",
+    "expected_stored": "192.0.2.10",
+    "expected_message": null,
+    "frontend_stricter": true
+  },
+  {
+    "field": "camera_name",
+    "input": "",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "This field cannot be empty."
+  },
+  {
+    "field": "camera_name",
+    "input": "   ",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "This field cannot be empty."
+  },
+  {
+    "field": "camera_name",
+    "input": "Gate Camera",
+    "expected": "valid",
+    "expected_stored": "Gate Camera",
+    "expected_message": null
+  },
+  {
+    "field": "camera_name",
+    "input": "  Gate Camera  ",
+    "expected": "valid",
+    "expected_stored": "Gate Camera",
+    "expected_message": null
+  },
+  {
+    "field": "camera_name",
+    "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "expected": "valid",
+    "expected_stored": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "expected_message": null
+  },
+  {
+    "field": "camera_name",
+    "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "Must be 100 characters or fewer."
+  },
+  {
+    "field": "camera_name",
+    "input": "a\nb",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "Control characters including newlines and tabs are not allowed."
+  },
+  {
+    "field": "camera_name",
+    "input": "a\tb",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "Control characters including newlines and tabs are not allowed."
+  },
+  {
+    "field": "camera_name",
+    "input": "a\u0000b",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "Control characters including newlines and tabs are not allowed."
+  },
+  {
+    "field": "location",
+    "input": "",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "This field cannot be empty."
+  },
+  {
+    "field": "location",
+    "input": "Main Gate",
+    "expected": "valid",
+    "expected_stored": "Main Gate",
+    "expected_message": null
+  },
+  {
+    "field": "location",
+    "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "expected": "valid",
+    "expected_stored": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "expected_message": null
+  },
+  {
+    "field": "location",
+    "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "Must be 100 characters or fewer."
+  },
+  {
+    "field": "location",
+    "input": "Main\nGate",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "Control characters including newlines and tabs are not allowed."
+  },
+  {
+    "field": "description",
+    "input": "",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "This field cannot be empty."
+  },
+  {
+    "field": "description",
+    "input": "Main perimeter camera",
+    "expected": "valid",
+    "expected_stored": "Main perimeter camera",
+    "expected_message": null
+  },
+  {
+    "field": "description",
+    "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "expected": "valid",
+    "expected_stored": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "expected_message": null
+  },
+  {
+    "field": "description",
+    "input": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "Must be 500 characters or fewer."
+  },
+  {
+    "field": "description",
+    "input": "Desc\tNote",
+    "expected": "invalid",
+    "expected_stored": null,
+    "expected_message": "Control characters including newlines and tabs are not allowed."
+  }
+]
