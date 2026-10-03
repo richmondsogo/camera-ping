@@ -1,0 +1,31 @@
+camera_name,location,description,ip_address
+Server Room Rack A,Server Room,Overview of high-density server rack A and main PDU,192.0.2.101
+Server Room Rack B,Server Room,Focus on rack B network switches and patch panels,192.0.2.102
+Server Room Entry,Server Room,Doorway access camera with biometric lock coverage,192.0.2.103
+Main Gate Entrance,Main Entrance,Lobby exterior vehicle and pedestrian entry gate,192.0.2.104
+Main Lobby Turnstiles,Main Entrance,High-speed turnstile throughput monitoring,192.0.2.105
+Main Entrance Foyer,Main Entrance,Visitor check-in queue and security checkpoint area,192.0.2.106
+Warehouse A High Bay,Warehouse A,Overhead view of heavy machinery operations and forklift routes,192.0.2.107
+Warehouse A Racks West,Warehouse A,Storage aisle 1 to 4 inventory view,192.0.2.108
+Warehouse A Racks East,Warehouse A,Storage aisle 5 to 8 inventory view,192.0.2.109
+Warehouse A Shipping Bay,Warehouse A,Pallet staging and staging scale camera,192.0.2.110
+Loading Dock Bay 1,Loading Dock,Trailer dock door 1 exterior and bumper apron,192.0.2.111
+Loading Dock Bay 2,Loading Dock,Trailer dock door 2 exterior and bumper apron,192.0.2.112
+Loading Dock Staging,Loading Dock,Inbound freight sorting and staging area,192.0.2.113
+East Corridor 1F,East Corridor,First floor hallway outside engineering labs,192.0.2.114
+East Corridor 2F,East Corridor,Second floor hallway outside marketing suites,192.0.2.115
+East Stairwell Exit,East Corridor,Emergency exit door and stairwell landing,192.0.2.116
+West Corridor 1F,West Corridor,First floor western corridor facing cafeteria,192.0.2.117
+West Corridor 2F,West Corridor,Second floor western corridor outside conference rooms,192.0.2.118
+West Stairwell Exit,West Corridor,Ground floor emergency exit and alarm pull station,192.0.2.119
+Parking North Row 1,Parking Lot North,Employee parking zone A perimeter fence,192.0.2.120
+Parking North Row 2,Parking Lot North,Electric vehicle charging station stalls 1 through 6,192.0.2.121
+Parking North Gate,Parking Lot North,North lot barrier gate and license plate camera,192.0.2.122
+Parking South Row 1,Parking Lot South,Visitor parking stalls and walkway to main building,192.0.2.123
+Parking South Row 2,Parking Lot South,South perimeter fence and retention pond tree line,192.0.2.124
+Parking South Gate,Parking Lot South,South emergency vehicle gate access,192.0.2.125
+Reception Front Desk,Reception,Front desk greeting area and visitor log station,192.0.2.126
+Reception Waiting Lounge,Reception,Guest lounge seating and coffee bar area,192.0.2.127
+Reception Package Drop,Reception,Courier drop box and delivery package storage shelf,192.0.2.128
+Executive Boardroom,Executive Floor,Boardroom ante-room and executive lounge,192.0.2.129
+Executive Suite Hall,Executive Floor,C-suite hallway and private meeting room entrance,192.0.2.130
