@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -250,6 +251,84 @@ export function StyleguidePage() {
           </div>
         </div>
 
+        {/* Form Controls: Textarea & Label */}
+        <div className="space-y-2">
+          <span className="text-xs text-muted-foreground block font-medium">
+            Textarea & Label (min-h-20, resize-none, 6px radius)
+          </span>
+          <div className="grid max-w-sm gap-2 rounded-control border border-border bg-background p-4">
+            <Label htmlFor="demo-textarea">Description</Label>
+            <Textarea
+              id="demo-textarea"
+              data-testid="textarea-default"
+              defaultValue="Primary pan-tilt-zoom optical camera"
+            />
+            <Textarea
+              id="demo-placeholder-textarea"
+              data-testid="textarea-placeholder"
+              placeholder="Enter optional notes..."
+            />
+          </div>
+        </div>
+
+        {/* Form States */}
+        <div className="space-y-2" data-testid="section-form-states">
+          <span className="text-xs text-muted-foreground block font-medium">
+            Form States (aria-invalid border-error, error text)
+          </span>
+          <div className="grid max-w-sm gap-4 rounded-control border border-border bg-background p-4">
+            <div className="space-y-1">
+              <Label htmlFor="input-error">Input with error</Label>
+              <Input
+                id="input-error"
+                data-testid="input-error"
+                aria-invalid="true"
+                defaultValue=""
+                placeholder="Camera name"
+              />
+              <p data-testid="form-error-text" className="text-xs text-error">
+                This field cannot be empty.
+              </p>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="textarea-normal">Textarea normal</Label>
+              <Textarea
+                id="textarea-normal"
+                data-testid="textarea-normal"
+                defaultValue="Normal textarea notes"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="textarea-error">Textarea with error</Label>
+              <Textarea
+                id="textarea-error"
+                data-testid="textarea-error"
+                aria-invalid="true"
+                defaultValue="Invalid long text"
+              />
+              <p className="text-xs text-error">
+                Description cannot exceed 500 characters.
+              </p>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="select-error">Select with error</Label>
+              <Select>
+                <SelectTrigger
+                  id="select-error"
+                  data-testid="select-error"
+                  aria-invalid="true"
+                >
+                  <SelectValue placeholder="Select location" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="gate">Main Gate</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-error">Please select a location.</p>
+            </div>
+          </div>
+        </div>
+
         {/* Select */}
         <div className="space-y-2">
           <span className="text-xs text-muted-foreground block font-medium">
@@ -457,6 +536,12 @@ export function StyleguidePage() {
                 <p className="text-sm text-foreground">
                   Dialog content conforms to the 8px radius token, 24px padding,
                   and zero elevation specifications.
+                </p>
+                <p
+                  data-testid="dialog-error-text"
+                  className="text-xs text-error"
+                >
+                  An error occurred in this dialog.
                 </p>
                 <DialogFooter showCloseButton>
                   <Button variant="default" size="default">

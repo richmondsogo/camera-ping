@@ -1,15 +1,29 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { describe, expect, it } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { App } from "./App";
+
+function renderApp(initialEntry = "/") {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <App />
+      </MemoryRouter>
+    </QueryClientProvider>
+  );
+}
 
 describe("App Shell & Routing", () => {
   it("renders the header with app name and navigation", () => {
-    render(
-      <MemoryRouter initialEntries={["/"]}>
-        <App />
-      </MemoryRouter>
-    );
+    renderApp("/");
 
     expect(screen.getByText("Camera Monitor")).toBeInTheDocument();
     expect(
@@ -30,11 +44,7 @@ describe("App Shell & Routing", () => {
   });
 
   it("navigates between Dashboard and Settings routes", () => {
-    render(
-      <MemoryRouter initialEntries={["/"]}>
-        <App />
-      </MemoryRouter>
-    );
+    renderApp("/");
 
     const settingsLink = screen.getByRole("link", { name: "Settings" });
     fireEvent.click(settingsLink);

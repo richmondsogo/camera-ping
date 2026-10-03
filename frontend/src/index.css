@@ -26,6 +26,12 @@
   --spacing-popup-pad: 4px;
   --spacing-item-gap: 2px;
 
+  --spacing-col-status: 100px;
+  --spacing-col-ip: 140px;
+  --spacing-col-checked: 170px;
+  --spacing-col-actions: 160px;
+  --spacing-table-min: 1080px;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
@@ -42,6 +48,8 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-overlay: var(--overlay);
+
+  --color-error: var(--error);
 
   --color-status-online: var(--status-online);
   --color-status-offline: var(--status-offline);
@@ -60,6 +68,7 @@
   --primary-foreground: #ffffff;
   --destructive: #c81e1e;
   --destructive-foreground: #ffffff;
+  --error: #c81e1e;
   --popover: #ffffff;
   --popover-foreground: #09090b;
   --accent: #f4f4f5;
@@ -83,6 +92,7 @@
   --primary-foreground: #ffffff;
   --destructive: #c81e1e;
   --destructive-foreground: #ffffff;
+  --error: #ef4444;
   --popover: #09090b;
   --popover-foreground: #fafafa;
   --accent: #27272a;

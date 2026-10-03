@@ -15,6 +15,7 @@
 
 ## Ports and network binding (Steps 08 and 13)
 - The admin PC runs other software, so the app's port must not be assumed free.
+- Owner decision: Access is admin PC only: bind 127.0.0.1, no LAN access, no login.
 - Requirements:
   - One configurable port from environment variable.
   - An uncommon default port (not 8000 or 5173).
@@ -22,7 +23,6 @@
   - If the port is taken, fail at startup with a clear message naming the port and the env var to change.
   - In production, the backend serves the built frontend on that single port.
   - `dev.py`, the Vite proxy target, and the Playwright `webServer` config must read the ports from env vars instead of hardcoding them.
-- Whether LAN access is wanted is an open owner decision.
 - Note: Do not change any code for this in Step 03.
 
 ## Housekeeping notes
@@ -30,5 +30,12 @@
 - `contrast.spec.ts` is ~900 lines; consider splitting it if it grows further.
 - The "Dialog: Overlay backdrop" contrast pair has a 1:1 threshold and can never fail (remove it or give it a real threshold).
 
+## Known gaps after Step 04
+- Location is free text with no normalization (case variants show as separate locations).
+- IP validation rules exist in two places (backend and frontend). While cross-checked against `shared/camera-validation-vectors.json`, frontend trimming (`String.prototype.trim()`) is stricter than Python `strip()` on certain non-ASCII whitespace characters (e.g. U+0085).
+- No sorting or pagination in camera table (deferred per design, displaying API order).
+- No polling until Step 08 (user must reload or perform actions to see updated status).
+
 ## For Step 13 (deploy)
 - The admin PC will reboot. The app must auto-start (Task Scheduler or a service wrapper) and resume monitoring state.
+- Add a Host-header check to the backend (reject unexpected Host values) as a hardening measure against browser-based requests to localhost.

@@ -106,6 +106,11 @@ Semantic typography utilities defined in `frontend/src/index.css`:
 | `--spacing-tight` | 8px | Button groups, icon gap, label gap, helper text, badge px, status gap | `gap-tight`, `space-y-tight`, `px-tight` |
 | `--spacing-popup-pad` | 4px | Select popup container padding | `p-popup-pad` |
 | `--spacing-item-gap` | 2px | Vertical gap between items in select popup list | `gap-item-gap` |
+| `--spacing-col-status` | 100px | Fixed column width: Status indicator & text | `w-col-status` |
+| `--spacing-col-ip` | 140px | Fixed column width: Longest IPv4 address | `w-col-ip` |
+| `--spacing-col-checked` | 170px | Fixed column width: Full ISO timestamp | `w-col-checked` |
+| `--spacing-col-actions` | 160px | Fixed column width: Edit & Delete button group | `w-col-actions` |
+| `--spacing-table-min` | 1080px | Minimum table width in horizontal scroll wrapper | `min-w-table-min` |
 
 ---
 
@@ -146,6 +151,7 @@ All color combinations must meet or exceed WCAG 2.1 AA contrast requirements (mi
 | `--primary-foreground`| `#ffffff` | `#ffffff` | Text on primary button/badge |
 | `--destructive` | `#c81e1e` | `#c81e1e` | Error / destructive fill |
 | `--destructive-foreground` | `#ffffff`| `#ffffff`| Text on destructive button/badge |
+| `--error` | `#c81e1e` | `#ef4444` | Form error text and invalid input borders (>= 4.5:1 text, >= 3:1 border) |
 | `--overlay` | `rgba(0,0,0,0.45)` | `rgba(0,0,0,0.70)` | Dialog modal backdrop |
 | `--status-online` | `#16a34a` | `#22c55e` | Reachable camera status dot |
 | `--status-offline` | `#dc2626` | `#ef4444` | Unreachable camera status dot |
@@ -165,7 +171,7 @@ Measured via automated headless browser tests (`frontend/e2e/contrast.spec.ts`) 
 | Button: Outline | `#09090b` | `#ffffff` | **19.9:1** | 4.5:1 | PASS |
 | Button: Outline (hover) | `#09090b` | `#f4f4f5` | **18.1:1** | 4.5:1 | PASS |
 | Button: Outline border | `#84848a` | `#ffffff` | **3.72:1** | 3:1 | PASS |
-| Button: Ghost | `#09090b` | `#ffffff` | **19.9:1** | 4.5:1 | PASS |
+| Button: Ghost | `#71717a` | `#ffffff` | **4.83:1** | 4.5:1 | PASS |
 | Button: Ghost (hover) | `#09090b` | `#f4f4f5` | **18.1:1** | 4.5:1 | PASS |
 | Button: Destructive | `#ffffff` | `#c81e1e` | **5.74:1** | 4.5:1 | PASS |
 | Button: Destructive (hover) | `#fae9e9` | `#c81e1e` | **4.89:1** | 4.5:1 | PASS |
@@ -176,22 +182,30 @@ Measured via automated headless browser tests (`frontend/e2e/contrast.spec.ts`) 
 | Input: Value text | `#09090b` | `#ffffff` | **19.9:1** | 4.5:1 | PASS |
 | Input: Placeholder text | `#71717a` | `#ffffff` | **4.83:1** | 4.5:1 | PASS |
 | Input: Border | `#84848a` | `#ffffff` | **3.72:1** | 3:1 | PASS |
+| Textarea: Value text | `#09090b` | `#ffffff` | **19.9:1** | 4.5:1 | PASS |
+| Textarea: Placeholder text | `#71717a` | `#ffffff` | **4.83:1** | 4.5:1 | PASS |
+| Textarea: Border | `#84848a` | `#ffffff` | **3.72:1** | 3:1 | PASS |
+| Form: Error text | `#c81e1e` | `#ffffff` | **5.74:1** | 4.5:1 | PASS |
+| Form: Invalid border | `#c81e1e` | `#ffffff` | **5.74:1** | 3:1 | PASS |
 | Select: Trigger text | `#09090b` | `#ffffff` | **19.9:1** | 4.5:1 | PASS |
 | Select: Trigger border | `#84848a` | `#ffffff` | **3.72:1** | 3:1 | PASS |
 | Select: Popup item text | `#09090b` | `#ffffff` | **19.9:1** | 4.5:1 | PASS |
 | Select: Popup item (highlighted) | `#09090b` | `#f4f4f5` | **18.1:1** | 4.5:1 | PASS |
 | Dialog: Trigger button | `#09090b` | `#ffffff` | **19.9:1** | 4.5:1 | PASS |
 | Dialog: Content text | `#71717a` | `#ffffff` | **4.83:1** | 4.5:1 | PASS |
+| Form: Error text (inside dialog) | `#c81e1e` | `#ffffff` | **5.74:1** | 4.5:1 | PASS |
 | Dialog: Overlay backdrop | `#8c8c8c` | `#ffffff` | **3.36:1** | 1:1 (Exempt) | PASS |
 | Typography: Foreground text | `#09090b` | `#ffffff` | **19.9:1** | 4.5:1 | PASS |
 | Typography: Muted-foreground text | `#71717a` | `#ffffff` | **4.83:1** | 4.5:1 | PASS |
 | Table: Header text | `#71717a` | `#ffffff` | **4.83:1** | 4.5:1 | PASS |
 | Table: Cell text | `#09090b` | `#ffffff` | **19.9:1** | 4.5:1 | PASS |
+| Table: Description cell text | `#09090b` | `#ffffff` | **19.9:1** | 4.5:1 | PASS |
 | Table: Row hover cell text | `#09090b` | `#f9f9fa` | **18.91:1** | 4.5:1 | PASS |
 | Navigation: Active link | `#09090b` | `#ffffff` | **19.9:1** | 4.5:1 | PASS |
 | Navigation: Inactive link | `#71717a` | `#ffffff` | **4.83:1** | 4.5:1 | PASS |
 | Focus Ring: Button | `#2358e1` | `#ffffff` | **5.91:1** | 3:1 | PASS |
 | Focus Ring: Input | `#2358e1` | `#ffffff` | **5.91:1** | 3:1 | PASS |
+| Textarea: Focus ring | `#2358e1` | `#ffffff` | **5.91:1** | 3:1 | PASS |
 | Focus Ring: Select | `#2358e1` | `#ffffff` | **5.91:1** | 3:1 | PASS |
 | Status: Online dot | `#16a34a` | `#ffffff` | **3.3:1** | 3:1 | PASS |
 | Status: Offline dot | `#dc2626` | `#ffffff` | **4.83:1** | 3:1 | PASS |
@@ -207,7 +221,7 @@ Measured via automated headless browser tests (`frontend/e2e/contrast.spec.ts`) 
 | Button: Outline | `#fafafa` | `#09090b` | **19.06:1** | 4.5:1 | PASS |
 | Button: Outline (hover) | `#fafafa` | `#27272a` | **14.27:1** | 4.5:1 | PASS |
 | Button: Outline border | `#5e5e66` | `#09090b` | **3.1:1** | 3:1 | PASS |
-| Button: Ghost | `#fafafa` | `#09090b` | **19.06:1** | 4.5:1 | PASS |
+| Button: Ghost | `#a1a1aa` | `#09090b` | **7.76:1** | 4.5:1 | PASS |
 | Button: Ghost (hover) | `#fafafa` | `#27272a` | **14.27:1** | 4.5:1 | PASS |
 | Button: Destructive | `#ffffff` | `#c81e1e` | **5.74:1** | 4.5:1 | PASS |
 | Button: Destructive (hover) | `#fae9e9` | `#c81e1e` | **4.89:1** | 4.5:1 | PASS |
@@ -218,22 +232,30 @@ Measured via automated headless browser tests (`frontend/e2e/contrast.spec.ts`) 
 | Input: Value text | `#fafafa` | `#09090b` | **19.06:1** | 4.5:1 | PASS |
 | Input: Placeholder text | `#a1a1aa` | `#09090b` | **7.76:1** | 4.5:1 | PASS |
 | Input: Border | `#5e5e66` | `#09090b` | **3.1:1** | 3:1 | PASS |
+| Textarea: Value text | `#fafafa` | `#09090b` | **19.06:1** | 4.5:1 | PASS |
+| Textarea: Placeholder text | `#a1a1aa` | `#09090b` | **7.76:1** | 4.5:1 | PASS |
+| Textarea: Border | `#5e5e66` | `#09090b` | **3.1:1** | 3:1 | PASS |
+| Form: Error text | `#ef4444` | `#09090b` | **5.29:1** | 4.5:1 | PASS |
+| Form: Invalid border | `#ef4444` | `#09090b` | **5.29:1** | 3:1 | PASS |
 | Select: Trigger text | `#fafafa` | `#09090b` | **19.06:1** | 4.5:1 | PASS |
 | Select: Trigger border | `#5e5e66` | `#09090b` | **3.1:1** | 3:1 | PASS |
 | Select: Popup item text | `#fafafa` | `#09090b` | **19.06:1** | 4.5:1 | PASS |
 | Select: Popup item (highlighted) | `#fafafa` | `#27272a` | **14.27:1** | 4.5:1 | PASS |
 | Dialog: Trigger button | `#fafafa` | `#09090b` | **19.06:1** | 4.5:1 | PASS |
 | Dialog: Content text | `#a1a1aa` | `#09090b` | **7.76:1** | 4.5:1 | PASS |
+| Form: Error text (inside dialog) | `#ef4444` | `#09090b` | **5.29:1** | 4.5:1 | PASS |
 | Dialog: Overlay backdrop | `#030303` | `#09090b` | **1.04:1** | 1:1 (Exempt) | PASS |
 | Typography: Foreground text | `#fafafa` | `#09090b` | **19.06:1** | 4.5:1 | PASS |
 | Typography: Muted-foreground text | `#a1a1aa` | `#09090b` | **7.76:1** | 4.5:1 | PASS |
 | Table: Header text | `#a1a1aa` | `#09090b` | **7.76:1** | 4.5:1 | PASS |
 | Table: Cell text | `#fafafa` | `#09090b` | **19.06:1** | 4.5:1 | PASS |
+| Table: Description cell text | `#fafafa` | `#09090b` | **19.06:1** | 4.5:1 | PASS |
 | Table: Row hover cell text | `#fafafa` | `#19191b` | **16.82:1** | 4.5:1 | PASS |
 | Navigation: Active link | `#fafafa` | `#09090b` | **19.06:1** | 4.5:1 | PASS |
 | Navigation: Inactive link | `#a1a1aa` | `#09090b` | **7.76:1** | 4.5:1 | PASS |
 | Focus Ring: Button | `#3b82f6` | `#09090b` | **5.41:1** | 3:1 | PASS |
 | Focus Ring: Input | `#3b82f6` | `#09090b` | **5.41:1** | 3:1 | PASS |
+| Textarea: Focus ring | `#3b82f6` | `#09090b` | **5.41:1** | 3:1 | PASS |
 | Focus Ring: Select | `#3b82f6` | `#09090b` | **5.41:1** | 3:1 | PASS |
 | Status: Online dot | `#22c55e` | `#09090b` | **8.73:1** | 3:1 | PASS |
 | Status: Offline dot | `#ef4444` | `#09090b` | **5.29:1** | 3:1 | PASS |

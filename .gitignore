@@ -27,6 +27,7 @@ htmlcov/
 
 # Local databases & runtime data
 backend/data/
+backend/.e2e-data/
 *.db
 *.db-wal
 *.db-shm
