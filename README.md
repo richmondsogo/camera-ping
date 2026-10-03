@@ -3,7 +3,7 @@
 Local network ICMP reachability monitor for Hikvision CCTV cameras running on an admin PC in the office server room.
 
 ## Status
-- **Phase**: Step 03 - Camera Model, Migration, and CRUD API
+- **Phase**: Step 04 - Dashboard Table, Camera CRUD UI, and Filters
 - **Foundation**: FastAPI (Backend) + React 19 / Vite / Tailwind CSS v4 (Frontend) + SQLite / Alembic
 
 ## Prerequisites
