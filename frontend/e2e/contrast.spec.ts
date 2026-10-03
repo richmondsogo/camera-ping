@@ -637,9 +637,11 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
     // Assert exact N pairs measured (non-vacuous: 46 pairs)
     expect(results.length).toBe(46);
 
-    console.log(formatResultsTable("Light", results));
-
     const failures = results.filter((r) => !r.pass);
+    if (process.env.CONTRAST_REPORT === "1" || failures.length > 0) {
+      console.log(formatResultsTable("Light", results));
+    }
+
     if (failures.length > 0) {
       console.warn(
         `[LIGHT MODE] ${failures.length} contrast failure(s) found.`
@@ -1024,9 +1026,11 @@ test.describe("WCAG 2.1 Contrast Measurements", () => {
     // Assert exact N pairs measured (non-vacuous: 46 pairs)
     expect(results.length).toBe(46);
 
-    console.log(formatResultsTable("Dark", results));
-
     const failures = results.filter((r) => !r.pass);
+    if (process.env.CONTRAST_REPORT === "1" || failures.length > 0) {
+      console.log(formatResultsTable("Dark", results));
+    }
+
     if (failures.length > 0) {
       console.warn(`[DARK MODE] ${failures.length} contrast failure(s) found.`);
     }
