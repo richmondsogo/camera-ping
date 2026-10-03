@@ -343,6 +343,29 @@ describe("mapServerErrors", () => {
     );
   });
 
+  it("handles loc items with numbers and strings and extra total_errors key without breaking mapServerErrors", () => {
+    const errorBody = {
+      detail: [
+        {
+          loc: ["file", 7, "ip_address"],
+          msg: "x",
+          type: "value_error",
+        },
+      ],
+      total_errors: 1,
+    };
+    const err = new ApiError({
+      kind: "http",
+      status: 422,
+      message: "x",
+      detail: errorBody.detail,
+      totalErrors: errorBody.total_errors,
+    });
+    const result = mapServerErrors(err);
+    expect(result.formError).toBeNull();
+    expect(result.fieldErrors.ip_address).toBe("x");
+  });
+
   it("maps unknown non-ApiError to generic error", () => {
     const result = mapServerErrors(new Error("Random failure"));
     expect(result.formError).toBe("An unexpected error occurred.");

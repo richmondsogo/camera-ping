@@ -157,3 +157,8 @@
   width: 480px;
   max-width: 90vw;
 }
+
+@utility w-dialog-wide {
+  width: 640px;
+  max-width: 90vw;
+}

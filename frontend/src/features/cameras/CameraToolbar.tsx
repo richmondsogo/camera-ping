@@ -1,5 +1,5 @@
-import { Plus, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Download, Plus, Search, Upload } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -12,6 +12,7 @@ import {
   ALL_LOCATIONS_VALUE,
   type StatusFilter,
 } from "@/features/cameras/utils";
+import { cn } from "@/lib/utils";
 
 export interface CameraToolbarProps {
   searchQuery: string;
@@ -25,6 +26,9 @@ export interface CameraToolbarProps {
   filteredCameras: number;
   onAddCamera: () => void;
   addCameraRef?: React.RefObject<HTMLButtonElement | null>;
+  onImportCameras?: () => void;
+  importRef?: React.RefObject<HTMLButtonElement | null>;
+  isExportDisabled?: boolean;
 }
 
 export function CameraToolbar({
@@ -39,6 +43,9 @@ export function CameraToolbar({
   filteredCameras,
   onAddCamera,
   addCameraRef,
+  onImportCameras,
+  importRef,
+  isExportDisabled = false,
 }: CameraToolbarProps) {
   const isControlsDisabled = totalCameras === 0;
   const cameraNoun = totalCameras === 1 ? "camera" : "cameras";
@@ -124,6 +131,43 @@ export function CameraToolbar({
         >
           {countLine}
         </span>
+
+        {/* Import Button */}
+        <Button
+          ref={importRef}
+          onClick={onImportCameras}
+          variant="outline"
+          size="default"
+          data-testid="import-cameras-toolbar-button"
+        >
+          <Upload className="size-4" />
+          <span>Import</span>
+        </Button>
+
+        {/* Export Button / Link */}
+        {isExportDisabled ? (
+          <Button
+            variant="outline"
+            size="default"
+            disabled
+            data-testid="export-cameras-toolbar-button"
+          >
+            <Download className="size-4" />
+            <span>Export</span>
+          </Button>
+        ) : (
+          <a
+            href="/api/cameras/export"
+            download
+            className={cn(
+              buttonVariants({ variant: "outline", size: "default" })
+            )}
+            data-testid="export-cameras-toolbar-button"
+          >
+            <Download className="size-4" />
+            <span>Export</span>
+          </a>
+        )}
 
         {/* Add Camera Button */}
         <Button

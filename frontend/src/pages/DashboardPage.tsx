@@ -1,9 +1,11 @@
 import * as React from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { CameraFormDialog } from "@/features/cameras/CameraFormDialog";
 import { CameraTable } from "@/features/cameras/CameraTable";
 import { CameraToolbar } from "@/features/cameras/CameraToolbar";
 import { DeleteCameraDialog } from "@/features/cameras/DeleteCameraDialog";
-import { useCameras } from "@/features/cameras/queries";
+import { ImportCamerasDialog } from "@/features/cameras/ImportCamerasDialog";
+import { CAMERAS_QUERY_KEY, useCameras } from "@/features/cameras/queries";
 import {
   filterCameras,
   getDistinctLocations,
@@ -12,6 +14,7 @@ import {
 import type { CameraRead } from "@/lib/schemas";
 
 export function DashboardPage() {
+  const queryClient = useQueryClient();
   const { data: cameras = [], isPending, isError, refetch } = useCameras();
 
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -27,12 +30,14 @@ export function DashboardPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [deleteDialogCamera, setDeleteDialogCamera] =
     React.useState<CameraRead | null>(null);
+  const [importDialogOpen, setImportDialogOpen] = React.useState(false);
 
   // Screen reader status announcement
   const [announcement, setAnnouncement] = React.useState("");
 
   // Focus management refs
   const addCameraRef = React.useRef<HTMLButtonElement | null>(null);
+  const importButtonRef = React.useRef<HTMLButtonElement | null>(null);
   const editButtonRefs = React.useRef<Map<number, HTMLButtonElement>>(
     new Map()
   );
@@ -142,6 +147,19 @@ export function DashboardPage() {
     }
   }, [formDialogCamera]);
 
+  const handleImportSuccess = React.useCallback(
+    async (count: number) => {
+      await queryClient.invalidateQueries({ queryKey: CAMERAS_QUERY_KEY });
+      const message =
+        count === 1 ? "1 camera imported." : `${count} cameras imported.`;
+      setAnnouncement(message);
+      restoreFocus(importButtonRef.current);
+    },
+    [queryClient, restoreFocus]
+  );
+
+  const isExportDisabled = isPending || isError || cameras.length === 0;
+
   return (
     <div className="flex flex-col gap-stack">
       {/* Screen Reader Live Region */}
@@ -170,6 +188,9 @@ export function DashboardPage() {
         filteredCameras={filteredCameras.length}
         onAddCamera={handleAddCamera}
         addCameraRef={addCameraRef}
+        onImportCameras={() => setImportDialogOpen(true)}
+        importRef={importButtonRef}
+        isExportDisabled={isExportDisabled}
       />
 
       <CameraTable
@@ -197,6 +218,14 @@ export function DashboardPage() {
         onOpenChange={handleDeleteDialogClose}
         camera={deleteDialogCamera}
         onSuccess={handleDeleteSuccess}
+      />
+
+      {/* Import Cameras Dialog */}
+      <ImportCamerasDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onSuccess={handleImportSuccess}
+        importButtonRef={importButtonRef}
       />
     </div>
   );

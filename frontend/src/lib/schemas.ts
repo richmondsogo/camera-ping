@@ -181,3 +181,40 @@ export const cameraFormSchema = z.object({
   ip_address: createIpAddressSchema(),
 });
 export type CameraFormData = z.infer<typeof cameraFormSchema>;
+
+/**
+ * Server error schemas supporting string or numeric loc paths and optional total_errors.
+ */
+export const apiErrorDetailItemSchema = z.object({
+  loc: z.array(z.union([z.string(), z.number()])),
+  msg: z.string(),
+  type: z.string(),
+});
+export type ApiErrorDetailItem = z.infer<typeof apiErrorDetailItemSchema>;
+
+export const apiErrorResponseSchema = z.object({
+  detail: z.union([z.string(), z.array(apiErrorDetailItemSchema)]),
+  total_errors: z.number().int().optional(),
+});
+export type ApiErrorResponse = z.infer<typeof apiErrorResponseSchema>;
+
+/**
+ * CSV Import response schemas.
+ */
+export const cameraImportPreviewSchema = z.object({
+  count: z.number().int().nonnegative(),
+  preview: z.array(
+    z.object({
+      camera_name: z.string(),
+      location: z.string(),
+      description: z.string(),
+      ip_address: z.string(),
+    })
+  ),
+});
+export type CameraImportPreview = z.infer<typeof cameraImportPreviewSchema>;
+
+export const cameraImportSuccessSchema = z.object({
+  imported: z.number().int().nonnegative(),
+});
+export type CameraImportSuccess = z.infer<typeof cameraImportSuccessSchema>;

@@ -1,6 +1,12 @@
+import path from "node:path";
 import { test, expect } from "@playwright/test";
+import { resetCameras } from "./helpers";
 
 test.describe("Camera Management & Dashboard CRUD", () => {
+  test.beforeEach(async () => {
+    await resetCameras();
+  });
+
   test("full CRUD flow: add, filter, edit, and delete cameras", async ({
     page,
   }) => {
@@ -251,5 +257,118 @@ test.describe("Camera Management & Dashboard CRUD", () => {
       );
     });
     expect(bodyHasNoOverflow).toBe(true);
+  });
+
+  test("import 30 cameras from CSV sample, verify table rows, count line, and export CSV file", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await expect(page).toHaveTitle(/Camera Monitor/);
+
+    // Initial 0 cameras, export button is disabled
+    const exportBtn = page.getByTestId("export-cameras-toolbar-button");
+    await expect(exportBtn).toBeDisabled();
+
+    // Click Import
+    const importBtn = page.getByTestId("import-cameras-toolbar-button");
+    await importBtn.click();
+
+    const importDialog = page.getByTestId("import-cameras-dialog");
+    await expect(importDialog).toBeVisible();
+
+    // Upload sample-cameras-30.csv
+    const sampleCsvPath = path.resolve(
+      __dirname,
+      "../../shared/sample-cameras-30.csv"
+    );
+    await page.getByTestId("csv-file-input").setInputFiles(sampleCsvPath);
+
+    // Preview appears
+    await expect(page.getByText("30 cameras will be added.")).toBeVisible();
+    const confirmBtn = page.getByRole("button", { name: /Import 30 cameras/i });
+    await expect(confirmBtn).toBeVisible();
+
+    // Confirm import
+    await confirmBtn.click();
+    await expect(importDialog).not.toBeVisible();
+
+    // Focus restored to import button
+    await expect(importBtn).toBeFocused();
+
+    // Table updates to 30 rows
+    await expect(page.getByTestId("camera-count-line")).toHaveText(
+      "Showing 30 of 30 cameras"
+    );
+    await expect(page.getByText("Office Floor 1 PTZ")).toBeVisible();
+    await expect(page.getByText("192.0.2.101")).toBeVisible();
+    await expect(page.getByText("192.0.2.130")).toBeVisible();
+
+    // Export button is now enabled
+    await expect(exportBtn).toBeEnabled();
+
+    // Download export
+    const downloadPromise = page.waitForEvent("download");
+    await exportBtn.click();
+    const download = await downloadPromise;
+
+    // Verify downloaded filename format: cameras-YYYY-MM-DD.csv
+    const downloadName = download.suggestedFilename();
+    expect(downloadName).toMatch(/^cameras-\d{4}-\d{2}-\d{2}\.csv$/);
+
+    // Read file contents
+    const stream = await download.createReadStream();
+    if (!stream) {
+      throw new Error("Failed to create read stream for downloaded file");
+    }
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) {
+      chunks.push(Buffer.from(chunk));
+    }
+    const exportedText = Buffer.concat(chunks).toString("utf-8");
+    const lines = exportedText.trim().split(/\r?\n/);
+    expect(lines[0]).toBe(
+      "camera_name,location,description,ip_address,status,last_checked,last_online"
+    );
+    // 1 header + 30 camera rows = 31 lines
+    expect(lines.length).toBe(31);
+  });
+
+  test("import CSV with validation errors displays error table and leaves inventory unchanged", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    const importBtn = page.getByTestId("import-cameras-toolbar-button");
+    await importBtn.click();
+
+    const importDialog = page.getByTestId("import-cameras-dialog");
+    await expect(importDialog).toBeVisible();
+
+    // Invalid CSV buffer: invalid IP format and missing name
+    const invalidCsv =
+      "camera_name,location,description,ip_address\n,Lobby,Entrance,not-an-ip\nValid Cam,Lobby,Desk,999.999.999.999";
+    await page.getByTestId("csv-file-input").setInputFiles({
+      name: "invalid.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from(invalidCsv),
+    });
+
+    // Error table displayed
+    await expect(page.getByTestId("import-error-view")).toBeVisible();
+    await expect(
+      page.getByText(/problems found\. Nothing was imported\./)
+    ).toBeVisible();
+    await expect(page.getByText("Invalid IP address format.")).toBeVisible();
+    await expect(page.getByTestId("import-confirm-button")).not.toBeVisible();
+
+    // Cancel import
+    await page.getByTestId("import-cancel-button").click();
+    await expect(importDialog).not.toBeVisible();
+
+    // Inventory remains unchanged (0 cameras)
+    await expect(page.getByTestId("empty-cameras-state")).toBeVisible();
+    await expect(page.getByTestId("camera-count-line")).toHaveText(
+      "Showing 0 of 0 cameras"
+    );
   });
 });
