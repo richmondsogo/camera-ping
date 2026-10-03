@@ -1,6 +1,10 @@
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { test, expect } from "@playwright/test";
 import { resetCameras } from "./helpers";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 test.describe("Camera Management & Dashboard CRUD", () => {
   test.beforeEach(async () => {
@@ -299,7 +303,7 @@ test.describe("Camera Management & Dashboard CRUD", () => {
     await expect(page.getByTestId("camera-count-line")).toHaveText(
       "Showing 30 of 30 cameras"
     );
-    await expect(page.getByText("Office Floor 1 PTZ")).toBeVisible();
+    await expect(page.getByText("Server Room Rack A")).toBeVisible();
     await expect(page.getByText("192.0.2.101")).toBeVisible();
     await expect(page.getByText("192.0.2.130")).toBeVisible();
 
@@ -358,7 +362,10 @@ test.describe("Camera Management & Dashboard CRUD", () => {
     await expect(
       page.getByText(/problems found\. Nothing was imported\./)
     ).toBeVisible();
-    await expect(page.getByText("Invalid IP address format.")).toBeVisible();
+    await expect(page.getByText("This field cannot be empty.")).toBeVisible();
+    await expect(
+      page.getByText("Enter a valid IPv4 address such as 192.168.1.64.").first()
+    ).toBeVisible();
     await expect(page.getByTestId("import-confirm-button")).not.toBeVisible();
 
     // Cancel import
