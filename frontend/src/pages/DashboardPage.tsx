@@ -11,11 +11,62 @@ import {
   getDistinctLocations,
   type StatusFilter,
 } from "@/features/cameras/utils";
+import { MonitoringPanel } from "@/features/monitoring/MonitoringPanel";
+import {
+  useMonitoringStatus,
+  useStartMonitoring,
+  useStopMonitoring,
+} from "@/features/monitoring/queries";
+import { countByStatus } from "@/features/monitoring/utils";
 import type { CameraRead } from "@/lib/schemas";
 
 export function DashboardPage() {
   const queryClient = useQueryClient();
-  const { data: cameras = [], isPending, isError, refetch } = useCameras();
+  const {
+    data: cameras = [],
+    isPending,
+    isError: isCamerasError,
+    dataUpdatedAt: camerasUpdatedAt,
+    refetch,
+  } = useCameras();
+
+  const {
+    data: monitoringStatus,
+    isError: isStatusError,
+    dataUpdatedAt: statusUpdatedAt,
+  } = useMonitoringStatus();
+
+  const startMutation = useStartMonitoring();
+  const stopMutation = useStopMonitoring();
+
+  const initialMountTime = React.useRef(Date.now()).current;
+  const lastSuccessTime = React.useMemo(() => {
+    const maxUpdated = Math.max(camerasUpdatedAt, statusUpdatedAt);
+    return maxUpdated > 0 ? maxUpdated : initialMountTime;
+  }, [camerasUpdatedAt, statusUpdatedAt, initialMountTime]);
+
+  const isConnectionLost = isCamerasError || isStatusError;
+  const counts = React.useMemo(() => countByStatus(cameras), [cameras]);
+
+  // Tab title: (N offline) Camera Monitor when offline > 0, else Camera Monitor. Restore on unmount.
+  React.useEffect(() => {
+    if (counts.offline > 0) {
+      document.title = `(${counts.offline} offline) Camera Monitor`;
+    } else {
+      document.title = "Camera Monitor";
+    }
+    return () => {
+      document.title = "Camera Monitor";
+    };
+  }, [counts.offline]);
+
+  const handleStart = React.useCallback(async () => {
+    await startMutation.mutateAsync();
+  }, [startMutation]);
+
+  const handleStop = React.useCallback(async () => {
+    await stopMutation.mutateAsync();
+  }, [stopMutation]);
 
   const [searchQuery, setSearchQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>("all");
@@ -164,7 +215,7 @@ export function DashboardPage() {
     setLocationFilter(null);
   }, []);
 
-  const isExportDisabled = isPending || isError || cameras.length === 0;
+  const isExportDisabled = isPending || isCamerasError || cameras.length === 0;
 
   return (
     <div className="flex flex-col gap-stack">
@@ -181,6 +232,19 @@ export function DashboardPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-page-title text-foreground">Dashboard</h1>
       </div>
+
+      <MonitoringPanel
+        status={monitoringStatus}
+        counts={counts}
+        isStarting={startMutation.isPending}
+        isStopping={stopMutation.isPending}
+        onStart={handleStart}
+        onStop={handleStop}
+        startError={startMutation.isError}
+        stopError={stopMutation.isError}
+        isConnectionLost={isConnectionLost}
+        lastSuccessTime={lastSuccessTime}
+      />
 
       <CameraToolbar
         searchQuery={searchQuery}
@@ -204,7 +268,7 @@ export function DashboardPage() {
         cameras={filteredCameras}
         totalCameras={cameras.length}
         isPending={isPending}
-        isError={isError}
+        isError={isCamerasError}
         onRetry={() => void refetch()}
         onEdit={handleEdit}
         onDelete={handleDelete}

@@ -15,6 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatLastChecked } from "@/features/cameras/utils";
+import { formatCheckCount } from "@/features/monitoring/utils";
 import type { CameraRead } from "@/lib/schemas";
 
 export interface CameraTableProps {
@@ -54,6 +55,11 @@ export function CameraTable({
                 ? "bg-status-offline"
                 : "bg-status-unknown";
           const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+          const failures = row.original.consecutive_failures;
+          const checkCountText =
+            status === "offline" && failures > 0
+              ? formatCheckCount(failures)
+              : null;
 
           return (
             <div className="flex items-center gap-tight whitespace-nowrap">
@@ -63,6 +69,15 @@ export function CameraTable({
                 aria-hidden="true"
               />
               <span data-slot="status-label">{statusLabel}</span>
+              {checkCountText && (
+                <span
+                  data-slot="status-failures"
+                  className="text-xs text-muted-foreground"
+                  title={`Failed ${failures} consecutive checks`}
+                >
+                  {checkCountText}
+                </span>
+              )}
             </div>
           );
         },
