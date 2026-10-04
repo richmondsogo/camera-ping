@@ -54,7 +54,6 @@ def create_camera(db: Session, camera_in: CameraCreate) -> Camera:
         last_checked=None,
         last_online=None,
         consecutive_failures=0,
-        alert_sent_for_current_outage=False,
         created_at=now,
         updated_at=now,
     )
@@ -117,7 +116,6 @@ def update_camera(db: Session, camera_id: int, camera_update: CameraUpdate) -> C
         camera.last_checked = None
         camera.last_online = None
         camera.consecutive_failures = 0
-        camera.alert_sent_for_current_outage = False
 
     if has_changes:
         camera.updated_at = clock.utc_now()
@@ -410,7 +408,6 @@ def commit_imported_cameras(db: Session, cameras_in: list[CameraCreate]) -> int:
             last_checked=None,
             last_online=None,
             consecutive_failures=0,
-            alert_sent_for_current_outage=False,
             created_at=now,
             updated_at=now,
         )

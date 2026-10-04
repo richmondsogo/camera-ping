@@ -4,7 +4,7 @@
 
 - Sequential pings do not scale. One check can take up to ~2s, so 30 unreachable cameras take up to ~60s, which equals the whole default check interval. The engine must ping concurrently.
 - On Windows, ping.exe can exit with code 0 when a router replies "Destination host unreachable". Exit code alone is not proof of reachability. Step 06 must test this on the real Windows machine and decide whether to also require "TTL=" in the output, and verify that works on non-English Windows.
-- The v1 script (cctv-ping.py) keeps its state in memory only. The new design persists failure streaks and alert state in the database so restarts do not lose them. The restart test (failure #7, restart, failure #8) proves this.
+- The v1 script (cctv-ping.py) keeps its state in memory only. The new design persists failure streaks in the database so restarts do not lose them. The restart test (failure #7, restart, failure #8) proves this.
 
 ## CSV-first import (Step 05)
 
@@ -43,7 +43,23 @@
 - Exported CSV is not directly re-importable without removing the last three columns (`status`, `last_checked`, `last_online`), as import strictly enforces the 4-column contract (`camera_name,location,description,ip_address`).
 - Formula injection risk on CSV export: fields beginning with `= + - @` are exported unescaped; if opened in Microsoft Excel, formulas could trigger warnings or execute if untrusted user input is exported.
 
+## Known gaps after Step 07
+
+- No recovered/outage history.
+- No notification of any kind, so the dashboard must be visible to be useful (consider tab-title offline count in Step 08).
+- If every camera fails in one cycle the admin PC's own network is the likely cause.
+
 ## For Step 13 (deploy)
 
 - The admin PC will reboot. The app must auto-start (Task Scheduler or a service wrapper) and resume monitoring state.
 - Add a Host-header check to the backend (reject unexpected Host values) as a hardening measure against browser-based requests to localhost.
+
+### Offline deployment (Step 13)
+
+- The admin PC has no internet, so install needs a prebuilt frontend (`pnpm build` on the dev PC), a pre-downloaded wheel folder (`pip download`), an offline Python installer, and auto-start; no network calls at runtime.
+
+### Office acceptance (Step 13)
+
+- Unplug one camera and verify Offline after a cycle.
+- Ping an unused camera-subnet address and a router-unreachable address, compare real ping.exe outputs, and replace the synthetic fixtures in `backend/tests/fixtures/ping` with real captures.
+

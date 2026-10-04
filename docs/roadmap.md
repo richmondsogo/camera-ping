@@ -6,12 +6,13 @@
 | 02 / 02b | design system & refinement | Base UI primitives, semantic spacing tokens, Tailwind v4 design tokens, and styleguide            | done   |
 | 03       | camera-api                 | Database foundation, Camera model, Alembic migrations, and REST CRUD API                          | done   |
 | 04       | dashboard-crud             | Camera table, add/edit modal form, delete confirmation, and client-side filtering                 | done   |
-| 05       | csv-import-export          | CSV upload validation, preview-and-confirm, and camera inventory export                           | done   |
-| 06       | ping-discovery             | Windows ping behavior, concurrent ICMP reachability spikes, and non-English Windows verification  | later  |
-| 07       | monitoring-engine          | Background scheduler, persistent failure streak tracking, and 10-failure alert trigger logic      | later  |
-| 08       | monitoring-ui              | Live monitoring controls (start/stop), cycle status indicators, and polling/refresh logic         | later  |
-| 09       | settings                   | Check interval, notification email address, and light/dark theme preference                       | later  |
-| 10       | email-discovery            | Microsoft email authentication, Graph API / SMTP discovery, and delivery credentials              | later  |
-| 11       | email-alerts               | Reliable outage notifications (single alert per outage episode) and failure handling              | later  |
-| 12       | e2e                        | Complete smoke and end-to-end integration test suite simulating camera states and alerts          | later  |
-| 13       | deploy                     | Admin PC deployment, single-port serving, autostart configuration, and runbook                    | later  |
+| 05       | csv-import-export          | CSV upload validation, preview-and-confirm, and camera inventory export                           | done        |
+| 06       | ping-discovery             | dropped: keep the v1 ping.exe method, no discovery needed                                         | dropped     |
+| 07       | monitoring-engine          | monitoring engine + status API                                                                    | in progress |
+| 08       | monitoring-ui              | monitoring-ui (Start/Stop buttons, summary, polling; API already exists)                          | later       |
+| 09       | settings                   | settings (check interval and theme only)                                                          | later       |
+| 10       | email-discovery            | dropped: no email, admin PC is offline                                                            | dropped     |
+| 11       | email-alerts               | dropped: no email, admin PC is offline                                                            | dropped     |
+| 12       | e2e                        | Complete smoke and end-to-end integration test suite simulating camera states                     | later       |
+| 13       | deploy                     | deploy (must work offline): admin PC deployment, single-port serving, and autostart               | later       |
+

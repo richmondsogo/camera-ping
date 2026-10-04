@@ -1,7 +1,8 @@
 # Agent Instructions & Project Conventions
 
 ## Architecture Summary
-Camera Monitor is a local web application built for an admin PC in an office server room. Its purpose is to monitor the reachability of local Hikvision network cameras via ICMP ping checks, display live statuses on a clean dashboard, and send an alert email upon reaching 10 consecutive check failures during an outage.
+Camera Monitor is a local web application built for an admin PC in an office server room. Its purpose is to monitor the reachability of local Hikvision network cameras via ICMP ping checks and display live statuses on a clean dashboard.
+
 
 The application has no external cloud runtime dependencies and operates entirely within the local office network.
 
@@ -55,6 +56,7 @@ All standard commands are executed from the repository root using Python:
 - **Database Access**: SQLAlchemy models and queries must use absolute SQLite paths configured via `settings.database_url`. Never use cwd-relative paths. Alembic migrations must always configure `render_as_batch=True`.
 - **API Boundaries**: Frontend communicates with `/api/*` through the Vite proxy in development. No CORS headers or direct host URLs hardcoded.
 - **Fixtures**: All test addresses must use reserved RFC 5737 documentation blocks (`192.0.2.0/24`). Never hardcode production IP addresses.
+- **Monitoring Engine**: Periodic ICMP pings run concurrently off the event loop (`ThreadPoolExecutor` max 32 workers). Probing interval is configured via `MONITOR_INTERVAL_SECONDS` (default 60s, min 10s). The engine's running state persists in SQLite (`monitoring_state`), automatically resuming on application restart if running prior to shutdown.
 
 ## Working Agreement
 1. **Strict Git Discipline**:
@@ -65,4 +67,5 @@ All standard commands are executed from the repository root using Python:
 2. **"Never claim done without pasting real check output"**: Every verification must be evidenced by pasting actual terminal output from the executed command.
 3. **"One step per conversation, plan first, wait for approval"**: Every fresh conversation starts by reading `AGENTS.md`, drafting a numbered plan, and awaiting explicit human approval before any files are modified.
 4. **"No features beyond the step's scope, name and ask instead"**: Do not speculate or implement ahead of the approved plan. If a feature or abstraction is noticed, name it and ask before building.
-5. **"Secrets never in source or database, env only"**: Credentials, email tokens, and secrets must live strictly in environment variables, never committed to source or written into SQLite database records.
+5. **"Secrets never in source or database, env only"**: Credentials and secrets must live strictly in environment variables, never committed to source or written into SQLite database records.
+

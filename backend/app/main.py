@@ -1,4 +1,4 @@
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -10,9 +10,13 @@ from sqlalchemy import Engine
 from alembic import command
 from app.api.cameras import router as cameras_router
 from app.api.health import router as health_router
+from app.api.monitoring import router as monitoring_router
 from app.config import BACKEND_DIR, Settings, settings
 from app.database import create_db_engine, create_sessionmaker
 from app.exceptions import CameraNotFoundError, DuplicateIpError
+from app.models.monitoring import MonitoringState
+from app.monitoring.engine import MonitoringEngine
+from app.monitoring.probe import ping_host
 
 
 @asynccontextmanager
@@ -20,7 +24,8 @@ async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
     """FastAPI application lifespan manager.
 
     Creates data directory on startup if using SQLite, runs Alembic migrations to head,
-    and cleanly disposes the database engine on shutdown.
+    resumes monitoring engine if previously running, cancels monitoring on shutdown
+    without mutating the persisted flag, and cleanly disposes the database engine.
     """
     app_settings: Settings = application.state.settings
 
@@ -49,20 +54,36 @@ async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
         )
         raise RuntimeError(msg) from e
 
+    session_factory = application.state.sessionmaker
+    with session_factory() as session:
+        state = session.get(MonitoringState, 1)
+        should_resume = state.running if state is not None else False
+
+    if should_resume:
+        await application.state.monitoring_engine.start()
+
     yield
+
+    await application.state.monitoring_engine.shutdown()
 
     engine: Engine = application.state.engine
     engine.dispose()
 
 
-def create_app(app_settings: Settings | None = None) -> FastAPI:
+def create_app(
+    app_settings: Settings | None = None,
+    pinger: Callable[[str], bool] | None = None,
+) -> FastAPI:
     """Application factory for Camera Monitor.
 
     Builds the database engine and sessionmaker, stores them on app.state,
-    registers routers, exception handlers, and the startup lifespan.
+    registers routers, exception handlers, engine, and startup lifespan.
     """
     if app_settings is None:
         app_settings = settings
+
+    if pinger is None:
+        pinger = ping_host
 
     application = FastAPI(
         title="Camera Monitor API",
@@ -72,10 +93,16 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
 
     engine = create_db_engine(app_settings.database_url)
     session_factory = create_sessionmaker(engine)
+    monitoring_engine = MonitoringEngine(
+        session_factory=session_factory,
+        pinger=pinger,
+        interval=app_settings.monitor_interval_seconds,
+    )
 
     application.state.settings = app_settings
     application.state.engine = engine
     application.state.sessionmaker = session_factory
+    application.state.monitoring_engine = monitoring_engine
 
     @application.exception_handler(CameraNotFoundError)
     async def camera_not_found_handler(
@@ -105,6 +132,7 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
 
     application.include_router(health_router)
     application.include_router(cameras_router)
+    application.include_router(monitoring_router)
 
     return application
 

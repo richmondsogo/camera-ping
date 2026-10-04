@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import StrEnum
 
-from sqlalchemy import Boolean, CheckConstraint, Integer, String, text
+from sqlalchemy import CheckConstraint, Integer, String, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base, UTCDateTime
@@ -32,11 +32,6 @@ class Camera(Base):
     consecutive_failures: Mapped[int] = mapped_column(
         Integer,
         CheckConstraint("consecutive_failures >= 0", name="consecutive_failures"),
-        server_default=text("0"),
-        nullable=False,
-    )
-    alert_sent_for_current_outage: Mapped[bool] = mapped_column(
-        Boolean,
         server_default=text("0"),
         nullable=False,
     )

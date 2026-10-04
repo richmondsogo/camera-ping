@@ -35,13 +35,19 @@ def test_migration_upgrade_downgrade_cycle(tmp_path: Path) -> None:
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
     tables = {row[0] for row in cursor.fetchall()}
     assert "cameras" in tables
+    assert "monitoring_state" in tables
     assert "alembic_version" in tables
+
+    # Verify initial monitoring_state seed row
+    cursor.execute("SELECT id, running FROM monitoring_state")
+    assert cursor.fetchall() == [(1, 0)]
 
     # 2. Downgrade to base
     command.downgrade(cfg, "base")
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
     tables_after_down = {row[0] for row in cursor.fetchall()}
     assert "cameras" not in tables_after_down
+    assert "monitoring_state" not in tables_after_down
     assert "alembic_version" in tables_after_down
 
     # 3. Upgrade to head again
@@ -49,6 +55,7 @@ def test_migration_upgrade_downgrade_cycle(tmp_path: Path) -> None:
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
     tables_again = {row[0] for row in cursor.fetchall()}
     assert "cameras" in tables_again
+    assert "monitoring_state" in tables_again
 
     conn.close()
 
@@ -81,12 +88,19 @@ def test_schema_drift(tmp_path: Path) -> None:
     cursor.execute(
         "SELECT sql FROM sqlite_master WHERE type='table' AND name='cameras'"
     )
-    create_sql = cursor.fetchone()[0]
+    create_cameras_sql = cursor.fetchone()[0]
+
+    cursor.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='monitoring_state'"
+    )
+    create_monitoring_sql = cursor.fetchone()[0]
     conn.close()
 
-    assert "CONSTRAINT uq_cameras_ip_address UNIQUE (ip_address)" in create_sql
-    assert "CONSTRAINT ck_cameras_status CHECK" in create_sql
-    assert "CONSTRAINT ck_cameras_consecutive_failures CHECK" in create_sql
+    assert "CONSTRAINT uq_cameras_ip_address UNIQUE (ip_address)" in create_cameras_sql
+    assert "CONSTRAINT ck_cameras_status CHECK" in create_cameras_sql
+    assert "CONSTRAINT ck_cameras_consecutive_failures CHECK" in create_cameras_sql
+
+    assert "CONSTRAINT ck_monitoring_state_id CHECK (id = 1)" in create_monitoring_sql
 
 
 def test_database_enforces_constraints(tmp_path: Path) -> None:
@@ -105,9 +119,9 @@ def test_database_enforces_constraints(tmp_path: Path) -> None:
     insert_sql = text("""
         INSERT INTO cameras (
             camera_name, location, description, ip_address, status,
-            consecutive_failures, alert_sent_for_current_outage, created_at, updated_at
+            consecutive_failures, created_at, updated_at
         ) VALUES (
-            :name, :loc, :desc, :ip, :status, :failures, :alert, :created, :updated
+            :name, :loc, :desc, :ip, :status, :failures, :created, :updated
         )
     """)
 
@@ -121,7 +135,6 @@ def test_database_enforces_constraints(tmp_path: Path) -> None:
             "ip": "192.0.2.10",
             "status": "unknown",
             "failures": 0,
-            "alert": 0,
             "created": now_iso,
             "updated": now_iso,
         },
@@ -139,7 +152,6 @@ def test_database_enforces_constraints(tmp_path: Path) -> None:
                 "ip": "192.0.2.10",
                 "status": "unknown",
                 "failures": 0,
-                "alert": 0,
                 "created": now_iso,
                 "updated": now_iso,
             },
@@ -158,7 +170,6 @@ def test_database_enforces_constraints(tmp_path: Path) -> None:
                 "ip": "192.0.2.11",
                 "status": "invalid_status",
                 "failures": 0,
-                "alert": 0,
                 "created": now_iso,
                 "updated": now_iso,
             },
@@ -177,11 +188,58 @@ def test_database_enforces_constraints(tmp_path: Path) -> None:
                 "ip": "192.0.2.12",
                 "status": "offline",
                 "failures": -1,
-                "alert": 0,
                 "created": now_iso,
                 "updated": now_iso,
             },
         )
+        session.commit()
+    session.rollback()
+
+    session.close()
+    engine.dispose()
+
+
+def test_monitoring_state_constraints(tmp_path: Path) -> None:
+    """Verify raw SQL operations enforce id = 1 CHECK and uniqueness."""
+    db_file = tmp_path / "monitoring_constraints.db"
+    db_url = f"sqlite:///{db_file.as_posix()}"
+    cfg = get_alembic_config(db_url)
+    command.upgrade(cfg, "head")
+
+    engine = create_db_engine(db_url)
+    session_factory = create_sessionmaker(engine)
+    session = session_factory()
+
+    # Initial row with id=1 was seeded by migration
+    row = session.execute(text("SELECT id, running FROM monitoring_state")).fetchone()
+    assert row == (1, 0)
+
+    # 1. Attempt to insert row with id != 1 must fail CHECK constraint
+    with pytest.raises(IntegrityError, match="CHECK constraint failed"):
+        session.execute(
+            text("INSERT INTO monitoring_state (id, running) VALUES (2, 0)")
+        )
+        session.commit()
+    session.rollback()
+
+    with pytest.raises(IntegrityError, match="CHECK constraint failed"):
+        session.execute(
+            text("INSERT INTO monitoring_state (id, running) VALUES (0, 0)")
+        )
+        session.commit()
+    session.rollback()
+
+    # 2. Attempt to insert a second row with id = 1 must fail PRIMARY KEY / UNIQUE
+    with pytest.raises(IntegrityError, match="UNIQUE constraint failed"):
+        session.execute(
+            text("INSERT INTO monitoring_state (id, running) VALUES (1, 1)")
+        )
+        session.commit()
+    session.rollback()
+
+    # 3. Attempt to update id away from 1 must fail CHECK constraint
+    with pytest.raises(IntegrityError, match="CHECK constraint failed"):
+        session.execute(text("UPDATE monitoring_state SET id = 2 WHERE id = 1"))
         session.commit()
     session.rollback()
 

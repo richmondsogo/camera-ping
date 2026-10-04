@@ -1,6 +1,8 @@
 # Camera Monitor MVP: Build Plan
 
-**Status:** Planning complete
+**Status:** Planning complete (Amended Step 07)
+
+> **Amended (Step 07):** The admin PC in the office server room has no internet access. The owner checks the dashboard manually on-site. All email, notification, and Microsoft email/alert machinery has been dropped. The 10-consecutive-failures alert trigger and `alert_sent_for_current_outage` column are removed. Consecutive failure counting (`consecutive_failures`) and restart persistence are retained for display on the dashboard.
 
 **Purpose:** Canonical scope and execution plan for the Camera Monitor MVP.
 
@@ -164,7 +166,6 @@ Camera
 ├── last_checked
 ├── last_online
 ├── consecutive_failures
-├── alert_sent_for_current_outage
 ├── created_at
 └── updated_at
 ```
@@ -190,10 +191,9 @@ last_online
 
 ```text
 consecutive_failures
-alert_sent_for_current_outage
 ```
 
-The internal monitoring fields exist only to make the monitoring and alert rules reliable, including across application restarts.
+The internal monitoring field tracks failure streaks reliably across application restarts.
 
 ### Inventory scope
 
@@ -231,8 +231,6 @@ Ping all cameras concurrently
 Persist results
    ↓
 Evaluate failure streaks
-   ↓
-Trigger alert when required
 ```
 
 ## Monitoring definition
@@ -261,32 +259,14 @@ Ping succeeds
 → status = Online
 → consecutive_failures = 0
 → last_online = now
-→ current outage alert state is cleared
 
 Ping fails
 → status = Offline
 → consecutive_failures += 1
 
-Failure #10
-→ send one email
-→ mark alert as sent for the current outage
-
-Further failures during the same outage
-→ no additional emails
-
 Successful ping after an outage
-→ reset failure streak
-→ clear current outage alert state
-→ a future outage can trigger another alert
+→ reset failure streak (consecutive_failures = 0)
 ```
-
-### Alert rule
-
-A camera generates an alert only when it reaches **10 consecutive failed checks**.
-
-The system sends **one email per outage episode**.
-
-The MVP does not send recovery emails.
 
 ### Start and stop
 
@@ -471,7 +451,7 @@ Users may not directly edit:
 - Last Checked
 - Last Online
 - Consecutive Failures
-- Alert State
+
 
 ### Delete
 
@@ -540,9 +520,6 @@ Only the required settings are included in the MVP.
 Monitoring
 └── Check interval
 
-Notifications
-└── Notification email
-
 Appearance
 └── Light / Dark
 ```
@@ -555,10 +532,6 @@ The scheduler uses the saved interval when monitoring is running.
 
 The exact allowed interval range and UI control can be finalized during implementation, but the MVP should keep this intentionally simple rather than exposing arbitrary scheduling rules.
 
-### Notification email
-
-Settings must allow the destination email address for outage notifications to be changed.
-
 ### Appearance
 
 Provide light and dark modes using the same design system and component styling.
@@ -567,23 +540,7 @@ No additional personalization is required.
 
 ---
 
-# 9. Microsoft Email Alerts
-
-The backend owns email delivery.
-
-The office uses Microsoft email.
-
-Email secrets, credentials, tokens, or other sensitive configuration must never be hard-coded into source code or stored in ordinary application records.
-
-They belong in protected deployment/environment configuration.
-
-The exact Microsoft authentication and mail-delivery mechanism is an implementation/discovery decision and must be verified before the notification feature is built.
-
-The builder must not invent or assume an authentication flow without documenting the chosen approach in an ADR.
-
----
-
-# 10. Integration and E2E Testing
+# 9. Integration and E2E Testing
 
 Testing must prove the application's behavior without depending on the real office cameras.
 
@@ -615,43 +572,14 @@ All cameras are checked
 Statuses update
 ```
 
-## Ten-failure alert flow
+## Failure streak and recovery flow
 
 ```text
 Offline
-× 1
-× 2
-...
-× 9
-× 10
-→ exactly one email
-```
-
-## Continued outage flow
-
-```text
-Offline
-× many
-→ still exactly one email
-```
-
-## Recovery/reset flow
-
-```text
-Offline
-→ failure streak increases
+→ failure streak increases (consecutive_failures += 1)
 
 Online
-→ failure streak resets
-→ alert state clears
-```
-
-## New outage flow
-
-```text
-Offline again
-× 10
-→ another email
+→ failure streak resets (consecutive_failures = 0)
 ```
 
 ## Restart persistence flow
@@ -670,18 +598,15 @@ A green type checker or test suite does not prove the UI is correct.
 
 ---
 
-# 11. Final Acceptance Test on the Actual Office Network
+# 10. Final Acceptance Test on the Actual Office Network
 
 Real camera IP addresses are intentionally introduced only at the final deployment/test stage.
 
 Deployment flow:
-
 ```text
 Admin PC in server room
           ↓
 Install application
-          ↓
-Configure Microsoft email
           ↓
 Import real camera CSV
           ↓
@@ -701,10 +626,9 @@ The final test must verify at minimum:
 3. Last Checked timestamps update correctly.
 4. Start and Stop work correctly.
 5. The configured interval is respected.
-6. An intentionally unreachable camera reaches the 10-consecutive-failure threshold.
-7. Exactly one notification email is sent for that outage.
-8. Continued outage does not produce duplicate emails.
-9. Restoring reachability resets the failure streak.
+6. Failure streak persists across a restart (failure #7, restart, failure #8).
+7. Unplug one camera and see it Offline after the next cycle.
+8. Restoring reachability resets the failure streak to 0.
 
 This is the final acceptance boundary between development and operational deployment.
 
@@ -742,7 +666,7 @@ If implementation depends on an unfamiliar, fragile, or externally controlled be
 
 Examples for this project include:
 
-- Microsoft email authentication/delivery
+- Windows ping command output across locales
 - shadcn/Base UI component availability and MCP usage
 - Browser behavior that cannot be reliably inferred
 - Any other external integration whose behavior needs real evidence
@@ -779,7 +703,7 @@ Features not explicitly included in this plan do not enter the MVP implicitly.
 Do not add:
 
 - Authentication/roles
-- Additional notification types
+- Notification types or emails
 - Recovery emails
 - Historical monitoring analytics
 - RTSP/video verification
@@ -805,7 +729,6 @@ Examples likely to require ADRs:
 
 - Database/runtime architecture
 - Scheduler/monitoring architecture
-- Microsoft email delivery mechanism
 - Frontend/backend boundary
 - Any decision that materially changes the operational or deployment model
 
@@ -825,6 +748,6 @@ A step log records what actually happened, including discoveries, deviations, ve
 
 The MVP is complete when the following is true:
 
-> An operator on the admin PC can maintain a camera inventory, import real camera IPs from the documented CSV format, start and stop periodic ICMP monitoring, see current camera status and timestamps in a clean dashboard, configure the monitoring interval and notification email, and receive exactly one email when a camera remains unreachable for 10 consecutive checks.
+> An operator on the admin PC can maintain a camera inventory, import real camera IPs from the documented CSV format, start and stop periodic ICMP monitoring, see current camera status and timestamps in a clean dashboard, and configure the monitoring interval and theme.
 
 Everything else is outside the MVP unless explicitly added through a documented scope decision.

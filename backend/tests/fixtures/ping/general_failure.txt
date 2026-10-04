@@ -1,0 +1,5 @@
+Pinging 192.0.2.10 with 32 bytes of data:
+General failure.
+
+Ping statistics for 192.0.2.10:
+    Packets: Sent = 1, Received = 0, Lost = 1 (100% loss),
