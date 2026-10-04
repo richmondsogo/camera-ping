@@ -8,8 +8,8 @@
 | 04       | dashboard-crud             | Camera table, add/edit modal form, delete confirmation, and client-side filtering                 | done   |
 | 05       | csv-import-export          | CSV upload validation, preview-and-confirm, and camera inventory export                           | done        |
 | 06       | ping-discovery             | dropped: keep the v1 ping.exe method, no discovery needed                                         | dropped     |
-| 07       | monitoring-engine          | monitoring engine + status API                                                                    | in progress |
-| 08       | monitoring-ui              | monitoring-ui (Start/Stop buttons, summary, polling; API already exists)                          | later       |
+| 07       | monitoring-engine          | monitoring engine + status API                                                                    | done   |
+| 08       | monitoring-ui              | monitoring-ui (Start/Stop buttons, summary, polling; API already exists)                          | done   |
 | 09       | settings                   | settings (check interval and theme only)                                                          | later       |
 | 10       | email-discovery            | dropped: no email, admin PC is offline                                                            | dropped     |
 | 11       | email-alerts               | dropped: no email, admin PC is offline                                                            | dropped     |

@@ -43,11 +43,12 @@
 - Exported CSV is not directly re-importable without removing the last three columns (`status`, `last_checked`, `last_online`), as import strictly enforces the 4-column contract (`camera_name,location,description,ip_address`).
 - Formula injection risk on CSV export: fields beginning with `= + - @` are exported unescaped; if opened in Microsoft Excel, formulas could trigger warnings or execute if untrusted user input is exported.
 
-## Known gaps after Step 07
+## Known gaps after Step 07 & 08
 
-- No recovered/outage history.
-- No notification of any kind, so the dashboard must be visible to be useful (consider tab-title offline count in Step 08).
-- If every camera fails in one cycle the admin PC's own network is the likely cause.
+- No recovered/outage history (deferred).
+- Live browser tab title with offline count implemented in Step 08 (`(N offline) Camera Monitor`).
+- Future alert enhancement idea: optional audible alert (Web Audio API or audio beep) when a camera transitions from online to offline while dashboard is open.
+- If every camera fails in one cycle the admin PC's own network is the likely cause (all-offline banner added in Step 08).
 
 ## For Step 13 (deploy)
 
