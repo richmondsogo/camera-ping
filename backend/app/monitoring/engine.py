@@ -6,7 +6,6 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker

@@ -10,6 +10,7 @@ from sqlalchemy import Engine
 from alembic import command
 from app.api.cameras import router as cameras_router
 from app.api.health import router as health_router
+from app.api.monitoring import router as monitoring_router
 from app.config import BACKEND_DIR, Settings, settings
 from app.database import create_db_engine, create_sessionmaker
 from app.exceptions import CameraNotFoundError, DuplicateIpError
@@ -131,6 +132,7 @@ def create_app(
 
     application.include_router(health_router)
     application.include_router(cameras_router)
+    application.include_router(monitoring_router)
 
     return application
 
