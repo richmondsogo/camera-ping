@@ -1,40 +1,46 @@
 import { z } from "zod";
 import {
+  apiErrorResponseSchema,
+  cameraImportPreviewSchema,
+  cameraImportSuccessSchema,
   cameraListSchema,
   cameraReadSchema,
+  type ApiErrorDetailItem,
   type Camera,
   type CameraFormData,
+  type CameraImportPreview,
+  type CameraImportSuccess,
 } from "./schemas";
 
 export type ApiErrorKind = "network" | "server" | "http" | "invalid-response";
 
-export interface ApiErrorDetailItem {
-  loc: string[];
-  msg: string;
-  type: string;
-}
+export type { ApiErrorDetailItem };
 
 export class ApiError extends Error {
   readonly kind: ApiErrorKind;
   readonly status: number;
   readonly detail: string | ApiErrorDetailItem[] | null;
+  readonly totalErrors?: number;
 
   constructor({
     kind,
     status,
     message,
     detail = null,
+    totalErrors,
   }: {
     kind: ApiErrorKind;
     status: number;
     message: string;
     detail?: string | ApiErrorDetailItem[] | null;
+    totalErrors?: number;
   }) {
     super(message);
     this.name = "ApiError";
     this.kind = kind;
     this.status = status;
     this.detail = detail;
+    this.totalErrors = totalErrors;
   }
 }
 
@@ -46,7 +52,18 @@ export async function apiRequest<T>(
   let res: Response;
   try {
     res = await fetch(url, options);
-  } catch {
+  } catch (err) {
+    if (
+      (err instanceof Error &&
+        (err.name === "NotReadableError" ||
+          err.message.includes("NotReadableError"))) ||
+      (typeof err === "object" &&
+        err !== null &&
+        "name" in err &&
+        (err as { name: string }).name === "NotReadableError")
+    ) {
+      throw err;
+    }
     throw new ApiError({
       kind: "network",
       status: 0,
@@ -94,8 +111,20 @@ export async function apiRequest<T>(
 
     let detail: string | ApiErrorDetailItem[] | null = null;
     let message = "Request failed.";
+    let totalErrors: number | undefined;
 
-    if (
+    const errorParse = apiErrorResponseSchema.safeParse(parsedJson);
+    if (errorParse.success) {
+      const d = errorParse.data.detail;
+      totalErrors = errorParse.data.total_errors;
+      if (typeof d === "string") {
+        detail = d;
+        message = d;
+      } else if (Array.isArray(d)) {
+        detail = d;
+        message = d.map((item) => item.msg).join("; ");
+      }
+    } else if (
       parsedJson &&
       typeof parsedJson === "object" &&
       "detail" in parsedJson
@@ -106,7 +135,16 @@ export async function apiRequest<T>(
         message = d;
       } else if (Array.isArray(d)) {
         detail = d as ApiErrorDetailItem[];
-        message = d.map((item) => item.msg).join("; ");
+        message = (d as { msg?: string }[])
+          .map((item) => item.msg ?? "Invalid value")
+          .join("; ");
+      }
+      if (
+        "total_errors" in parsedJson &&
+        typeof (parsedJson as { total_errors?: unknown }).total_errors ===
+          "number"
+      ) {
+        totalErrors = (parsedJson as { total_errors: number }).total_errors;
       }
     }
 
@@ -115,6 +153,7 @@ export async function apiRequest<T>(
       status: res.status,
       message,
       detail,
+      totalErrors,
     });
   }
 
@@ -166,4 +205,30 @@ export const api = {
 
   deleteCamera: (id: number): Promise<void> =>
     apiRequest(`/api/cameras/${id}`, { method: "DELETE" }),
+
+  importCameras: async (
+    file: File,
+    dryRun: boolean
+  ): Promise<CameraImportPreview | CameraImportSuccess> => {
+    if (dryRun) {
+      return apiRequest<CameraImportPreview>(
+        "/api/cameras/import?dry_run=true",
+        {
+          method: "POST",
+          headers: { "Content-Type": "text/csv" },
+          body: file,
+        },
+        cameraImportPreviewSchema
+      );
+    }
+    return apiRequest<CameraImportSuccess>(
+      "/api/cameras/import?dry_run=false",
+      {
+        method: "POST",
+        headers: { "Content-Type": "text/csv" },
+        body: file,
+      },
+      cameraImportSuccessSchema
+    );
+  },
 };

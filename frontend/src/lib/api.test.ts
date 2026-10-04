@@ -159,4 +159,36 @@ describe("api and ApiError", () => {
     const result = await api.getCamera(1);
     expect(result).toEqual(validCamera);
   });
+
+  it("handles loc items that are string or number and preserves total_errors without breaking mapServerErrors", async () => {
+    const errorBody = {
+      detail: [
+        {
+          loc: ["file", 7, "ip_address"],
+          msg: "x",
+          type: "value_error",
+        },
+      ],
+      total_errors: 1,
+    };
+
+    global.fetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(errorBody), {
+        status: 422,
+        headers: { "Content-Type": "application/json" },
+      })
+    );
+
+    let caughtError: ApiError | null = null;
+    try {
+      await api.listCameras();
+    } catch (err) {
+      caughtError = err as ApiError;
+    }
+
+    expect(caughtError).not.toBeNull();
+    expect(caughtError?.status).toBe(422);
+    expect(caughtError?.totalErrors).toBe(1);
+    expect(caughtError?.detail).toEqual(errorBody.detail);
+  });
 });

@@ -32,6 +32,11 @@
   --spacing-col-actions: 160px;
   --spacing-table-min: 1080px;
 
+  --spacing-trigger-status: 160px;
+  --spacing-trigger-location: 200px;
+  --spacing-select-indicator: 16px;
+  --spacing-popup-max: 360px;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
@@ -155,5 +160,10 @@
 
 @utility w-dialog {
   width: 480px;
+  max-width: 90vw;
+}
+
+@utility w-dialog-wide {
+  width: 640px;
   max-width: 90vw;
 }

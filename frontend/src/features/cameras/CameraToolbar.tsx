@@ -1,5 +1,6 @@
-import { Plus, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import * as React from "react";
+import { Download, Plus, Search, Upload } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -12,6 +13,17 @@ import {
   ALL_LOCATIONS_VALUE,
   type StatusFilter,
 } from "@/features/cameras/utils";
+import { cn } from "@/lib/utils";
+
+const STATUS_SELECT_ITEMS: ReadonlyArray<{
+  value: StatusFilter;
+  label: string;
+}> = [
+  { value: "all", label: "All Statuses" },
+  { value: "online", label: "Online" },
+  { value: "offline", label: "Offline" },
+  { value: "unknown", label: "Unknown" },
+];
 
 export interface CameraToolbarProps {
   searchQuery: string;
@@ -25,6 +37,10 @@ export interface CameraToolbarProps {
   filteredCameras: number;
   onAddCamera: () => void;
   addCameraRef?: React.RefObject<HTMLButtonElement | null>;
+  onImportCameras?: () => void;
+  importRef?: React.RefObject<HTMLButtonElement | null>;
+  isExportDisabled?: boolean;
+  onClearFilters?: () => void;
 }
 
 export function CameraToolbar({
@@ -39,40 +55,70 @@ export function CameraToolbar({
   filteredCameras,
   onAddCamera,
   addCameraRef,
+  onImportCameras,
+  importRef,
+  isExportDisabled = false,
+  onClearFilters,
 }: CameraToolbarProps) {
   const isControlsDisabled = totalCameras === 0;
   const cameraNoun = totalCameras === 1 ? "camera" : "cameras";
   const countLine = `Showing ${filteredCameras} of ${totalCameras} ${cameraNoun}`;
 
-  return (
-    <div
-      data-slot="camera-toolbar"
-      className="flex flex-col gap-toolbar sm:flex-row sm:items-center sm:justify-between"
-    >
-      <div className="flex flex-1 flex-wrap items-center gap-inline">
-        {/* Search Input */}
-        <div className="relative min-w-48 max-w-xs flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search cameras..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            disabled={isControlsDisabled}
-            className="pl-9"
-            aria-label="Search cameras"
-            data-testid="camera-search-input"
-          />
-        </div>
+  const searchInputRef = React.useRef<HTMLInputElement | null>(null);
 
-        {/* Status Filter */}
-        <div className="w-36">
+  const hasActiveFilters =
+    searchQuery.trim().length > 0 ||
+    statusFilter !== "all" ||
+    locationFilter !== null;
+
+  const handleClearFilters = React.useCallback(() => {
+    onSearchChange("");
+    onStatusChange("all");
+    onLocationChange(null);
+    onClearFilters?.();
+    searchInputRef.current?.focus();
+  }, [onSearchChange, onStatusChange, onLocationChange, onClearFilters]);
+
+  const locationSelectItems = React.useMemo(
+    () => [
+      { value: ALL_LOCATIONS_VALUE, label: "All Locations" },
+      ...distinctLocations.map((loc) => ({ value: loc, label: loc })),
+    ],
+    [distinctLocations]
+  );
+
+  return (
+    <div className="flex flex-col gap-tight">
+      <div
+        data-slot="camera-toolbar"
+        className="flex flex-wrap items-center justify-between gap-inline"
+      >
+        <div className="flex flex-wrap items-center gap-inline">
+          {/* Search Input */}
+          <div className="relative min-w-48 max-w-xs flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search cameras..."
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              disabled={isControlsDisabled}
+              className="pl-9"
+              aria-label="Search cameras"
+              data-testid="camera-search-input"
+            />
+          </div>
+
+          {/* Status Filter */}
           <Select
+            items={STATUS_SELECT_ITEMS}
             value={statusFilter}
             onValueChange={(val) => onStatusChange(val as StatusFilter)}
             disabled={isControlsDisabled}
           >
             <SelectTrigger
+              className="w-trigger-status"
               aria-label="Filter by status"
               data-testid="status-filter-trigger"
             >
@@ -85,11 +131,10 @@ export function CameraToolbar({
               <SelectItem value="unknown">Unknown</SelectItem>
             </SelectContent>
           </Select>
-        </div>
 
-        {/* Location Filter */}
-        <div className="w-40">
+          {/* Location Filter */}
           <Select
+            items={locationSelectItems}
             value={
               locationFilter === null ? ALL_LOCATIONS_VALUE : locationFilter
             }
@@ -99,6 +144,7 @@ export function CameraToolbar({
             disabled={isControlsDisabled}
           >
             <SelectTrigger
+              className="w-trigger-location"
               aria-label="Filter by location"
               data-testid="location-filter-trigger"
             >
@@ -113,30 +159,80 @@ export function CameraToolbar({
               ))}
             </SelectContent>
           </Select>
+
+          {/* Clear Filters Button */}
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="default"
+              onClick={handleClearFilters}
+              data-testid="clear-filters-toolbar-button"
+            >
+              Clear filters
+            </Button>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-tight">
+          {/* Import Button */}
+          <Button
+            ref={importRef}
+            onClick={onImportCameras}
+            variant="outline"
+            size="default"
+            data-testid="import-cameras-toolbar-button"
+          >
+            <Upload className="size-4" />
+            <span>Import</span>
+          </Button>
+
+          {/* Export Button / Link */}
+          {isExportDisabled ? (
+            <Button
+              variant="outline"
+              size="default"
+              disabled
+              data-testid="export-cameras-toolbar-button"
+            >
+              <Download className="size-4" />
+              <span>Export</span>
+            </Button>
+          ) : (
+            <a
+              href="/api/cameras/export"
+              download
+              className={cn(
+                buttonVariants({ variant: "outline", size: "default" })
+              )}
+              data-testid="export-cameras-toolbar-button"
+            >
+              <Download className="size-4" />
+              <span>Export</span>
+            </a>
+          )}
+
+          {/* Add Camera Button */}
+          <Button
+            ref={addCameraRef}
+            onClick={onAddCamera}
+            variant="default"
+            size="default"
+            data-testid="add-camera-toolbar-button"
+          >
+            <Plus className="size-4" />
+            <span>Add Camera</span>
+          </Button>
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-inline sm:justify-end">
-        {/* Count Line */}
-        <span
-          className="text-sm text-muted-foreground whitespace-nowrap"
-          data-testid="camera-count-line"
-        >
-          {countLine}
-        </span>
-
-        {/* Add Camera Button */}
-        <Button
-          ref={addCameraRef}
-          onClick={onAddCamera}
-          variant="default"
-          size="default"
-          data-testid="add-camera-toolbar-button"
-        >
-          <Plus className="size-4" />
-          <span>Add Camera</span>
-        </Button>
-      </div>
+      {/* Count Line */}
+      <p
+        aria-live="polite"
+        className="text-sm text-muted-foreground"
+        data-testid="camera-count-line"
+      >
+        {countLine}
+      </p>
     </div>
   );
 }

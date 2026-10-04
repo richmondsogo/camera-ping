@@ -80,10 +80,16 @@ const SEED_DESCRIPTIONS = [
   "Overhead wide-angle monitoring of employee entrance and vehicle checkpoint.",
 ];
 
+export const LONG_SEED_LOCATION =
+  "Perimeter West Boundary - Critical Infrastructure Sector 9 Storage Vault";
+
 export function generateSeedCameras(count: number): SeedCameraPayload[] {
   const cameras: SeedCameraPayload[] = [];
   for (let i = 1; i <= count; i++) {
-    const loc = SEED_LOCATIONS[(i - 1) % SEED_LOCATIONS.length];
+    const loc =
+      i === 30
+        ? LONG_SEED_LOCATION
+        : SEED_LOCATIONS[(i - 1) % SEED_LOCATIONS.length];
     const desc = SEED_DESCRIPTIONS[(i - 1) % SEED_DESCRIPTIONS.length];
     cameras.push({
       camera_name: `Camera ${String(i).padStart(2, "0")} - ${loc}`,

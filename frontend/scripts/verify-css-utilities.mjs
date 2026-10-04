@@ -69,7 +69,7 @@ const colorRoleUtils = ["text-error", "border-error"];
 
 const regexes = [
   /\b((?:p|px|py|pt|pr|pb|pl|m|mx|my|mt|mr|mb|ml|gap|gap-x|gap-y|h|w|min-h|max-h|min-w|max-w)-([a-z0-9-]+))\b/g,
-  /\b(w-dialog)\b/g,
+  /\b(w-dialog|w-dialog-wide)\b/g,
 ];
 
 for (const file of srcFiles) {
@@ -83,7 +83,7 @@ for (const file of srcFiles) {
           usedUtils.add(util);
         }
       }
-      if (util === "w-dialog") {
+      if (util === "w-dialog" || util === "w-dialog-wide") {
         usedUtils.add(util);
       }
     }

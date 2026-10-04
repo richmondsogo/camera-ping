@@ -111,6 +111,10 @@ Semantic typography utilities defined in `frontend/src/index.css`:
 | `--spacing-col-checked` | 170px | Fixed column width: Full ISO timestamp | `w-col-checked` |
 | `--spacing-col-actions` | 160px | Fixed column width: Edit & Delete button group | `w-col-actions` |
 | `--spacing-table-min` | 1080px | Minimum table width in horizontal scroll wrapper | `min-w-table-min` |
+| `--spacing-trigger-status` | 160px | Status select trigger width | `w-trigger-status` |
+| `--spacing-trigger-location` | 200px | Location select trigger width | `w-trigger-location` |
+| `--spacing-select-indicator` | 16px | Select item check indicator slot width | `w-select-indicator`, `h-select-indicator` |
+| `--spacing-popup-max` | 360px | Select popup maximum width | `max-w-popup-max` |
 
 ---
 

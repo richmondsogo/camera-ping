@@ -7,3 +7,7 @@ class CameraNotFoundError(Exception):
 
 class DuplicateIpError(Exception):
     """Raised when a camera IP address already exists."""
+
+
+class ImportConflictError(Exception):
+    """Raised when an IP conflict occurs while committing imported cameras."""

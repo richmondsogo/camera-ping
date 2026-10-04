@@ -1,11 +1,13 @@
 # Notes for later steps
 
 ## For Step 06 (ping discovery) and Step 07 (monitoring engine)
+
 - Sequential pings do not scale. One check can take up to ~2s, so 30 unreachable cameras take up to ~60s, which equals the whole default check interval. The engine must ping concurrently.
 - On Windows, ping.exe can exit with code 0 when a router replies "Destination host unreachable". Exit code alone is not proof of reachability. Step 06 must test this on the real Windows machine and decide whether to also require "TTL=" in the output, and verify that works on non-English Windows.
 - The v1 script (cctv-ping.py) keeps its state in memory only. The new design persists failure streaks and alert state in the database so restarts do not lose them. The restart test (failure #7, restart, failure #8) proves this.
 
 ## CSV-first import (Step 05)
+
 - The owner says most cameras will be added by CSV import and manual entry is the exception.
 - Required headers are exactly: `camera_name,location,description,ip_address`.
 - Accept the file only if everything matches the contract, otherwise reject the whole file and commit nothing (no partial imports).
@@ -14,6 +16,7 @@
   - How row-level errors are reported and displayed in the UI.
 
 ## Ports and network binding (Steps 08 and 13)
+
 - The admin PC runs other software, so the app's port must not be assumed free.
 - Owner decision: Access is admin PC only: bind 127.0.0.1, no LAN access, no login.
 - Requirements:
@@ -26,16 +29,21 @@
 - Note: Do not change any code for this in Step 03.
 
 ## Housekeeping notes
+
 - Starlette's `httpx` deprecation warning in pytest (`StarletteDeprecationWarning: Using 'httpx' with 'starlette.testclient' is deprecated; install 'httpx2' instead.`) — revisit if it becomes an error.
 - `contrast.spec.ts` is ~900 lines; consider splitting it if it grows further.
 - The "Dialog: Overlay backdrop" contrast pair has a 1:1 threshold and can never fail (remove it or give it a real threshold).
 
-## Known gaps after Step 04
+## Known gaps after Step 04 & 05
+
 - Location is free text with no normalization (case variants show as separate locations).
 - IP validation rules exist in two places (backend and frontend). While cross-checked against `shared/camera-validation-vectors.json`, frontend trimming (`String.prototype.trim()`) is stricter than Python `strip()` on certain non-ASCII whitespace characters (e.g. U+0085).
 - No sorting or pagination in camera table (deferred per design, displaying API order).
 - No polling until Step 08 (user must reload or perform actions to see updated status).
+- Exported CSV is not directly re-importable without removing the last three columns (`status`, `last_checked`, `last_online`), as import strictly enforces the 4-column contract (`camera_name,location,description,ip_address`).
+- Formula injection risk on CSV export: fields beginning with `= + - @` are exported unescaped; if opened in Microsoft Excel, formulas could trigger warnings or execute if untrusted user input is exported.
 
 ## For Step 13 (deploy)
+
 - The admin PC will reboot. The app must auto-start (Task Scheduler or a service wrapper) and resume monitoring state.
 - Add a Host-header check to the backend (reject unexpected Host values) as a hardening measure against browser-based requests to localhost.

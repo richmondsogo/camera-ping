@@ -173,3 +173,38 @@ class CameraRead(BaseModel):
     last_online: datetime | None
     created_at: datetime
     updated_at: datetime
+
+
+CAMERA_CSV_HEADERS: list[str] = [
+    "camera_name",
+    "location",
+    "description",
+    "ip_address",
+]
+
+CAMERA_EXPORT_HEADERS: list[str] = [
+    *CAMERA_CSV_HEADERS,
+    "status",
+    "last_checked",
+    "last_online",
+]
+
+
+class CameraImportPreview(BaseModel):
+    count: int
+    preview: list[CameraCreate]
+
+
+class CameraImportSuccess(BaseModel):
+    imported: int
+
+
+class CameraImportErrorItem(BaseModel):
+    loc: list[str | int]
+    msg: str
+    type: str
+
+
+class CameraImportErrorResponse(BaseModel):
+    detail: list[CameraImportErrorItem]
+    total_errors: int
