@@ -20,7 +20,11 @@ import {
 import { countByStatus } from "@/features/monitoring/utils";
 import type { CameraRead } from "@/lib/schemas";
 
-export function DashboardPage() {
+export interface DashboardPageProps {
+  pollInterval?: number | false;
+}
+
+export function DashboardPage({ pollInterval }: DashboardPageProps = {}) {
   const queryClient = useQueryClient();
   const {
     data: cameras = [],
@@ -28,13 +32,13 @@ export function DashboardPage() {
     isError: isCamerasError,
     dataUpdatedAt: camerasUpdatedAt,
     refetch,
-  } = useCameras();
+  } = useCameras(pollInterval);
 
   const {
     data: monitoringStatus,
     isError: isStatusError,
     dataUpdatedAt: statusUpdatedAt,
-  } = useMonitoringStatus();
+  } = useMonitoringStatus(pollInterval);
 
   const startMutation = useStartMonitoring();
   const stopMutation = useStopMonitoring();

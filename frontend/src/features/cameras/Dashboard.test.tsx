@@ -76,7 +76,7 @@ describe("DashboardPage component tests", () => {
   it("renders table rows and count line for loaded cameras", async () => {
     vi.spyOn(api, "listCameras").mockResolvedValue(mockCameras);
 
-    renderWithClient(<DashboardPage />);
+    renderWithClient(<DashboardPage pollInterval={false} />);
 
     expect(
       screen.getAllByTestId("loading-cameras-skeleton").length
@@ -96,7 +96,7 @@ describe("DashboardPage component tests", () => {
   it("renders text-only empty state and disables search/filters when 0 cameras exist", async () => {
     vi.spyOn(api, "listCameras").mockResolvedValue([]);
 
-    renderWithClient(<DashboardPage />);
+    renderWithClient(<DashboardPage pollInterval={false} />);
 
     await waitFor(() => {
       expect(screen.getByTestId("empty-cameras-state")).toBeInTheDocument();
@@ -121,7 +121,7 @@ describe("DashboardPage component tests", () => {
   it("handles singular count line when 1 camera exists", async () => {
     vi.spyOn(api, "listCameras").mockResolvedValue([mockCameras[0]]);
 
-    renderWithClient(<DashboardPage />);
+    renderWithClient(<DashboardPage pollInterval={false} />);
 
     await waitFor(() => {
       expect(screen.getByText("Front Gate Cam")).toBeInTheDocument();
@@ -145,7 +145,7 @@ describe("DashboardPage component tests", () => {
       )
       .mockResolvedValue(mockCameras);
 
-    renderWithClient(<DashboardPage />);
+    renderWithClient(<DashboardPage pollInterval={false} />);
 
     await waitFor(() => {
       expect(screen.getByTestId("error-cameras-state")).toBeInTheDocument();
@@ -172,7 +172,7 @@ describe("DashboardPage component tests", () => {
           })
       );
 
-    const { queryClient } = renderWithClient(<DashboardPage />);
+    const { queryClient } = renderWithClient(<DashboardPage pollInterval={false} />);
 
     await waitFor(() => {
       expect(screen.getByText("Front Gate Cam")).toBeInTheDocument();
@@ -195,7 +195,7 @@ describe("DashboardPage component tests", () => {
   it("allows selecting __ALL__ location as a real location distinct from All Locations", async () => {
     vi.spyOn(api, "listCameras").mockResolvedValue(mockCameras);
 
-    renderWithClient(<DashboardPage />);
+    renderWithClient(<DashboardPage pollInterval={false} />);
 
     await waitFor(() => {
       expect(screen.getByText("Front Gate Cam")).toBeInTheDocument();
@@ -227,7 +227,7 @@ describe("DashboardPage component tests", () => {
       })
     );
 
-    renderWithClient(<DashboardPage />);
+    renderWithClient(<DashboardPage pollInterval={false} />);
 
     await waitFor(() => {
       expect(screen.getByText("Front Gate Cam")).toBeInTheDocument();
@@ -263,7 +263,7 @@ describe("DashboardPage component tests", () => {
   it("shows IP change warning in edit dialog and toggles back when original IP is re-typed", async () => {
     vi.spyOn(api, "listCameras").mockResolvedValue(mockCameras);
 
-    renderWithClient(<DashboardPage />);
+    renderWithClient(<DashboardPage pollInterval={false} />);
 
     await waitFor(() => {
       expect(screen.getByText("Front Gate Cam")).toBeInTheDocument();
@@ -305,7 +305,7 @@ describe("DashboardPage component tests", () => {
         })
     );
 
-    renderWithClient(<DashboardPage />);
+    renderWithClient(<DashboardPage pollInterval={false} />);
 
     await waitFor(() => {
       expect(screen.getByText("Front Gate Cam")).toBeInTheDocument();
@@ -354,7 +354,7 @@ describe("DashboardPage component tests", () => {
   it("focus returns to Add Camera button after closing Add dialog", async () => {
     vi.spyOn(api, "listCameras").mockResolvedValue(mockCameras);
 
-    renderWithClient(<DashboardPage />);
+    renderWithClient(<DashboardPage pollInterval={false} />);
 
     await waitFor(() => {
       expect(screen.getByText("Front Gate Cam")).toBeInTheDocument();
@@ -377,7 +377,7 @@ describe("DashboardPage component tests", () => {
   it("focus returns to that row's Edit button after closing Edit dialog", async () => {
     vi.spyOn(api, "listCameras").mockResolvedValue(mockCameras);
 
-    renderWithClient(<DashboardPage />);
+    renderWithClient(<DashboardPage pollInterval={false} />);
 
     await waitFor(() => {
       expect(screen.getByText("Warehouse Cam")).toBeInTheDocument();
@@ -401,7 +401,7 @@ describe("DashboardPage component tests", () => {
     vi.spyOn(api, "listCameras").mockResolvedValue(mockCameras);
     vi.spyOn(api, "deleteCamera").mockResolvedValue(undefined);
 
-    renderWithClient(<DashboardPage />);
+    renderWithClient(<DashboardPage pollInterval={false} />);
 
     await waitFor(() => {
       expect(screen.getByText("Front Gate Cam")).toBeInTheDocument();
@@ -429,7 +429,7 @@ describe("DashboardPage component tests", () => {
     ]);
     vi.spyOn(api, "deleteCamera").mockResolvedValue(undefined);
 
-    renderWithClient(<DashboardPage />);
+    renderWithClient(<DashboardPage pollInterval={false} />);
 
     await waitFor(() => {
       expect(screen.getByText("Warehouse Cam")).toBeInTheDocument();

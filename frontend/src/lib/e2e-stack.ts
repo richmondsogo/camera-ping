@@ -101,10 +101,23 @@ export function generateSeedCameras(count: number): SeedCameraPayload[] {
   return cameras;
 }
 
+export async function stopMonitoring(
+  apiBaseUrl: string = `http://127.0.0.1:${getExpectedE2eBackendPort()}`
+): Promise<void> {
+  assertE2eStack(apiBaseUrl);
+  try {
+    await fetch(`${apiBaseUrl}/api/monitoring/stop`, { method: "POST" });
+  } catch {
+    // ignore if already stopped or network unready
+  }
+}
+
 export async function resetCameras(
   apiBaseUrl: string = `http://127.0.0.1:${getExpectedE2eBackendPort()}`
 ): Promise<void> {
   assertE2eStack(apiBaseUrl);
+
+  await stopMonitoring(apiBaseUrl);
 
   const getRes = await fetch(`${apiBaseUrl}/api/cameras`);
   if (!getRes.ok) {

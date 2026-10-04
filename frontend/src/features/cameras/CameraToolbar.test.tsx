@@ -182,7 +182,7 @@ describe("CameraToolbar filter select labels and clear filters", () => {
 
     vi.spyOn(api, "listCameras").mockResolvedValue(testCameras);
 
-    renderWithClient(<DashboardPage />);
+    renderWithClient(<DashboardPage pollInterval={false} />);
 
     await waitFor(() => {
       expect(screen.getByText("Cam Alpha")).toBeInTheDocument();
@@ -241,7 +241,7 @@ describe("CameraToolbar filter select labels and clear filters", () => {
 
     vi.spyOn(api, "listCameras").mockResolvedValue(testCameras);
 
-    renderWithClient(<DashboardPage />);
+    renderWithClient(<DashboardPage pollInterval={false} />);
 
     await waitFor(() => {
       expect(screen.getByText("Cam Alpha")).toBeInTheDocument();
