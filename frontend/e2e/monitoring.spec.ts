@@ -125,6 +125,8 @@ test.describe("Monitoring Engine & Dashboard Controls", () => {
 
     // Stop monitoring via UI
     await page.getByTestId("stop-monitoring-button").click();
-    await expect(page.getByText("Monitoring stopped")).toBeVisible();
+    await expect(
+      page.getByTestId("monitoring-panel").getByText("Monitoring stopped")
+    ).toBeVisible();
   });
 });
