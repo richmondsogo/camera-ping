@@ -50,6 +50,7 @@ class MonitoringEngine:
         self._interval = interval
         self._lock = asyncio.Lock()
         self._stop_event = threading.Event()
+        self._cycle_lock = threading.Lock()
         self._task: asyncio.Task[None] | None = None
 
     @property
@@ -72,77 +73,88 @@ class MonitoringEngine:
         if self._stop_event.is_set():
             return
 
-        cycle_started_at = clock.utc_now()
+        with self._cycle_lock:
+            if self._stop_event.is_set():
+                return
 
-        # 1. Snapshot all cameras and update last_cycle_started_at
-        with self.sessionmaker() as session:
-            state = session.get(MonitoringState, 1)
-            if state is not None:
-                state.last_cycle_started_at = cycle_started_at
-                session.commit()
+            cycle_started_at = clock.utc_now()
 
-            stmt = select(Camera.id, Camera.ip_address).order_by(Camera.id.asc())
-            snapshot = [(row[0], row[1]) for row in session.execute(stmt).all()]
-
-        if not snapshot:
+            # 1. Snapshot all cameras and update last_cycle_started_at
             with self.sessionmaker() as session:
                 state = session.get(MonitoringState, 1)
                 if state is not None:
-                    state.last_cycle_finished_at = clock.utc_now()
+                    state.last_cycle_started_at = cycle_started_at
                     session.commit()
-            return
 
-        # 2. Probe concurrently in ThreadPoolExecutor (max 32 workers)
-        workers = min(32, len(snapshot))
-        probe_results: dict[int, tuple[str, bool]] = {}
+                stmt = select(Camera.id, Camera.ip_address).order_by(Camera.id.asc())
+                snapshot = [(row[0], row[1]) for row in session.execute(stmt).all()]
 
-        with ThreadPoolExecutor(max_workers=workers) as executor:
-            future_to_cam = {
-                executor.submit(self.pinger, ip): (cam_id, ip)
-                for cam_id, ip in snapshot
-            }
-            for future in as_completed(future_to_cam):
-                cam_id, ip = future_to_cam[future]
+            if not snapshot:
+                with self.sessionmaker() as session:
+                    state = session.get(MonitoringState, 1)
+                    if state is not None:
+                        state.last_cycle_finished_at = clock.utc_now()
+                        session.commit()
+                return
+
+            if self._stop_event.is_set():
+                return
+
+            # 2. Probe concurrently in ThreadPoolExecutor (max 32 workers)
+            workers = min(32, len(snapshot))
+            probe_results: dict[int, tuple[str, bool]] = {}
+
+            def _probe_worker(cam_id: int, ip: str) -> tuple[int, str, bool]:
                 if self._stop_event.is_set():
-                    logger.info("Cycle interrupted: discarding in-flight results")
-                    return
+                    return cam_id, ip, False
                 try:
-                    is_online = future.result()
+                    res = self.pinger(ip)
                 except Exception as exc:
                     logger.warning("Pinger exception for host %s: %s", ip, exc)
-                    is_online = False
-                probe_results[cam_id] = (ip, is_online)
+                    res = False
+                return cam_id, ip, res
 
-        if self._stop_event.is_set():
-            logger.info("Cycle completed after stop requested: discarding results")
-            return
+            with ThreadPoolExecutor(max_workers=workers) as executor:
+                futures = [
+                    executor.submit(_probe_worker, cid, ip) for cid, ip in snapshot
+                ]
+                for future in as_completed(futures):
+                    if self._stop_event.is_set():
+                        logger.info("Cycle interrupted: discarding in-flight results")
+                        return
+                    cid, ip, is_online = future.result()
+                    probe_results[cid] = (ip, is_online)
 
-        # 3. Apply results in ONE transaction using DB as source of truth
-        with self.sessionmaker() as session:
-            now = clock.utc_now()
-            for cam_id, (probed_ip, is_online) in probe_results.items():
-                cam = session.get(Camera, cam_id)
-                if cam is None:
-                    continue
-                if cam.ip_address != probed_ip:
-                    # Stale result: IP changed during cycle
-                    continue
+            if self._stop_event.is_set():
+                logger.info("Cycle completed after stop requested: discarding results")
+                return
 
-                if is_online:
-                    cam.status = CameraStatus.ONLINE
-                    cam.consecutive_failures = 0
-                    cam.last_checked = now
-                    cam.last_online = now
-                else:
-                    cam.status = CameraStatus.OFFLINE
-                    cam.consecutive_failures = cam.consecutive_failures + 1
-                    cam.last_checked = now
+            # 3. Apply results in ONE transaction using DB as source of truth
+            with self.sessionmaker() as session:
+                now = clock.utc_now()
+                for cam_id, (probed_ip, is_online) in probe_results.items():
+                    cam = session.get(Camera, cam_id)
+                    if cam is None:
+                        continue
+                    if cam.ip_address != probed_ip:
+                        # Stale result: IP changed during cycle
+                        continue
 
-            state = session.get(MonitoringState, 1)
-            if state is not None:
-                state.last_cycle_finished_at = now
+                    if is_online:
+                        cam.status = CameraStatus.ONLINE
+                        cam.consecutive_failures = 0
+                        cam.last_checked = now
+                        cam.last_online = now
+                    else:
+                        cam.status = CameraStatus.OFFLINE
+                        cam.consecutive_failures = cam.consecutive_failures + 1
+                        cam.last_checked = now
 
-            session.commit()
+                state = session.get(MonitoringState, 1)
+                if state is not None:
+                    state.last_cycle_finished_at = now
+
+                session.commit()
 
     async def _scheduler_loop(self) -> None:
         """Periodic loop running cycles using monotonic clock intervals."""
@@ -203,6 +215,7 @@ class MonitoringEngine:
                 except asyncio.CancelledError:
                     pass
                 self._task = None
+            await asyncio.to_thread(self._wait_for_cycle_finish)
 
     async def shutdown(self) -> None:
         """Shutdown the running task on application exit without modifying DB flag."""
@@ -215,6 +228,11 @@ class MonitoringEngine:
                 except asyncio.CancelledError:
                     pass
                 self._task = None
+            await asyncio.to_thread(self._wait_for_cycle_finish)
+
+    def _wait_for_cycle_finish(self) -> None:
+        with self._cycle_lock:
+            pass
 
     def get_status(self, db: Session | None = None) -> MonitoringStatus:
         """Retrieve current monitoring state and camera counts."""
