@@ -56,6 +56,7 @@ All standard commands are executed from the repository root using Python:
 - **Database Access**: SQLAlchemy models and queries must use absolute SQLite paths configured via `settings.database_url`. Never use cwd-relative paths. Alembic migrations must always configure `render_as_batch=True`.
 - **API Boundaries**: Frontend communicates with `/api/*` through the Vite proxy in development. No CORS headers or direct host URLs hardcoded.
 - **Fixtures**: All test addresses must use reserved RFC 5737 documentation blocks (`192.0.2.0/24`). Never hardcode production IP addresses.
+- **Monitoring Engine**: Periodic ICMP pings run concurrently off the event loop (`ThreadPoolExecutor` max 32 workers). Probing interval is configured via `MONITOR_INTERVAL_SECONDS` (default 60s, min 10s). The engine's running state persists in SQLite (`monitoring_state`), automatically resuming on application restart if running prior to shutdown.
 
 ## Working Agreement
 1. **Strict Git Discipline**:
