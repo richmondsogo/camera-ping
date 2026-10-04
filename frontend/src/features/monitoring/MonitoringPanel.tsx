@@ -86,7 +86,7 @@ export function MonitoringPanel({
 
   const nextCheckDisplay =
     isRunning && status?.next_check_at
-      ? formatTime24h(status.next_check_at) ?? "—"
+      ? (formatTime24h(status.next_check_at) ?? "—")
       : "—";
 
   const intervalDisplay = status?.interval_seconds ?? 60;
@@ -241,7 +241,7 @@ export function MonitoringPanel({
           className="rounded-control border border-error bg-background p-control-x text-sm text-error"
         >
           Can't reach the server. Showing data from{" "}
-          {lastSuccessTime ? formatTime24h(lastSuccessTime) ?? "—" : "—"}.
+          {lastSuccessTime ? (formatTime24h(lastSuccessTime) ?? "—") : "—"}.
           Retrying…
         </div>
       )}

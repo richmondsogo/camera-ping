@@ -1,4 +1,3 @@
-import * as React from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -15,6 +14,10 @@ const defaultProps: MonitoringPanelProps = {
     last_cycle_finished_at: null,
     next_check_at: null,
     running_since: null,
+    total: 3,
+    online: 2,
+    offline: 1,
+    unknown: 0,
   },
   counts: { total: 3, online: 2, offline: 1, unknown: 0 },
   isStarting: false,
@@ -70,14 +73,13 @@ describe("MonitoringPanel component", () => {
       last_cycle_finished_at: "2026-10-04T14:30:02Z",
       next_check_at: "2026-10-04T14:31:00Z",
       running_since: "2026-10-04T14:00:00Z",
+      total: 3,
+      online: 2,
+      offline: 1,
+      unknown: 0,
     };
 
-    render(
-      <MonitoringPanel
-        {...defaultProps}
-        status={runningStatus}
-      />
-    );
+    render(<MonitoringPanel {...defaultProps} status={runningStatus} />);
 
     expect(screen.getByText("Monitoring running")).toBeInTheDocument();
     expect(screen.getByTestId("start-monitoring-button")).toBeDisabled();
@@ -96,14 +98,13 @@ describe("MonitoringPanel component", () => {
       last_cycle_finished_at: null,
       next_check_at: null,
       running_since: "2026-10-04T14:29:50Z",
+      total: 3,
+      online: 2,
+      offline: 1,
+      unknown: 0,
     };
 
-    render(
-      <MonitoringPanel
-        {...defaultProps}
-        status={inProgressStatus}
-      />
-    );
+    render(<MonitoringPanel {...defaultProps} status={inProgressStatus} />);
 
     expect(screen.getByTestId("last-check")).toHaveTextContent(
       "Last check Checking now…"
@@ -259,14 +260,13 @@ describe("MonitoringPanel component", () => {
         last_cycle_finished_at: finishedAt,
         next_check_at: new Date(baseTime - 15 * 1000).toISOString(),
         running_since: new Date(baseTime - 100 * 1000).toISOString(),
+        total: 3,
+        online: 2,
+        offline: 1,
+        unknown: 0,
       };
 
-      render(
-        <MonitoringPanel
-          {...defaultProps}
-          status={frozenStatus}
-        />
-      );
+      render(<MonitoringPanel {...defaultProps} status={frozenStatus} />);
 
       // At 25s elapsed, threshold is 30s: stalled banner is NOT present
       expect(screen.queryByTestId("stalled-banner")).not.toBeInTheDocument();
@@ -300,6 +300,10 @@ describe("MonitoringPanel component", () => {
         last_cycle_finished_at: "2026-10-04T12:00:02Z",
         next_check_at: "2026-10-04T12:01:00Z",
         running_since: "2026-10-04T11:00:00Z",
+        total: 3,
+        online: 2,
+        offline: 1,
+        unknown: 0,
       };
 
       const { rerender } = render(
@@ -346,6 +350,10 @@ describe("MonitoringPanel component", () => {
         last_cycle_finished_at: "2026-10-04T12:00:02Z",
         next_check_at: "2026-10-04T12:01:00Z",
         running_since: "2026-10-04T11:00:00Z",
+        total: 3,
+        online: 0,
+        offline: 3,
+        unknown: 0,
       };
 
       const { rerender } = render(

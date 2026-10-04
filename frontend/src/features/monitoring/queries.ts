@@ -34,7 +34,9 @@ export function useStartMonitoring() {
     onSuccess: (data: MonitoringStatus) => {
       queryClient.setQueryData(MONITORING_STATUS_QUERY_KEY, data);
       return Promise.all([
-        queryClient.invalidateQueries({ queryKey: MONITORING_STATUS_QUERY_KEY }),
+        queryClient.invalidateQueries({
+          queryKey: MONITORING_STATUS_QUERY_KEY,
+        }),
         queryClient.invalidateQueries({ queryKey: CAMERAS_QUERY_KEY }),
       ]);
     },
@@ -55,7 +57,9 @@ export function useStopMonitoring() {
     onSuccess: (data: MonitoringStatus) => {
       queryClient.setQueryData(MONITORING_STATUS_QUERY_KEY, data);
       return Promise.all([
-        queryClient.invalidateQueries({ queryKey: MONITORING_STATUS_QUERY_KEY }),
+        queryClient.invalidateQueries({
+          queryKey: MONITORING_STATUS_QUERY_KEY,
+        }),
         queryClient.invalidateQueries({ queryKey: CAMERAS_QUERY_KEY }),
       ]);
     },

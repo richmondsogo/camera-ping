@@ -60,9 +60,12 @@ test.describe("Monitoring Engine & Dashboard Controls", () => {
     const offlineRow = page.locator("tbody tr", { hasText: "Doc IP Cam" });
 
     // Wait until Loopback Cam is Online
-    await expect(loopbackRow.locator('[data-slot="badge"]')).toHaveText("Online", {
-      timeout: 20_000,
-    });
+    await expect(loopbackRow.locator('[data-slot="status-label"]')).toHaveText(
+      "Online",
+      {
+        timeout: 20_000,
+      }
+    );
 
     // Wait until Doc IP Cam is Offline and shows a check count
     const checkCountLocator = offlineRow.locator("text=/\\d+\\s+checks?/");
@@ -81,7 +84,9 @@ test.describe("Monitoring Engine & Dashboard Controls", () => {
     );
 
     // Verify Loopback Cam stayed Online throughout
-    await expect(loopbackRow.locator('[data-slot="badge"]')).toHaveText("Online");
+    await expect(loopbackRow.locator('[data-slot="status-label"]')).toHaveText(
+      "Online"
+    );
 
     // Verify Tab Title includes (1 offline)
     await expect(page).toHaveTitle(/\(1 offline\) Camera Monitor/);
@@ -96,10 +101,7 @@ test.describe("Monitoring Engine & Dashboard Controls", () => {
     await expect(page.getByTestId("stopped-notice")).toBeVisible();
   });
 
-  test("resumes running state after page reload", async ({
-    page,
-    request,
-  }) => {
+  test("resumes running state after page reload", async ({ page, request }) => {
     // Start monitoring via API
     const startRes = await request.post(
       "http://127.0.0.1:18000/api/monitoring/start"

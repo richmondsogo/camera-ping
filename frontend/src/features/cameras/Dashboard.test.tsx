@@ -172,7 +172,9 @@ describe("DashboardPage component tests", () => {
           })
       );
 
-    const { queryClient } = renderWithClient(<DashboardPage pollInterval={false} />);
+    const { queryClient } = renderWithClient(
+      <DashboardPage pollInterval={false} />
+    );
 
     await waitFor(() => {
       expect(screen.getByText("Front Gate Cam")).toBeInTheDocument();

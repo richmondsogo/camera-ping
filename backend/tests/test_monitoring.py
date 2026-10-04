@@ -1,7 +1,7 @@
 import asyncio
 import threading
 import time
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -552,8 +552,8 @@ def test_running_since_and_next_check_at_behavior(
         db_path = tmp_path / "timing.db"
         session_factory, engine_db = _create_migrated_db(db_path)
 
-        t0 = datetime(2026, 10, 1, 10, 0, 0, tzinfo=clock.UTC)
-        t1 = datetime(2026, 10, 1, 10, 0, 10, tzinfo=clock.UTC)
+        t0 = datetime(2026, 10, 1, 10, 0, 0, tzinfo=UTC)
+        t1 = datetime(2026, 10, 1, 10, 0, 10, tzinfo=UTC)
 
         monkeypatch.setattr(clock, "utc_now", lambda: t0)
 
@@ -610,7 +610,7 @@ def test_resume_at_startup_sets_running_since_and_nulls_stale_next_check_at(
     session_factory, engine_db = _create_migrated_db(db_path)
 
     # Seed state in DB from a previous run
-    old_time = datetime(2026, 10, 1, 8, 0, 0, tzinfo=clock.UTC)
+    old_time = datetime(2026, 10, 1, 8, 0, 0, tzinfo=UTC)
     with session_factory() as session:
         state = session.get(MonitoringState, 1)
         assert state is not None
@@ -619,7 +619,7 @@ def test_resume_at_startup_sets_running_since_and_nulls_stale_next_check_at(
         state.last_cycle_finished_at = old_time
         session.commit()
 
-    startup_time = datetime(2026, 10, 1, 12, 0, 0, tzinfo=clock.UTC)
+    startup_time = datetime(2026, 10, 1, 12, 0, 0, tzinfo=UTC)
     monkeypatch.setattr(clock, "utc_now", lambda: startup_time)
 
     settings = Settings(database_url=f"sqlite:///{db_path.as_posix()}")
@@ -721,4 +721,3 @@ def test_consecutive_failures_tracking_and_reset_in_cycles(
         patch_data = patch_res.json()
         assert patch_data["status"] == "unknown"
         assert patch_data["consecutive_failures"] == 0
-

@@ -62,6 +62,10 @@ const mockStoppedStatus: MonitoringStatus = {
   last_cycle_finished_at: null,
   next_check_at: null,
   running_since: null,
+  total: 2,
+  online: 1,
+  offline: 1,
+  unknown: 0,
 };
 
 const mockRunningStatus: MonitoringStatus = {
@@ -71,6 +75,10 @@ const mockRunningStatus: MonitoringStatus = {
   last_cycle_finished_at: "2026-10-04T12:00:01Z",
   next_check_at: "2026-10-04T12:01:00Z",
   running_since: "2026-10-04T11:59:00Z",
+  total: 2,
+  online: 1,
+  offline: 1,
+  unknown: 0,
 };
 
 describe("DashboardPage monitoring integration", () => {
@@ -83,7 +91,9 @@ describe("DashboardPage monitoring integration", () => {
     vi.spyOn(api, "listCameras").mockResolvedValue(mockCamerasWithOffline);
     vi.spyOn(api, "getMonitoringStatus").mockResolvedValue(mockStoppedStatus);
 
-    const { unmount } = renderWithClient(<DashboardPage pollInterval={false} />);
+    const { unmount } = renderWithClient(
+      <DashboardPage pollInterval={false} />
+    );
 
     await waitFor(() => {
       expect(document.title).toBe("(1 offline) Camera Monitor");
@@ -132,7 +142,9 @@ describe("DashboardPage monitoring integration", () => {
   it("handles Start and Stop monitoring lifecycle via API mutations", async () => {
     let currentStatus = mockStoppedStatus;
     vi.spyOn(api, "listCameras").mockResolvedValue(mockCamerasWithOffline);
-    vi.spyOn(api, "getMonitoringStatus").mockImplementation(async () => currentStatus);
+    vi.spyOn(api, "getMonitoringStatus").mockImplementation(
+      async () => currentStatus
+    );
     const startSpy = vi
       .spyOn(api, "startMonitoring")
       .mockImplementation(async () => {
