@@ -50,4 +50,3 @@ async def stop_monitoring(
     await engine.stop()
     status_info = engine.get_status(db=db)
     return MonitoringStatusResponse.model_validate(status_info)
-
