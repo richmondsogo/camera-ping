@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 class MonitoringStatus:
     running: bool
     interval_seconds: int
+    running_since: datetime | None
     last_cycle_started_at: datetime | None
     last_cycle_finished_at: datetime | None
     next_check_at: datetime | None
@@ -52,6 +53,7 @@ class MonitoringEngine:
         self._stop_event = threading.Event()
         self._cycle_lock = threading.Lock()
         self._task: asyncio.Task[None] | None = None
+        self._running_since: datetime | None = None
 
     @property
     def interval_seconds(self) -> float:
@@ -189,6 +191,9 @@ class MonitoringEngine:
                     state.running = True
                     session.commit()
 
+            if self._running_since is None:
+                self._running_since = clock.utc_now()
+
             if self._task is not None and not self._task.done():
                 return
 
@@ -207,6 +212,7 @@ class MonitoringEngine:
                     state.running = False
                     session.commit()
 
+            self._running_since = None
             self._stop_event.set()
             if self._task is not None:
                 self._task.cancel()
@@ -247,7 +253,12 @@ class MonitoringEngine:
 
             interval_int = int(round(self.interval_seconds))
             next_check_at: datetime | None = None
-            if running and started_at is not None:
+            if (
+                running
+                and self._running_since is not None
+                and started_at is not None
+                and started_at >= self._running_since
+            ):
                 next_check_at = started_at + timedelta(seconds=interval_int)
 
             total = session_to_use.scalar(select(func.count(Camera.id))) or 0
@@ -279,6 +290,7 @@ class MonitoringEngine:
             return MonitoringStatus(
                 running=running,
                 interval_seconds=interval_int,
+                running_since=self._running_since if running else None,
                 last_cycle_started_at=started_at,
                 last_cycle_finished_at=finished_at,
                 next_check_at=next_check_at,

@@ -169,6 +169,7 @@ class CameraRead(BaseModel):
     description: str
     ip_address: str
     status: CameraStatus | str
+    consecutive_failures: int = 0
     last_checked: datetime | None
     last_online: datetime | None
     created_at: datetime

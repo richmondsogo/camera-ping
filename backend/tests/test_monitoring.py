@@ -515,6 +515,7 @@ def test_monitoring_api_endpoints_and_hidden_fields_absent(tmp_path: Path) -> No
         assert data["offline"] == 0
         assert data["unknown"] == 0
         assert data["next_check_at"] is None
+        assert data["running_since"] is None
 
         # Verify hidden / internal fields are ABSENT
         assert "consecutive_failures" not in data
@@ -527,6 +528,7 @@ def test_monitoring_api_endpoints_and_hidden_fields_absent(tmp_path: Path) -> No
         assert start_res.status_code == 200
         start_data = start_res.json()
         assert start_data["running"] is True
+        assert start_data["running_since"] is not None
         assert "consecutive_failures" not in start_data
         assert "alert_sent_for_current_outage" not in start_data
 
@@ -535,5 +537,188 @@ def test_monitoring_api_endpoints_and_hidden_fields_absent(tmp_path: Path) -> No
         assert stop_res.status_code == 200
         stop_data = stop_res.json()
         assert stop_data["running"] is False
+        assert stop_data["running_since"] is None
         assert "consecutive_failures" not in stop_data
         assert "alert_sent_for_current_outage" not in stop_data
+
+
+# 10. Checkpoint 1: running_since and next_check_at behavior
+def test_running_since_and_next_check_at_behavior(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """next_check_at is null right after start, set after first cycle."""
+
+    async def _run() -> None:
+        db_path = tmp_path / "timing.db"
+        session_factory, engine_db = _create_migrated_db(db_path)
+
+        t0 = datetime(2026, 10, 1, 10, 0, 0, tzinfo=clock.UTC)
+        t1 = datetime(2026, 10, 1, 10, 0, 10, tzinfo=clock.UTC)
+
+        monkeypatch.setattr(clock, "utc_now", lambda: t0)
+
+        engine = MonitoringEngine(
+            session_factory, pinger=lambda ip: True, interval=60.0
+        )
+
+        # 1. Stopped initially: running_since is None, next_check_at is None
+        status0 = engine.get_status()
+        assert status0.running is False
+        assert status0.running_since is None
+        assert status0.next_check_at is None
+
+        # 2. Hold cycle lock so cycle 1 cannot begin immediately
+        engine._cycle_lock.acquire()
+        try:
+            await engine.start()
+            status1 = engine.get_status()
+            assert status1.running is True
+            assert status1.running_since == t0
+            assert status1.next_check_at is None
+        finally:
+            if engine._cycle_lock.locked():
+                engine._cycle_lock.release()
+
+        # 3. Allow cycle 1 to run
+        monkeypatch.setattr(clock, "utc_now", lambda: t1)
+        await asyncio.sleep(0.1)
+
+        status2 = engine.get_status()
+        assert status2.running is True
+        assert status2.running_since == t0
+        assert status2.last_cycle_started_at is not None
+        assert status2.next_check_at is not None
+
+        # 4. Stop: running_since cleared to None, next_check_at is None
+        await engine.stop()
+        status3 = engine.get_status()
+        assert status3.running is False
+        assert status3.running_since is None
+        assert status3.next_check_at is None
+
+        engine_db.dispose()
+
+    asyncio.run(_run())
+
+
+# 11. Checkpoint 1: Resume at startup sets running_since and avoids stale next_check_at
+def test_resume_at_startup_sets_running_since_and_nulls_stale_next_check_at(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Resume at startup sets running_since; next_check_at is null before cycle 1."""
+    db_path = tmp_path / "resume_timing.db"
+    session_factory, engine_db = _create_migrated_db(db_path)
+
+    # Seed state in DB from a previous run
+    old_time = datetime(2026, 10, 1, 8, 0, 0, tzinfo=clock.UTC)
+    with session_factory() as session:
+        state = session.get(MonitoringState, 1)
+        assert state is not None
+        state.running = True
+        state.last_cycle_started_at = old_time
+        state.last_cycle_finished_at = old_time
+        session.commit()
+
+    startup_time = datetime(2026, 10, 1, 12, 0, 0, tzinfo=clock.UTC)
+    monkeypatch.setattr(clock, "utc_now", lambda: startup_time)
+
+    settings = Settings(database_url=f"sqlite:///{db_path.as_posix()}")
+    app = create_app(settings, pinger=lambda ip: True)
+
+    app.state.monitoring_engine._cycle_lock.acquire()
+    try:
+        with TestClient(app) as client:
+            # Upon startup, engine resumed but cycle 1 is blocked by cycle_lock
+            res = client.get("/api/monitoring/status")
+            assert res.status_code == 200
+            data = res.json()
+            assert data["running"] is True
+            assert datetime.fromisoformat(data["running_since"]) == startup_time
+            # Because old_time < startup_time, next_check_at must NOT be stale
+            assert data["next_check_at"] is None
+
+            # Release the lock so cycle 1 can proceed
+            app.state.monitoring_engine._cycle_lock.release()
+            time.sleep(0.1)
+
+            res2 = client.get("/api/monitoring/status")
+            data2 = res2.json()
+            assert data2["next_check_at"] is not None
+
+            # Clean shutdown by stopping
+            client.post("/api/monitoring/stop")
+    finally:
+        if app.state.monitoring_engine._cycle_lock.locked():
+            app.state.monitoring_engine._cycle_lock.release()
+
+    engine_db.dispose()
+
+
+# 12. Checkpoint 1: consecutive_failures counting and reset via API / cycles
+def test_consecutive_failures_tracking_and_reset_in_cycles(
+    tmp_path: Path,
+) -> None:
+    """consecutive_failures tracks on fail cycles, resets on success or IP change."""
+    db_path = tmp_path / "streak.db"
+    settings = Settings(database_url=f"sqlite:///{db_path.as_posix()}")
+
+    ping_results: dict[str, bool] = {"192.0.2.55": False}
+
+    def _pinger(ip: str) -> bool:
+        return ping_results.get(ip, False)
+
+    app = create_app(settings, pinger=_pinger)
+
+    with TestClient(app) as client:
+        # Create camera
+        cam_res = client.post(
+            "/api/cameras",
+            json={
+                "camera_name": "Gate Cam",
+                "location": "North Gate",
+                "description": "Perimeter",
+                "ip_address": "192.0.2.55",
+            },
+        )
+        assert cam_res.status_code == 201
+        cam_id = cam_res.json()["id"]
+        assert cam_res.json()["consecutive_failures"] == 0
+
+        engine: MonitoringEngine = app.state.monitoring_engine
+
+        # Cycle 1: fail
+        engine.run_cycle_sync()
+        cam_data1 = client.get(f"/api/cameras/{cam_id}").json()
+        assert cam_data1["status"] == "offline"
+        assert cam_data1["consecutive_failures"] == 1
+
+        # Cycle 2: fail
+        engine.run_cycle_sync()
+        cam_data2 = client.get(f"/api/cameras/{cam_id}").json()
+        assert cam_data2["status"] == "offline"
+        assert cam_data2["consecutive_failures"] == 2
+
+        # Cycle 3: success -> consecutive_failures resets to 0
+        ping_results["192.0.2.55"] = True
+        engine.run_cycle_sync()
+        cam_data3 = client.get(f"/api/cameras/{cam_id}").json()
+        assert cam_data3["status"] == "online"
+        assert cam_data3["consecutive_failures"] == 0
+
+        # Cycle 4: fail again -> 1
+        ping_results["192.0.2.55"] = False
+        engine.run_cycle_sync()
+        cam_data4 = client.get(f"/api/cameras/{cam_id}").json()
+        assert cam_data4["status"] == "offline"
+        assert cam_data4["consecutive_failures"] == 1
+
+        # Change IP via PATCH -> consecutive_failures resets to 0
+        patch_res = client.patch(
+            f"/api/cameras/{cam_id}",
+            json={"ip_address": "192.0.2.56"},
+        )
+        assert patch_res.status_code == 200
+        patch_data = patch_res.json()
+        assert patch_data["status"] == "unknown"
+        assert patch_data["consecutive_failures"] == 0
+
