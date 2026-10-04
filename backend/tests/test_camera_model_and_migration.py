@@ -105,9 +105,9 @@ def test_database_enforces_constraints(tmp_path: Path) -> None:
     insert_sql = text("""
         INSERT INTO cameras (
             camera_name, location, description, ip_address, status,
-            consecutive_failures, alert_sent_for_current_outage, created_at, updated_at
+            consecutive_failures, created_at, updated_at
         ) VALUES (
-            :name, :loc, :desc, :ip, :status, :failures, :alert, :created, :updated
+            :name, :loc, :desc, :ip, :status, :failures, :created, :updated
         )
     """)
 
@@ -121,7 +121,6 @@ def test_database_enforces_constraints(tmp_path: Path) -> None:
             "ip": "192.0.2.10",
             "status": "unknown",
             "failures": 0,
-            "alert": 0,
             "created": now_iso,
             "updated": now_iso,
         },
@@ -139,7 +138,6 @@ def test_database_enforces_constraints(tmp_path: Path) -> None:
                 "ip": "192.0.2.10",
                 "status": "unknown",
                 "failures": 0,
-                "alert": 0,
                 "created": now_iso,
                 "updated": now_iso,
             },
@@ -158,7 +156,6 @@ def test_database_enforces_constraints(tmp_path: Path) -> None:
                 "ip": "192.0.2.11",
                 "status": "invalid_status",
                 "failures": 0,
-                "alert": 0,
                 "created": now_iso,
                 "updated": now_iso,
             },
@@ -177,7 +174,6 @@ def test_database_enforces_constraints(tmp_path: Path) -> None:
                 "ip": "192.0.2.12",
                 "status": "offline",
                 "failures": -1,
-                "alert": 0,
                 "created": now_iso,
                 "updated": now_iso,
             },

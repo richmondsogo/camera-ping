@@ -57,9 +57,8 @@ def test_export_with_cameras(client: TestClient) -> None:
         == "camera_name,location,description,ip_address,status,last_checked,last_online"
     )
     assert lines[1] == "Gate A,Main Entrance,Gate overview,192.0.2.10,unknown,,"
-    # Ensure consecutive_failures and alert_sent are never in export
+    # Ensure consecutive_failures is never in export
     assert "consecutive_failures" not in text
-    assert "alert_sent_for_current_outage" not in text
 
 
 def test_fixed_routes_not_captured_by_camera_id(client: TestClient) -> None:

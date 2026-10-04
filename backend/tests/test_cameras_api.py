@@ -42,7 +42,6 @@ def test_create_camera_happy_path(client: TestClient) -> None:
 
     # Internal monitoring fields MUST be absent from response
     assert "consecutive_failures" not in data
-    assert "alert_sent_for_current_outage" not in data
 
 
 def test_internal_fields_absent_from_all_endpoints(
@@ -63,13 +62,11 @@ def test_internal_fields_absent_from_all_endpoints(
     post_data = post_res.json()
     camera_id = post_data["id"]
     assert "consecutive_failures" not in post_data
-    assert "alert_sent_for_current_outage" not in post_data
 
     # Set internal fields in DB to non-default values
     cam = db_session.get(Camera, camera_id)
     assert cam is not None
     cam.consecutive_failures = 7
-    cam.alert_sent_for_current_outage = True
     db_session.commit()
 
     # 2. Get Single (GET /api/cameras/{id})
@@ -77,7 +74,6 @@ def test_internal_fields_absent_from_all_endpoints(
     assert get_res.status_code == 200
     get_data = get_res.json()
     assert "consecutive_failures" not in get_data
-    assert "alert_sent_for_current_outage" not in get_data
 
     # 3. Patch (PATCH /api/cameras/{id})
     patch_res = client.patch(
@@ -86,7 +82,6 @@ def test_internal_fields_absent_from_all_endpoints(
     assert patch_res.status_code == 200
     patch_data = patch_res.json()
     assert "consecutive_failures" not in patch_data
-    assert "alert_sent_for_current_outage" not in patch_data
 
     # 4. List (GET /api/cameras)
     list_res = client.get("/api/cameras")
@@ -95,7 +90,6 @@ def test_internal_fields_absent_from_all_endpoints(
     assert len(list_data) >= 1
     for item in list_data:
         assert "consecutive_failures" not in item
-        assert "alert_sent_for_current_outage" not in item
 
 
 def test_ip_address_whitespace_trimmed_and_canonicalized(
@@ -402,7 +396,6 @@ def test_patch_ip_resets_monitoring_state(
     cam.last_checked = now
     cam.last_online = now
     cam.consecutive_failures = 12
-    cam.alert_sent_for_current_outage = True
     db_session.commit()
 
     # 1. Edit only camera_name -> monitoring state MUST remain untouched
@@ -415,7 +408,6 @@ def test_patch_ip_resets_monitoring_state(
     assert cam_after_name is not None
     assert cam_after_name.status == CameraStatus.OFFLINE
     assert cam_after_name.consecutive_failures == 12
-    assert cam_after_name.alert_sent_for_current_outage is True
 
     # 2. Edit ip_address to the SAME value -> monitoring state MUST remain untouched
     same_ip_patch = client.patch(
@@ -427,7 +419,6 @@ def test_patch_ip_resets_monitoring_state(
     assert cam_after_same is not None
     assert cam_after_same.status == CameraStatus.OFFLINE
     assert cam_after_same.consecutive_failures == 12
-    assert cam_after_same.alert_sent_for_current_outage is True
 
     # 3. Edit ip_address to a NEW value -> monitoring state MUST reset cleanly
     new_ip_patch = client.patch(
@@ -445,7 +436,6 @@ def test_patch_ip_resets_monitoring_state(
     assert cam_after_new_ip is not None
     assert cam_after_new_ip.status == CameraStatus.UNKNOWN
     assert cam_after_new_ip.consecutive_failures == 0
-    assert cam_after_new_ip.alert_sent_for_current_outage is False
 
 
 def test_updated_at_advances_only_when_user_fields_change(
