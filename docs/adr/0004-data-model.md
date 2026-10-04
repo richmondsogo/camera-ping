@@ -17,3 +17,5 @@ Camera Monitor requires persistent storage for monitored cameras, distinct separ
 - Prevents stale outage alerts or failure counts when camera hardware/IP changes.
 - Requires explicit field-change tracking in the service layer rather than automatic ORM timestamps.
 - SQLite batch mode handles table recreation seamlessly during schema migrations.
+- Note (Step 07): `alert_sent_for_current_outage` column was removed as the offline deployment dropped all email/alert machinery.
+
