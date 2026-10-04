@@ -8,7 +8,6 @@ export type CameraStatus = z.infer<typeof cameraStatusSchema>;
 
 /**
  * Schema validating API CameraRead responses.
- * Strictly excludes internal monitoring fields (consecutive_failures, alert_sent_for_current_outage).
  */
 export const cameraReadSchema = z.object({
   id: z.number().int().positive(),
@@ -17,6 +16,7 @@ export const cameraReadSchema = z.object({
   description: z.string(),
   ip_address: z.string(),
   status: cameraStatusSchema,
+  consecutive_failures: z.number().int().nonnegative().default(0),
   last_checked: z.string().nullable(),
   last_online: z.string().nullable(),
   created_at: z.string(),
@@ -26,6 +26,23 @@ export type Camera = z.infer<typeof cameraReadSchema>;
 export type CameraRead = Camera;
 
 export const cameraListSchema = z.array(cameraReadSchema);
+
+/**
+ * Schema validating API MonitoringStatus responses.
+ */
+export const monitoringStatusSchema = z.object({
+  running: z.boolean(),
+  interval_seconds: z.number().int().positive(),
+  running_since: z.string().nullable(),
+  last_cycle_started_at: z.string().nullable(),
+  last_cycle_finished_at: z.string().nullable(),
+  next_check_at: z.string().nullable(),
+  total: z.number().int().nonnegative(),
+  online: z.number().int().nonnegative(),
+  offline: z.number().int().nonnegative(),
+  unknown: z.number().int().nonnegative(),
+});
+export type MonitoringStatus = z.infer<typeof monitoringStatusSchema>;
 
 /**
  * Trim whitespace while preserving U+FEFF (BOM), matching Python str.strip()

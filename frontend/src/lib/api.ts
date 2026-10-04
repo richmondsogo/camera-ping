@@ -5,11 +5,13 @@ import {
   cameraImportSuccessSchema,
   cameraListSchema,
   cameraReadSchema,
+  monitoringStatusSchema,
   type ApiErrorDetailItem,
   type Camera,
   type CameraFormData,
   type CameraImportPreview,
   type CameraImportSuccess,
+  type MonitoringStatus,
 } from "./schemas";
 
 export type ApiErrorKind = "network" | "server" | "http" | "invalid-response";
@@ -231,4 +233,25 @@ export const api = {
       cameraImportSuccessSchema
     );
   },
+
+  getMonitoringStatus: (): Promise<MonitoringStatus> =>
+    apiRequest(
+      "/api/monitoring/status",
+      { method: "GET" },
+      monitoringStatusSchema
+    ),
+
+  startMonitoring: (): Promise<MonitoringStatus> =>
+    apiRequest(
+      "/api/monitoring/start",
+      { method: "POST" },
+      monitoringStatusSchema
+    ),
+
+  stopMonitoring: (): Promise<MonitoringStatus> =>
+    apiRequest(
+      "/api/monitoring/stop",
+      { method: "POST" },
+      monitoringStatusSchema
+    ),
 };
