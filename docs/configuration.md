@@ -12,6 +12,8 @@ These variables configure the FastAPI application. They can be set in the system
 | `BACKEND_PORT` | `8000` | `1024`–`65535` | TCP port the FastAPI backend listens on. | None |
 | `DATABASE_URL` | `sqlite:///backend/data/camera_monitor.db` | SQLAlchemy SQLite URI | Connection string for SQLite database storage. Must point to an absolute path. | None |
 | `MONITOR_INTERVAL_SECONDS` | `60` | `10`–`31536000` (10s to 365d) | Fallback ICMP probing interval used if no custom interval has been configured in the UI. | Stored in SQLite table `app_settings` (column `check_interval_seconds`). Dynamic DB setting takes precedence over env var. |
+| `FRONTEND_DIST` | Unset (dev), `frontend/dist` (prod) | Directory path | Path to built frontend static assets. When set, activates production mode and serves the UI. | None |
+| `LOG_DIR` | `backend/data/logs` | Directory path | Absolute path to directory where rotating log files are saved. | None |
 
 ## Development, Script, and Testing Variables
 

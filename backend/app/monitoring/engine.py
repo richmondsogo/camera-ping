@@ -134,6 +134,7 @@ class MonitoringEngine:
                 return
 
             # 3. Apply results in ONE transaction using DB as source of truth
+            status_changes: list[str] = []
             with self.sessionmaker() as session:
                 now = clock.utc_now()
                 for cam_id, (probed_ip, is_online) in probe_results.items():
@@ -144,21 +145,41 @@ class MonitoringEngine:
                         # Stale result: IP changed during cycle
                         continue
 
+                    prev_status = cam.status
+                    prev_failures = cam.consecutive_failures
+                    name = cam.camera_name
+
                     if is_online:
                         cam.status = CameraStatus.ONLINE
                         cam.consecutive_failures = 0
                         cam.last_checked = now
                         cam.last_online = now
+
+                        if prev_status == CameraStatus.UNKNOWN:
+                            status_changes.append(f"Camera '{name}' ({probed_ip}) is ONLINE")
+                        elif prev_status == CameraStatus.OFFLINE:
+                            suffix = "failed check" if prev_failures == 1 else "failed checks"
+                            status_changes.append(
+                                f"Camera '{name}' ({probed_ip}) back ONLINE after {prev_failures} {suffix}"
+                            )
                     else:
                         cam.status = CameraStatus.OFFLINE
                         cam.consecutive_failures = cam.consecutive_failures + 1
                         cam.last_checked = now
+
+                        if prev_status == CameraStatus.UNKNOWN:
+                            status_changes.append(f"Camera '{name}' ({probed_ip}) is OFFLINE")
+                        elif prev_status == CameraStatus.ONLINE:
+                            status_changes.append(f"Camera '{name}' ({probed_ip}) went OFFLINE")
 
                 state = session.get(MonitoringState, 1)
                 if state is not None:
                     state.last_cycle_finished_at = now
 
                 session.commit()
+
+            for line in status_changes:
+                logger.info(line)
 
     async def _scheduler_loop(self) -> None:
         """Periodic loop running cycles using monotonic clock intervals."""
@@ -168,6 +189,15 @@ class MonitoringEngine:
                 await asyncio.to_thread(self.run_cycle_sync)
             except Exception:
                 logger.exception("Unexpected error in monitoring cycle execution")
+
+            cycle_elapsed = time.monotonic() - cycle_start_mono
+            interval = self.interval_seconds
+            if cycle_elapsed > interval:
+                logger.warning(
+                    "Monitoring cycle took %.2fs, exceeding configured interval of %.2fs",
+                    cycle_elapsed,
+                    interval,
+                )
 
             if self._stop_event.is_set():
                 break
@@ -222,6 +252,7 @@ class MonitoringEngine:
             self._loop = asyncio.get_running_loop()
             self._wake_event = asyncio.Event()
             self._task = asyncio.create_task(self._scheduler_loop())
+            logger.info("Monitoring engine started")
 
     async def stop(self) -> None:
         """Stop future monitoring cycles and discard in-flight cycle results.
@@ -247,6 +278,7 @@ class MonitoringEngine:
                     pass
                 self._task = None
             await asyncio.to_thread(self._wait_for_cycle_finish)
+            logger.info("Monitoring engine stopped")
 
     async def shutdown(self) -> None:
         """Shutdown the running task on application exit without modifying DB flag."""

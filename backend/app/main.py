@@ -1,6 +1,9 @@
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
+import logging
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from alembic.config import Config
 from fastapi import FastAPI, Request
@@ -45,6 +48,7 @@ async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
 
     alembic_ini_path = BACKEND_DIR / "alembic.ini"
     alembic_cfg = Config(str(alembic_ini_path))
+    alembic_cfg.attributes["skip_logging_config"] = True
     alembic_cfg.set_main_option("sqlalchemy.url", app_settings.database_url)
 
     try:
@@ -62,6 +66,7 @@ async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
         should_resume = state.running if state is not None else False
 
     if should_resume:
+        logger.info("Resuming monitoring engine from previous state")
         await application.state.monitoring_engine.start()
 
     yield
