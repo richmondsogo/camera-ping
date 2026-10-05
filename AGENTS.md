@@ -48,6 +48,7 @@ All standard commands are executed from the repository root using Python:
   python scripts/check.py --only-tests
   python scripts/check.py --e2e   # Runs Playwright smoke/e2e tests
   # Set env var CONTRAST_REPORT=1 to print contrast tables (quiet by default unless a pair fails)
+  # Set env var WALKTHROUGH=1 to generate settings walkthrough screenshots during e2e
   ```
 
 ## Conventions

@@ -12,11 +12,11 @@ import {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const screenshotsDir = path.resolve(__dirname, "../screenshots/step09");
 
-if (!fs.existsSync(screenshotsDir)) {
+if (process.env.WALKTHROUGH && !fs.existsSync(screenshotsDir)) {
   fs.mkdirSync(screenshotsDir, { recursive: true });
 }
 
-test.describe("Step 09: Browser & Accessibility Verification Walkthrough", () => {
+test.describe("Settings Layout & Accessibility Verification", () => {
   test.beforeEach(async () => {
     await resetCameras();
     await resetSettings(60); // Default 60s
@@ -30,6 +30,11 @@ test.describe("Step 09: Browser & Accessibility Verification Walkthrough", () =>
   test("execute 6-point screenshot walkthrough and responsive inspection", async ({
     page,
   }) => {
+    test.skip(
+      !process.env.WALKTHROUGH,
+      "Screenshot walkthrough is opt-in (set WALKTHROUGH=1 to run)."
+    );
+
     // 1. Seed cameras to have rich dashboard data
     await seedCameras(30);
 
