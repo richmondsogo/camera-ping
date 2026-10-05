@@ -10,3 +10,4 @@ This directory documents the key architectural choices, constraints, and tradeof
 - [ADR 0006: Ping Mechanism](0006-ping-mechanism.md): Concurrent `ping.exe` execution requiring exit code 0, target IP, and TTL= match.
 - [ADR 0007: Removal of Email Alerts](0007-no-email.md): Removal of SMTP/Graph notification machinery due to offline admin PC environment.
 - [ADR 0008: Application Settings Storage and Dynamic Check Interval](0008-settings-storage.md): Singleton `app_settings` SQLite table for dynamic interval persistence.
+- [ADR 0009: Production Runtime Architecture](0009-production-runtime.md): Single-process loopback runtime, instance lock, Host/Origin validation, and logging.

@@ -68,6 +68,11 @@
 
 The admin PC has no internet at any time. Plan: one folder or zip containing the 64-bit Python 3.12 embeddable runtime (same minor version as development), runtime dependencies pre-installed from pinned versions on the dev PC, backend code, prebuilt frontend, install/start/stop/uninstall scripts, a scheduled task that starts the app at boot and restarts it on failure, a VERSION file, the operator documentation, and a fresh empty database (no test cameras). Nothing is downloaded at install time.
 
+### Step 14 needs
+- The start script must set the data, log and frontend paths through environment variables.
+- A hard kill (Task Scheduler "End") must be safe (tested in Step 13).
+- Record Windows reserved port ranges.
+
 ## Questions for the office visit
 
 - `winver` / `systeminfo` output (Windows version, 64-bit?)
