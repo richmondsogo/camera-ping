@@ -54,6 +54,8 @@ class MonitoringEngine:
         self._cycle_lock = threading.Lock()
         self._task: asyncio.Task[None] | None = None
         self._running_since: datetime | None = None
+        self._wake_event: asyncio.Event | None = None
+        self._loop: asyncio.AbstractEventLoop | None = None
 
     @property
     def interval_seconds(self) -> float:
@@ -170,14 +172,33 @@ class MonitoringEngine:
             if self._stop_event.is_set():
                 break
 
-            interval = self.interval_seconds
-            elapsed = time.monotonic() - cycle_start_mono
-            sleep_duration = max(0.0, interval - elapsed)
+            if self._wake_event is not None:
+                self._wake_event.clear()
 
-            try:
-                await asyncio.sleep(sleep_duration)
-            except asyncio.CancelledError:
-                break
+            while not self._stop_event.is_set():
+                interval = self.interval_seconds
+                elapsed = time.monotonic() - cycle_start_mono
+                remaining = max(0.0, interval - elapsed)
+                if remaining <= 0:
+                    break
+                slice_duration = min(remaining, 3600.0)
+
+                if self._wake_event is None:
+                    try:
+                        await asyncio.sleep(slice_duration)
+                    except asyncio.CancelledError:
+                        return
+                else:
+                    try:
+                        await asyncio.wait_for(
+                            self._wake_event.wait(),
+                            timeout=slice_duration,
+                        )
+                        self._wake_event.clear()
+                    except TimeoutError:
+                        pass
+                    except asyncio.CancelledError:
+                        return
 
     async def start(self) -> None:
         """Start the monitoring scheduler and immediately execute the first cycle.
@@ -198,6 +219,8 @@ class MonitoringEngine:
                 return
 
             self._stop_event.clear()
+            self._loop = asyncio.get_running_loop()
+            self._wake_event = asyncio.Event()
             self._task = asyncio.create_task(self._scheduler_loop())
 
     async def stop(self) -> None:
@@ -214,6 +237,8 @@ class MonitoringEngine:
 
             self._running_since = None
             self._stop_event.set()
+            if self._wake_event is not None:
+                self._wake_event.set()
             if self._task is not None:
                 self._task.cancel()
                 try:
@@ -227,6 +252,8 @@ class MonitoringEngine:
         """Shutdown the running task on application exit without modifying DB flag."""
         async with self._lock:
             self._stop_event.set()
+            if self._wake_event is not None:
+                self._wake_event.set()
             if self._task is not None:
                 self._task.cancel()
                 try:
@@ -235,6 +262,25 @@ class MonitoringEngine:
                     pass
                 self._task = None
             await asyncio.to_thread(self._wait_for_cycle_finish)
+
+    def wake(self) -> None:
+        """Thread-safe notification to wake the sleeping scheduler if running."""
+        if not self.is_running:
+            return
+        if self._wake_event is None or self._loop is None:
+            return
+        if self._loop.is_closed():
+            return
+
+        try:
+            current_loop = asyncio.get_running_loop()
+        except RuntimeError:
+            current_loop = None
+
+        if current_loop is self._loop:
+            self._wake_event.set()
+        else:
+            self._loop.call_soon_threadsafe(self._wake_event.set)
 
     def _wait_for_cycle_finish(self) -> None:
         with self._cycle_lock:

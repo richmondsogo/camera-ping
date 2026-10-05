@@ -11,12 +11,14 @@ from alembic import command
 from app.api.cameras import router as cameras_router
 from app.api.health import router as health_router
 from app.api.monitoring import router as monitoring_router
+from app.api.settings import router as settings_router
 from app.config import BACKEND_DIR, Settings, settings
 from app.database import create_db_engine, create_sessionmaker
 from app.exceptions import CameraNotFoundError, DuplicateIpError
 from app.models.monitoring import MonitoringState
 from app.monitoring.engine import MonitoringEngine
 from app.monitoring.probe import ping_host
+from app.services.settings import get_effective_interval
 
 
 @asynccontextmanager
@@ -93,10 +95,20 @@ def create_app(
 
     engine = create_db_engine(app_settings.database_url)
     session_factory = create_sessionmaker(engine)
+
+    def interval_provider() -> float:
+        with session_factory() as session:
+            return float(
+                get_effective_interval(
+                    session,
+                    default_interval=app_settings.monitor_interval_seconds,
+                )
+            )
+
     monitoring_engine = MonitoringEngine(
         session_factory=session_factory,
         pinger=pinger,
-        interval=app_settings.monitor_interval_seconds,
+        interval=interval_provider,
     )
 
     application.state.settings = app_settings
@@ -133,6 +145,7 @@ def create_app(
     application.include_router(health_router)
     application.include_router(cameras_router)
     application.include_router(monitoring_router)
+    application.include_router(settings_router)
 
     return application
 
