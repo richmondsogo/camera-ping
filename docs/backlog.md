@@ -59,8 +59,28 @@
 
 - The admin PC has no internet, so install needs a prebuilt frontend (`pnpm build` on the dev PC), a pre-downloaded wheel folder (`pip download`), an offline Python installer, and auto-start; no network calls at runtime.
 
-### Office acceptance (Step 13)
+### Office acceptance (Step 13 / 15)
 
 - Unplug one camera and verify Offline after a cycle.
 - Ping an unused camera-subnet address and a router-unreachable address, compare real ping.exe outputs, and replace the synthetic fixtures in `backend/tests/fixtures/ping` with real captures.
+
+## Offline bundle (Step 14)
+
+The admin PC has no internet at any time. Plan: one folder or zip containing the 64-bit Python 3.12 embeddable runtime (same minor version as development), runtime dependencies pre-installed from pinned versions on the dev PC, backend code, prebuilt frontend, install/start/stop/uninstall scripts, a scheduled task that starts the app at boot and restarts it on failure, a VERSION file, the operator documentation, and a fresh empty database (no test cameras). Nothing is downloaded at install time.
+
+## Questions for the office visit
+
+- `winver` / `systeminfo` output (Windows version, 64-bit?)
+- Whether the Windows account has administrator rights
+- Whether Python is already installed on the admin PC
+- Whether the PC is set to sleep or hibernate
+- Whether the cameras are on the same subnet or another VLAN
+
+## Decided against / deferred
+
+- Sorting offline cameras first (rows would jump under the cursor every 5 seconds)
+- Audible alert (decide after the office test; browsers block sound until the page has been clicked once)
+- `httpx2` test-client deprecation (dev-only, not installed)
+- Click the offline count to filter (possible small addition)
+
 

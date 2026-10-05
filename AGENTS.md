@@ -70,4 +70,6 @@ All standard commands are executed from the repository root using Python:
 5. **"Secrets never in source or database, env only"**: Credentials and secrets must live strictly in environment variables, never committed to source or written into SQLite database records.
 6. **"Scratch and throwaway scripts in OS temp only"**: Scratch or throwaway scripts use the OS temp directory, never `backend/data` or the repo, and are deleted afterwards.
 7. **"Paste check output only from final run on final commit"**: Paste check output only from the final run on the final commit; if any file changes after a run, re-run before pasting or pushing.
+8. **"Documentation is part of done"**: A step that changes behavior, configuration, commands, ports or screens updates the affected docs in the same PR, and `check` verifies links and configuration docs.
+9. **"Documentation claims must be verifiable"**: A documentation claim must be verifiable in the code or the running app; never describe behavior that was not observed.
 
