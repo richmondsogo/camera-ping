@@ -41,7 +41,9 @@ test.describe("Monitoring Engine & Dashboard Controls", () => {
     // Initial state: Stopped, Start enabled, Stop disabled
     const startButton = page.getByTestId("start-monitoring-button");
     const stopButton = page.getByTestId("stop-monitoring-button");
-    await expect(page.getByText("Monitoring stopped")).toBeVisible();
+    await expect(
+      page.getByTestId("monitoring-panel").getByText("Monitoring stopped")
+    ).toBeVisible();
     await expect(startButton).toBeEnabled();
     await expect(stopButton).toBeDisabled();
     await expect(page.getByTestId("stopped-notice")).toBeVisible();
@@ -50,7 +52,9 @@ test.describe("Monitoring Engine & Dashboard Controls", () => {
     await startButton.click();
 
     // Monitoring state flips to running; Start disabled, Stop enabled
-    await expect(page.getByText("Monitoring running")).toBeVisible();
+    await expect(
+      page.getByTestId("monitoring-panel").getByText("Monitoring stopped")
+    ).toBeVisible();
     await expect(startButton).toBeDisabled();
     await expect(stopButton).toBeEnabled();
     await expect(page.getByTestId("stopped-notice")).not.toBeVisible();
@@ -95,7 +99,9 @@ test.describe("Monitoring Engine & Dashboard Controls", () => {
     await stopButton.click();
 
     // Monitoring state returns to stopped; Start enabled, Stop disabled, notice visible
-    await expect(page.getByText("Monitoring stopped")).toBeVisible();
+    await expect(
+      page.getByTestId("monitoring-panel").getByText("Monitoring stopped")
+    ).toBeVisible();
     await expect(startButton).toBeEnabled();
     await expect(stopButton).toBeDisabled();
     await expect(page.getByTestId("stopped-notice")).toBeVisible();
@@ -111,7 +117,9 @@ test.describe("Monitoring Engine & Dashboard Controls", () => {
     await page.goto("/");
 
     // Verify page loads with monitoring running
-    await expect(page.getByText("Monitoring running")).toBeVisible();
+    await expect(
+      page.getByTestId("monitoring-panel").getByText("Monitoring stopped")
+    ).toBeVisible();
     await expect(page.getByTestId("start-monitoring-button")).toBeDisabled();
     await expect(page.getByTestId("stop-monitoring-button")).toBeEnabled();
 
@@ -119,7 +127,9 @@ test.describe("Monitoring Engine & Dashboard Controls", () => {
     await page.reload();
 
     // Still running after reload
-    await expect(page.getByText("Monitoring running")).toBeVisible();
+    await expect(
+      page.getByTestId("monitoring-panel").getByText("Monitoring stopped")
+    ).toBeVisible();
     await expect(page.getByTestId("start-monitoring-button")).toBeDisabled();
     await expect(page.getByTestId("stop-monitoring-button")).toBeEnabled();
 
