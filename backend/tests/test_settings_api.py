@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+from tests.conftest import make_test_client
 
 from app.config import Settings
 from app.main import create_app
@@ -25,7 +26,7 @@ def test_patch_settings_persists_across_app_rebuild(test_db_path: Path) -> None:
     )
     app_a = create_app(settings_a)
 
-    with TestClient(app_a) as client_a:
+    with make_test_client(app_a) as client_a:
         # Patch to 120 seconds
         patch_res = client_a.patch(
             "/api/settings",
@@ -43,7 +44,7 @@ def test_patch_settings_persists_across_app_rebuild(test_db_path: Path) -> None:
         monitor_interval_seconds=60,
     )
     app_b = create_app(settings_b)
-    with TestClient(app_b) as client_b:
+    with make_test_client(app_b) as client_b:
         get_res_b = client_b.get("/api/settings")
         assert get_res_b.status_code == 200
         assert get_res_b.json() == {"check_interval_seconds": 120}

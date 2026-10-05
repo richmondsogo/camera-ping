@@ -49,10 +49,16 @@ def app_instance(test_settings: Settings) -> FastAPI:
     return create_app(test_settings)
 
 
+def make_test_client(app: FastAPI, **kwargs: object) -> TestClient:
+    """Create a TestClient with base_url defaulting to http://localhost."""
+    kwargs.setdefault("base_url", "http://localhost")
+    return TestClient(app, **kwargs)  # type: ignore[arg-type]
+
+
 @pytest.fixture
 def client(app_instance: FastAPI) -> Generator[TestClient, None, None]:
     """TestClient that runs app lifespan (migrating tmp_path database)."""
-    with TestClient(app_instance) as test_client:
+    with make_test_client(app_instance) as test_client:
         yield test_client
 
 

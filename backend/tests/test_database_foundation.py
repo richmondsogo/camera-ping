@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+from tests.conftest import make_test_client
 from sqlalchemy import Column, Integer, Table, select
 from sqlalchemy.exc import StatementError
 from sqlalchemy.orm import Session
@@ -115,7 +116,7 @@ def test_in_process_upgrade_preserves_existing_loggers(tmp_path: Path) -> None:
     test_settings = Settings(database_url=f"sqlite:///{db_path.as_posix()}")
     test_app = create_app(test_settings)
 
-    with TestClient(test_app):
+    with make_test_client(test_app):
         pass
 
     logger.info("Message after Alembic upgrade")

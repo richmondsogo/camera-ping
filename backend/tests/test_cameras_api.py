@@ -4,6 +4,7 @@ from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
+from tests.conftest import make_test_client
 from sqlalchemy.orm import Session
 
 from app import clock
@@ -566,7 +567,7 @@ def test_database_persistence_across_app_restart(
 ) -> None:
     """Data persists across application restarts pointing to the same database file."""
     app1 = create_app(test_settings)
-    with TestClient(app1) as client1:
+    with make_test_client(app1) as client1:
         res = client1.post(
             "/api/cameras",
             json={
@@ -581,7 +582,7 @@ def test_database_persistence_across_app_restart(
 
     # Start a brand new app and client on the same database
     app2 = create_app(test_settings)
-    with TestClient(app2) as client2:
+    with make_test_client(app2) as client2:
         get_res = client2.get(f"/api/cameras/{created_id}")
         assert get_res.status_code == 200
         data = get_res.json()
