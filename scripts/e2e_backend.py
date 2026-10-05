@@ -33,10 +33,8 @@ def is_port_in_use(host: str, port: int) -> bool:
 
 def wipe_e2e_data() -> None:
     E2E_DATA_DIR.mkdir(parents=True, exist_ok=True)
-    for p in E2E_DATA_DIR.glob("*"):
-        if p.is_file() and (
-            p.suffix in {".db", ".sqlite3"} or "-wal" in p.name or "-shm" in p.name
-        ):
+    for p in E2E_DATA_DIR.glob("e2e_cameras*"):
+        if p.is_file():
             try:
                 p.unlink()
             except OSError as err:

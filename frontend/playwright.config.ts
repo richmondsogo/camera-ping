@@ -13,6 +13,7 @@ const repoRootDir = path.resolve(__dirname, "..");
 const e2eBackendScript = path.join(repoRootDir, "scripts", "e2e_backend.py");
 const e2eBackendPort = Number(process.env.E2E_BACKEND_PORT || "18000");
 const e2eFrontendPort = Number(process.env.E2E_FRONTEND_PORT || "15173");
+const e2eProdPort = Number(process.env.E2E_PROD_PORT || "18080");
 
 export default defineConfig({
   testDir: "./e2e",
@@ -31,6 +32,15 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
+      testIgnore: /production\.spec\.ts/,
+    },
+    {
+      name: "production",
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: `http://127.0.0.1:${e2eProdPort}`,
+      },
+      testMatch: /production\.spec\.ts/,
     },
   ],
   webServer: [
@@ -48,6 +58,20 @@ export default defineConfig({
       env: {
         API_PROXY_TARGET: `http://127.0.0.1:${e2eBackendPort}`,
         PORT: String(e2eFrontendPort),
+      },
+      reuseExistingServer: false,
+      timeout: 120 * 1000,
+    },
+    {
+      command: `"${pythonCmd}" -m app.serve`,
+      cwd: backendDir,
+      port: e2eProdPort,
+      env: {
+        DATABASE_URL: `sqlite:///${path.join(backendDir, ".e2e-data", "e2e_prod_cameras.db").replace(/\\/g, "/")}`,
+        LOG_DIR: path.join(backendDir, ".e2e-data", "logs"),
+        FRONTEND_DIST: path.join(__dirname, "dist"),
+        BACKEND_PORT: String(e2eProdPort),
+        BACKEND_HOST: "127.0.0.1",
       },
       reuseExistingServer: false,
       timeout: 120 * 1000,
