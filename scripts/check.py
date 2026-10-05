@@ -72,8 +72,12 @@ class CheckRunner:
     def run_backend_tests(self) -> None:
         self.run_step("Backend: pytest", [self.pytest], BACKEND_DIR)
 
+    def run_docs_checks(self) -> None:
+        self.run_step("Docs: links and configuration", [sys.executable, "scripts/check_docs.py"], REPO_ROOT)
+
     def run_script_tests(self) -> None:
         self.run_step("Scripts: Token Linter Tests", [sys.executable, "-m", "unittest", "scripts.tests.test_lint_tokens"], REPO_ROOT)
+        self.run_step("Scripts: Docs Checker Tests", [sys.executable, "-m", "unittest", "scripts.tests.test_check_docs"], REPO_ROOT)
 
     def run_frontend_lint(self) -> None:
         self.run_step("Frontend: Design Token Lint", [sys.executable, "scripts/lint_tokens.py"], REPO_ROOT)
@@ -144,6 +148,7 @@ def main() -> None:
         runner.run_frontend_tests()
         runner.run_frontend_build_verification()
     elif args.only_lint:
+        runner.run_docs_checks()
         runner.run_backend_lint()
         runner.run_frontend_lint()
     elif args.only_typecheck:
@@ -155,6 +160,7 @@ def main() -> None:
         runner.run_frontend_tests()
     else:
         # Default suite: all linters, typecheckers, and unit tests
+        runner.run_docs_checks()
         runner.run_backend_lint()
         runner.run_backend_typecheck()
         runner.run_backend_tests()
