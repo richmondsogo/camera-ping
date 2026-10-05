@@ -40,14 +40,14 @@ def test_create_camera_happy_path(client: TestClient) -> None:
     assert updated_at.tzinfo is not None
     assert created_at == updated_at
 
-    # Internal monitoring fields MUST be absent from response
-    assert "consecutive_failures" not in data
+    # consecutive_failures is present and 0 for new cameras
+    assert data["consecutive_failures"] == 0
 
 
-def test_internal_fields_absent_from_all_endpoints(
+def test_consecutive_failures_present_and_internal_alert_fields_absent(
     client: TestClient, db_session: Session
 ) -> None:
-    """Internal fields are absent from all response models (POST, GET, PATCH, list)."""
+    """consecutive_failures is in CameraRead; internal alert fields remain absent."""
     # 1. Create (POST)
     post_res = client.post(
         "/api/cameras",
@@ -61,7 +61,8 @@ def test_internal_fields_absent_from_all_endpoints(
     assert post_res.status_code == 201
     post_data = post_res.json()
     camera_id = post_data["id"]
-    assert "consecutive_failures" not in post_data
+    assert post_data["consecutive_failures"] == 0
+    assert "alert_sent_for_current_outage" not in post_data
 
     # Set internal fields in DB to non-default values
     cam = db_session.get(Camera, camera_id)
@@ -73,7 +74,8 @@ def test_internal_fields_absent_from_all_endpoints(
     get_res = client.get(f"/api/cameras/{camera_id}")
     assert get_res.status_code == 200
     get_data = get_res.json()
-    assert "consecutive_failures" not in get_data
+    assert get_data["consecutive_failures"] == 7
+    assert "alert_sent_for_current_outage" not in get_data
 
     # 3. Patch (PATCH /api/cameras/{id})
     patch_res = client.patch(
@@ -81,15 +83,22 @@ def test_internal_fields_absent_from_all_endpoints(
     )
     assert patch_res.status_code == 200
     patch_data = patch_res.json()
-    assert "consecutive_failures" not in patch_data
+    assert patch_data["consecutive_failures"] == 7
+    assert "alert_sent_for_current_outage" not in patch_data
 
     # 4. List (GET /api/cameras)
     list_res = client.get("/api/cameras")
     assert list_res.status_code == 200
     list_data = list_res.json()
     assert len(list_data) >= 1
+    found = False
     for item in list_data:
-        assert "consecutive_failures" not in item
+        assert "consecutive_failures" in item
+        assert "alert_sent_for_current_outage" not in item
+        if item["id"] == camera_id:
+            assert item["consecutive_failures"] == 7
+            found = True
+    assert found
 
 
 def test_ip_address_whitespace_trimmed_and_canonicalized(

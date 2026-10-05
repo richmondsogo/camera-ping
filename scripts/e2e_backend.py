@@ -67,13 +67,19 @@ def main() -> None:
     os.environ["DATABASE_URL"] = db_url
     os.environ["BACKEND_PORT"] = str(port)
     os.environ["BACKEND_HOST"] = host
+    os.environ["MONITOR_INTERVAL_SECONDS"] = "10"
 
     sys.path.insert(0, str(BACKEND_DIR))
     import uvicorn
     from app.config import Settings
     from app.main import create_app
 
-    app_settings = Settings(database_url=db_url, backend_port=port, backend_host=host)
+    app_settings = Settings(
+        database_url=db_url,
+        backend_port=port,
+        backend_host=host,
+        monitor_interval_seconds=10,
+    )
     app = create_app(app_settings)
 
     print(f"[E2E Backend] Running on http://{host}:{port} with database {db_url}")

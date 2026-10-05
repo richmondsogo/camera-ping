@@ -143,6 +143,7 @@ describe("api and ApiError", () => {
       description: "Front gate",
       ip_address: "192.0.2.10",
       status: "online",
+      consecutive_failures: 0,
       last_checked: null,
       last_online: null,
       created_at: "2026-10-03T10:00:00Z",
@@ -158,6 +159,39 @@ describe("api and ApiError", () => {
 
     const result = await api.getCamera(1);
     expect(result).toEqual(validCamera);
+  });
+
+  it("calls getMonitoringStatus, startMonitoring, and stopMonitoring with schemas", async () => {
+    const mockStatus = {
+      running: true,
+      interval_seconds: 60,
+      running_since: "2026-10-01T10:00:00Z",
+      last_cycle_started_at: "2026-10-01T10:01:00Z",
+      last_cycle_finished_at: "2026-10-01T10:01:05Z",
+      next_check_at: "2026-10-01T10:02:00Z",
+      total: 5,
+      online: 4,
+      offline: 1,
+      unknown: 0,
+    };
+
+    global.fetch = vi.fn().mockImplementation(() =>
+      Promise.resolve(
+        new Response(JSON.stringify(mockStatus), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        })
+      )
+    );
+
+    const getRes = await api.getMonitoringStatus();
+    expect(getRes).toEqual(mockStatus);
+
+    const startRes = await api.startMonitoring();
+    expect(startRes).toEqual(mockStatus);
+
+    const stopRes = await api.stopMonitoring();
+    expect(stopRes).toEqual(mockStatus);
   });
 
   it("handles loc items that are string or number and preserves total_errors without breaking mapServerErrors", async () => {

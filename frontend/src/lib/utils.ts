@@ -21,6 +21,7 @@ const customTwMerge = extendTailwindMerge({
         "tight",
         "popup-pad",
         "item-gap",
+        "panel-pad",
         "trigger-status",
         "trigger-location",
         "select-indicator",

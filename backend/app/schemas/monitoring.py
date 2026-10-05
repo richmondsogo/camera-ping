@@ -8,6 +8,7 @@ class MonitoringStatusResponse(BaseModel):
 
     running: bool
     interval_seconds: int
+    running_since: datetime | None = None
     last_cycle_started_at: datetime | None
     last_cycle_finished_at: datetime | None
     next_check_at: datetime | None

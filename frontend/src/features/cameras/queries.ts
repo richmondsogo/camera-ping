@@ -4,15 +4,21 @@ import { api } from "@/lib/api";
 import type { Camera, CameraFormData } from "@/lib/schemas";
 
 export const CAMERAS_QUERY_KEY = ["cameras"] as const;
+export const DEFAULT_POLL_INTERVAL_MS = 5000;
 
 /**
  * Query hook for camera list.
  * uses isPending for initial loading state; background refetches never blank the table.
+ * Supports background polling every 5s by default; can be disabled or overridden in tests.
  */
-export function useCameras() {
+export function useCameras(
+  pollInterval: number | false = DEFAULT_POLL_INTERVAL_MS
+) {
   return useQuery<Camera[]>({
     queryKey: CAMERAS_QUERY_KEY,
     queryFn: () => api.listCameras(),
+    refetchInterval: pollInterval,
+    refetchIntervalInBackground: true,
   });
 }
 

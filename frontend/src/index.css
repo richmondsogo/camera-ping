@@ -25,12 +25,13 @@
   --spacing-tight: 8px;
   --spacing-popup-pad: 4px;
   --spacing-item-gap: 2px;
+  --spacing-panel-pad: 16px;
 
-  --spacing-col-status: 100px;
+  --spacing-col-status: 170px;
   --spacing-col-ip: 140px;
   --spacing-col-checked: 170px;
   --spacing-col-actions: 160px;
-  --spacing-table-min: 1080px;
+  --spacing-table-min: 1150px;
 
   --spacing-trigger-status: 160px;
   --spacing-trigger-location: 200px;

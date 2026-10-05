@@ -159,6 +159,7 @@ describe("CameraToolbar filter select labels and clear filters", () => {
         location: "Warehouse",
         description: "Zone 1",
         status: "online",
+        consecutive_failures: 0,
         last_checked: null,
         last_online: null,
         created_at: "2026-10-01T10:00:00Z",
@@ -171,6 +172,7 @@ describe("CameraToolbar filter select labels and clear filters", () => {
         location: "Office",
         description: "Zone 2",
         status: "offline",
+        consecutive_failures: 0,
         last_checked: null,
         last_online: null,
         created_at: "2026-10-01T10:00:00Z",
@@ -180,7 +182,7 @@ describe("CameraToolbar filter select labels and clear filters", () => {
 
     vi.spyOn(api, "listCameras").mockResolvedValue(testCameras);
 
-    renderWithClient(<DashboardPage />);
+    renderWithClient(<DashboardPage pollInterval={false} />);
 
     await waitFor(() => {
       expect(screen.getByText("Cam Alpha")).toBeInTheDocument();
@@ -229,6 +231,7 @@ describe("CameraToolbar filter select labels and clear filters", () => {
         location: "Warehouse",
         description: "Zone 1",
         status: "online",
+        consecutive_failures: 0,
         last_checked: null,
         last_online: null,
         created_at: "2026-10-01T10:00:00Z",
@@ -238,7 +241,7 @@ describe("CameraToolbar filter select labels and clear filters", () => {
 
     vi.spyOn(api, "listCameras").mockResolvedValue(testCameras);
 
-    renderWithClient(<DashboardPage />);
+    renderWithClient(<DashboardPage pollInterval={false} />);
 
     await waitFor(() => {
       expect(screen.getByText("Cam Alpha")).toBeInTheDocument();
