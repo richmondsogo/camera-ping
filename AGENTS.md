@@ -68,4 +68,6 @@ All standard commands are executed from the repository root using Python:
 3. **"One step per conversation, plan first, wait for approval"**: Every fresh conversation starts by reading `AGENTS.md`, drafting a numbered plan, and awaiting explicit human approval before any files are modified.
 4. **"No features beyond the step's scope, name and ask instead"**: Do not speculate or implement ahead of the approved plan. If a feature or abstraction is noticed, name it and ask before building.
 5. **"Secrets never in source or database, env only"**: Credentials and secrets must live strictly in environment variables, never committed to source or written into SQLite database records.
+6. **"Scratch and throwaway scripts in OS temp only"**: Scratch or throwaway scripts use the OS temp directory, never `backend/data` or the repo, and are deleted afterwards.
+7. **"Paste check output only from final run on final commit"**: Paste check output only from the final run on the final commit; if any file changes after a run, re-run before pasting or pushing.
 
