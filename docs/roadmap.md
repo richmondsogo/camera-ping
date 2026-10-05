@@ -10,7 +10,7 @@
 | 06       | ping-discovery             | dropped: keep the v1 ping.exe method, no discovery needed                                         | dropped     |
 | 07       | monitoring-engine          | monitoring engine + status API                                                                    | done   |
 | 08       | monitoring-ui              | monitoring-ui (Start/Stop buttons, summary, polling; API already exists)                          | done   |
-| 09       | settings                   | settings (check interval and theme only)                                                          | in progress |
+| 09       | settings                   | settings (check interval and theme only)                                                          | done   |
 | 10       | email-discovery            | dropped: no email, admin PC is offline                                                            | dropped     |
 | 11       | email-alerts               | dropped: no email, admin PC is offline                                                            | dropped     |
 | 12       | e2e                        | Complete smoke and end-to-end integration test suite simulating camera states                     | later       |

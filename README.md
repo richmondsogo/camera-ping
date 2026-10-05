@@ -3,9 +3,9 @@
 Local network ICMP reachability monitor for Hikvision CCTV cameras running on an admin PC in the office server room.
 
 ## Status
-- **Phase**: Step 07 - Monitoring Engine + Status API
+- **Phase**: Step 09 - Settings (Check Interval & Theme)
 - **Foundation**: FastAPI (Backend) + React 19 / Vite / Tailwind CSS v4 (Frontend) + SQLite / Alembic
-- **Monitoring Engine**: Background ICMP pings run concurrently via `ThreadPoolExecutor` (max 32 workers). Probing interval configured via `MONITOR_INTERVAL_SECONDS` (default 60s, min 10s). Engine state persists across application restarts.
+- **Monitoring Engine**: Background ICMP pings run concurrently via `ThreadPoolExecutor` (max 32 workers). Probing interval configured via `MONITOR_INTERVAL_SECONDS` (default 60s, min 10s) or dynamically through the Settings interface. Engine state persists across application restarts.
 
 ## Prerequisites
 - **Python**: 3.12+ (Python 3.12 recommended)
