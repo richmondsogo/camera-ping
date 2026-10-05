@@ -18,6 +18,10 @@ DbSession = Annotated[Session, Depends(get_db)]
 
 MAX_IMPORT_BYTES = 1024 * 1024  # 1 MiB
 
+# Module-level integer constants to avoid deprecated Starlette constant renames
+HTTP_413_PAYLOAD_TOO_LARGE = 413
+HTTP_422_UNPROCESSABLE = 422
+
 
 @router.get("", response_model=list[CameraRead], status_code=status.HTTP_200_OK)
 def list_cameras(db: DbSession) -> Sequence[Camera]:
@@ -78,7 +82,7 @@ async def import_cameras(
         body_bytes.extend(chunk)
         if len(body_bytes) > MAX_IMPORT_BYTES:
             return JSONResponse(
-                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                status_code=HTTP_413_PAYLOAD_TOO_LARGE,
                 content={
                     "detail": [
                         {
@@ -95,7 +99,7 @@ async def import_cameras(
         csv_text = bytes(body_bytes).decode("utf-8-sig")
     except UnicodeDecodeError:
         return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=HTTP_422_UNPROCESSABLE,
             content={
                 "detail": [
                     {
@@ -114,7 +118,7 @@ async def import_cameras(
     validation = cameras_service.parse_and_validate_camera_csv(db, csv_text)
     if validation.errors:
         return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=HTTP_422_UNPROCESSABLE,
             content={
                 "detail": validation.errors[:100],
                 "total_errors": validation.total_errors,

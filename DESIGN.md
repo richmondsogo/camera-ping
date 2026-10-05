@@ -1,7 +1,7 @@
 # Camera Monitor Design System & Visual Specification
 
 **Status:** Active  
-**Source of Truth:** [frontend/src/index.css](file:///c:/Users/Richmond/Desktop/Open%20Source%20Projects/camera-ping/frontend/src/index.css)  
+**Source of Truth:** [frontend/src/index.css](frontend/src/index.css)  
 
 ---
 

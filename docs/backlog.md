@@ -4,7 +4,7 @@
 
 - Sequential pings do not scale. One check can take up to ~2s, so 30 unreachable cameras take up to ~60s, which equals the whole default check interval. The engine must ping concurrently.
 - On Windows, ping.exe can exit with code 0 when a router replies "Destination host unreachable". Exit code alone is not proof of reachability. Step 06 must test this on the real Windows machine and decide whether to also require "TTL=" in the output, and verify that works on non-English Windows.
-- The v1 script (cctv-ping.py) keeps its state in memory only. The new design persists failure streaks in the database so restarts do not lose them. The restart test (failure #7, restart, failure #8) proves this.
+- The legacy v1 script kept its state in memory only. The new design persists failure streaks in the database so restarts do not lose them. The restart test (failure #7, restart, failure #8) proves this.
 
 ## CSV-first import (Step 05)
 
@@ -59,8 +59,28 @@
 
 - The admin PC has no internet, so install needs a prebuilt frontend (`pnpm build` on the dev PC), a pre-downloaded wheel folder (`pip download`), an offline Python installer, and auto-start; no network calls at runtime.
 
-### Office acceptance (Step 13)
+### Office acceptance (Step 13 / 15)
 
 - Unplug one camera and verify Offline after a cycle.
 - Ping an unused camera-subnet address and a router-unreachable address, compare real ping.exe outputs, and replace the synthetic fixtures in `backend/tests/fixtures/ping` with real captures.
+
+## Offline bundle (Step 14)
+
+The admin PC has no internet at any time. Plan: one folder or zip containing the 64-bit Python 3.12 embeddable runtime (same minor version as development), runtime dependencies pre-installed from pinned versions on the dev PC, backend code, prebuilt frontend, install/start/stop/uninstall scripts, a scheduled task that starts the app at boot and restarts it on failure, a VERSION file, the operator documentation, and a fresh empty database (no test cameras). Nothing is downloaded at install time.
+
+## Questions for the office visit
+
+- `winver` / `systeminfo` output (Windows version, 64-bit?)
+- Whether the Windows account has administrator rights
+- Whether Python is already installed on the admin PC
+- Whether the PC is set to sleep or hibernate
+- Whether the cameras are on the same subnet or another VLAN
+
+## Decided against / deferred
+
+- Sorting offline cameras first (rows would jump under the cursor every 5 seconds)
+- Audible alert (decide after the office test; browsers block sound until the page has been clicked once)
+- `httpx2` test-client deprecation (dev-only, not installed)
+- Click the offline count to filter (possible small addition)
+
 

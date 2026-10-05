@@ -18,12 +18,14 @@ export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  retries: 0,
   workers: 1,
-  reporter: "list",
+  reporter: process.env.CI
+    ? [["list"], ["html", { open: "never", outputFolder: "playwright-report" }]]
+    : "list",
   use: {
     baseURL: `http://localhost:${e2eFrontendPort}`,
-    trace: "on-first-retry",
+    trace: "retain-on-failure",
   },
   projects: [
     {
