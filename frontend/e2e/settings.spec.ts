@@ -134,7 +134,7 @@ test.describe("Settings Page & Configuration", () => {
 
     await page.getByTestId("custom-interval-amount").fill("1");
     await page.getByTestId("custom-interval-unit").click();
-    await page.getByRole("option", { name: "days" }).click();
+    await page.getByRole("option", { name: "days", exact: true }).click();
 
     await page.getByTestId("save-settings-button").click();
     await expect(page.getByTestId("saved-notice")).toHaveText("Saved.");
@@ -238,7 +238,7 @@ test.describe("Settings Page & Configuration", () => {
     await page.route("**/src/main.tsx", (route) => route.abort());
 
     // 3. Navigate to page
-    await page.goto("/settings", { waitUntil: "commit" });
+    await page.goto("/settings", { waitUntil: "domcontentloaded" });
 
     // 4. Verify that html element already has class 'dark' applied by inline script
     const hasDarkClass = await page.evaluate(() =>

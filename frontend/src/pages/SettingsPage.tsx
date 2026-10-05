@@ -138,6 +138,7 @@ export function SettingsPage() {
   const saveMutation = useMutation({
     mutationFn: (seconds: number) =>
       api.updateSettings({ check_interval_seconds: seconds }),
+    networkMode: "always",
     onSuccess: (data) => {
       queryClient.setQueryData(["settings"], data);
       void queryClient.invalidateQueries({
