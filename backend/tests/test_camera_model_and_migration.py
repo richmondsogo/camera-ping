@@ -116,8 +116,7 @@ def test_schema_drift(tmp_path: Path) -> None:
 
     assert "CONSTRAINT ck_app_settings_id CHECK (id = 1)" in create_settings_sql
     assert (
-        "CONSTRAINT ck_app_settings_check_interval_seconds CHECK"
-        in create_settings_sql
+        "CONSTRAINT ck_app_settings_check_interval_seconds CHECK" in create_settings_sql
     )
 
 
@@ -321,9 +320,7 @@ def test_app_settings_constraints(tmp_path: Path) -> None:
     with pytest.raises(IntegrityError, match="CHECK constraint failed"):
         session.execute(
             text(
-                "UPDATE app_settings "
-                "SET check_interval_seconds = 31536001 "
-                "WHERE id = 1"
+                "UPDATE app_settings SET check_interval_seconds = 31536001 WHERE id = 1"
             )
         )
         session.commit()

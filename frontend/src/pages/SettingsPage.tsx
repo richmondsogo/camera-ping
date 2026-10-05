@@ -333,7 +333,7 @@ export function SettingsPage() {
             {/* Helper text or Long interval warning */}
             {effectiveSeconds !== null && effectiveSeconds >= 3600 ? (
               <p
-                className="text-xs font-medium text-amber-700 dark:text-amber-400"
+                className="text-xs font-medium text-muted-foreground"
                 data-testid="long-interval-warning"
               >
                 Outages may take up to {formatInterval(effectiveSeconds)} to

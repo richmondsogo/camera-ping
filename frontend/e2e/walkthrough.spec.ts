@@ -2,7 +2,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { test, expect } from "@playwright/test";
-import { resetCameras, resetSettings, seedCameras, stopMonitoring } from "./helpers";
+import {
+  resetCameras,
+  resetSettings,
+  seedCameras,
+  stopMonitoring,
+} from "./helpers";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const screenshotsDir = path.resolve(__dirname, "../screenshots/step09");
@@ -33,8 +38,12 @@ test.describe("Step 09: Browser & Accessibility Verification Walkthrough", () =>
 
     // Step 1: Default Settings Page (Light Mode)
     await page.goto("/settings");
-    await expect(page.getByRole("heading", { level: 1, name: "Settings" })).toBeVisible();
-    await expect(page.getByTestId("interval-preset-select")).toHaveText(/1 minute/);
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Settings" })
+    ).toBeVisible();
+    await expect(page.getByTestId("interval-preset-select")).toHaveText(
+      /1 minute/
+    );
     await expect(page.getByTestId("theme-select")).toHaveText(/Light/);
 
     await page.screenshot({
@@ -55,7 +64,9 @@ test.describe("Step 09: Browser & Accessibility Verification Walkthrough", () =>
     const saveButton = page.getByTestId("save-settings-button");
     await expect(saveButton).toBeEnabled();
     const warning = page.getByTestId("long-interval-warning");
-    await expect(warning).toHaveText("Outages may take up to 2 hours to detect.");
+    await expect(warning).toHaveText(
+      "Outages may take up to 2 hours to detect."
+    );
 
     await page.screenshot({
       path: path.join(screenshotsDir, "02-settings-custom-dirty.png"),
@@ -66,7 +77,9 @@ test.describe("Step 09: Browser & Accessibility Verification Walkthrough", () =>
     await saveButton.click();
     const savedNotice = page.getByTestId("saved-notice");
     await expect(savedNotice).toHaveText("Saved.");
-    await expect(page.getByTestId("settings-live-region")).toHaveText("Settings saved.");
+    await expect(page.getByTestId("settings-live-region")).toHaveText(
+      "Settings saved."
+    );
 
     await page.screenshot({
       path: path.join(screenshotsDir, "03-settings-saved-notice.png"),
@@ -86,9 +99,13 @@ test.describe("Step 09: Browser & Accessibility Verification Walkthrough", () =>
 
     // Step 5: Dashboard in Dark Mode reflecting 2 hours check interval
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1, name: "Dashboard" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Dashboard" })
+    ).toBeVisible();
     await expect(page.locator("html")).toHaveClass(/dark/);
-    await expect(page.getByTestId("check-interval")).toHaveText(/Checks every 2 hours/);
+    await expect(page.getByTestId("check-interval")).toHaveText(
+      /Checks every 2 hours/
+    );
 
     await page.screenshot({
       path: path.join(screenshotsDir, "05-dashboard-dark-mode.png"),
@@ -102,7 +119,9 @@ test.describe("Step 09: Browser & Accessibility Verification Walkthrough", () =>
     await page.getByRole("option", { name: "seconds" }).click();
 
     const errorMsg = page.getByTestId("custom-interval-error");
-    await expect(errorMsg).toHaveText("Choose an interval between 10 seconds and 365 days.");
+    await expect(errorMsg).toHaveText(
+      "Choose an interval between 10 seconds and 365 days."
+    );
     await expect(page.getByTestId("save-settings-button")).toBeDisabled();
 
     await page.screenshot({
@@ -122,7 +141,9 @@ test.describe("Step 09: Browser & Accessibility Verification Walkthrough", () =>
     for (const width of [1000, 1280, 1920]) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto("/settings");
-      await expect(page.getByRole("heading", { level: 1, name: "Settings" })).toBeVisible();
+      await expect(
+        page.getByRole("heading", { level: 1, name: "Settings" })
+      ).toBeVisible();
 
       // Check no horizontal scrollbar on body
       const scrollWidth = await page.evaluate(
@@ -134,7 +155,9 @@ test.describe("Step 09: Browser & Accessibility Verification Walkthrough", () =>
       expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1);
 
       // Verify max width constraint on main container
-      const containerBox = await page.getByTestId("settings-page").boundingBox();
+      const containerBox = await page
+        .getByTestId("settings-page")
+        .boundingBox();
       expect(containerBox).not.toBeNull();
       if (width > 1200) {
         expect(containerBox!.width).toBeLessThanOrEqual(1200 + 48); // max-w-page (1200px + padding)
@@ -174,6 +197,9 @@ test.describe("Step 09: Browser & Accessibility Verification Walkthrough", () =>
     const amountInput = page.getByTestId("custom-interval-amount");
     await amountInput.fill("");
     await expect(amountInput).toHaveAttribute("aria-invalid", "true");
-    await expect(amountInput).toHaveAttribute("aria-describedby", "custom-interval-error");
+    await expect(amountInput).toHaveAttribute(
+      "aria-describedby",
+      "custom-interval-error"
+    );
   });
 });
