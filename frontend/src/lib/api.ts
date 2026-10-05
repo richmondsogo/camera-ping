@@ -6,12 +6,15 @@ import {
   cameraListSchema,
   cameraReadSchema,
   monitoringStatusSchema,
+  settingsResponseSchema,
   type ApiErrorDetailItem,
   type Camera,
   type CameraFormData,
   type CameraImportPreview,
   type CameraImportSuccess,
   type MonitoringStatus,
+  type SettingsResponse,
+  type SettingsUpdate,
 } from "./schemas";
 
 export type ApiErrorKind = "network" | "server" | "http" | "invalid-response";
@@ -253,5 +256,19 @@ export const api = {
       "/api/monitoring/stop",
       { method: "POST" },
       monitoringStatusSchema
+    ),
+
+  getSettings: (): Promise<SettingsResponse> =>
+    apiRequest("/api/settings", { method: "GET" }, settingsResponseSchema),
+
+  updateSettings: (data: SettingsUpdate): Promise<SettingsResponse> =>
+    apiRequest(
+      "/api/settings",
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      },
+      settingsResponseSchema
     ),
 };

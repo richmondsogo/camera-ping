@@ -225,4 +225,34 @@ describe("api and ApiError", () => {
     expect(caughtError?.totalErrors).toBe(1);
     expect(caughtError?.detail).toEqual(errorBody.detail);
   });
+
+  it("calls getSettings and updateSettings with expected request params and schemas", async () => {
+    const mockSettings = { check_interval_seconds: 60 };
+
+    global.fetch = vi.fn().mockImplementation(() =>
+      Promise.resolve(
+        new Response(JSON.stringify(mockSettings), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        })
+      )
+    );
+
+    const getRes = await api.getSettings();
+    expect(getRes).toEqual(mockSettings);
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/settings",
+      expect.objectContaining({ method: "GET" })
+    );
+
+    const updateRes = await api.updateSettings({ check_interval_seconds: 120 });
+    expect(updateRes).toEqual(mockSettings);
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/settings",
+      expect.objectContaining({
+        method: "PATCH",
+        body: JSON.stringify({ check_interval_seconds: 120 }),
+      })
+    );
+  });
 });

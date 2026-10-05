@@ -3,6 +3,8 @@ import {
   cameraFormSchema,
   cameraReadSchema,
   monitoringStatusSchema,
+  settingsResponseSchema,
+  settingsUpdateSchema,
 } from "./schemas";
 import vectors from "../../../shared/camera-validation-vectors.json";
 
@@ -84,5 +86,35 @@ describe("CameraRead and MonitoringStatus Schema Validation", () => {
       expect(parsed.data.running_since).toBe("2026-10-01T12:00:00Z");
       expect(parsed.data.total).toBe(10);
     }
+  });
+
+  it("validates settingsResponseSchema and settingsUpdateSchema bounds", () => {
+    expect(
+      settingsResponseSchema.safeParse({ check_interval_seconds: 60 }).success
+    ).toBe(true);
+    expect(
+      settingsResponseSchema.safeParse({ check_interval_seconds: 10 }).success
+    ).toBe(true);
+    expect(
+      settingsResponseSchema.safeParse({ check_interval_seconds: 31536000 })
+        .success
+    ).toBe(true);
+    expect(
+      settingsResponseSchema.safeParse({ check_interval_seconds: 9 }).success
+    ).toBe(false);
+    expect(
+      settingsResponseSchema.safeParse({ check_interval_seconds: 31536001 })
+        .success
+    ).toBe(false);
+    expect(
+      settingsResponseSchema.safeParse({ check_interval_seconds: "60" }).success
+    ).toBe(false);
+
+    expect(
+      settingsUpdateSchema.safeParse({ check_interval_seconds: 120 }).success
+    ).toBe(true);
+    expect(
+      settingsUpdateSchema.safeParse({ check_interval_seconds: 5 }).success
+    ).toBe(false);
   });
 });

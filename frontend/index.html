@@ -4,8 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Camera Monitor</title>
+    <link rel="stylesheet" href="/src/index.css" />
+    <script>
+      try {
+        var t = localStorage.getItem("camera-monitor-theme");
+        if (t === "dark") {
+          document.documentElement.classList.add("dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+        }
+      } catch (e) {}
+    </script>
   </head>
-  <body class="bg-slate-50 text-slate-900 antialiased">
+  <body class="antialiased">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
