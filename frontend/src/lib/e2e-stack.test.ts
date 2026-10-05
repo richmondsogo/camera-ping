@@ -3,6 +3,7 @@ import {
   assertE2eStack,
   DEFAULT_E2E_BACKEND_PORT,
   resetCameras,
+  resetSettings,
   seedCameras,
 } from "./e2e-stack";
 
@@ -72,6 +73,12 @@ describe("assertE2eStack", () => {
   it("guards seedCameras from executing against port 5173", async () => {
     await expect(seedCameras(5, "http://127.0.0.1:5173")).rejects.toThrow(
       /protected production\/development port 5173/
+    );
+  });
+
+  it("guards resetSettings from executing against port 8000", async () => {
+    await expect(resetSettings(60, "http://127.0.0.1:8000")).rejects.toThrow(
+      /protected production\/development port 8000/
     );
   });
 });
