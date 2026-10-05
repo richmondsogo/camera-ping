@@ -66,6 +66,57 @@ Navigate to **Settings** in the header navigation:
 - **Long Interval Warning**: Selecting an interval of 1 hour or greater displays: `Outages may take up to <duration> to detect.`
 - **Appearance**: Toggle between `Light` and `Dark` theme.
 
+## Running in Production
+
+### Starting the Application
+From the repository root on the admin PC, start the application with:
+```powershell
+python scripts/run_prod.py
+```
+
+When ready, the server prints:
+```text
+Camera Monitor is running at http://127.0.0.1:8742  (press Ctrl+C to stop)
+```
+
+Open a web browser on the admin PC and navigate to:
+```text
+http://127.0.0.1:8742
+```
+> **Note**: Always use `http://127.0.0.1:8742`. (If `localhost` behaves differently on your network setup, verify at the office; `127.0.0.1` is guaranteed to bind strictly to loopback).
+
+### Stopping the Application
+To shut down Camera Monitor cleanly, return to the terminal running the launcher and press `Ctrl+C`. The server will stop background monitoring threads, release the instance lock, and terminate.
+
+### Common Startup Messages & Solutions
+- **Port already in use or reserved**:
+  `Port 8742 is already in use or reserved/blocked by Windows. Choose another port using BACKEND_PORT.`
+  *Solution*: Another application (or a Windows reserved port range) is using 8742. Set a different port for the session:
+  ```powershell
+  $env:BACKEND_PORT = "8743"
+  python scripts/run_prod.py
+  ```
+- **Another instance is already running**:
+  `Another instance of Camera Monitor is already running on this data folder (C:\...\backend\data) with PID 12345.`
+  *Solution*: The application enforces single-instance locking. Camera Monitor is already running under process ID `12345`. To inspect or stop the existing process:
+  ```powershell
+  tasklist /FI "PID eq 12345"
+  taskkill /PID 12345
+  ```
+
+### Logs & Diagnostics
+Camera Monitor writes structured logs to:
+```text
+backend/data/logs/camera-monitor.log
+```
+The file automatically rotates up to 5 backup files of 5 MiB each (`camera-monitor.log.1`, `camera-monitor.log.2`, etc.).
+
+Status changes are logged whenever a camera's state transitions:
+```text
+2026-10-05 14:00:00,123 INFO [app.monitoring.engine] Camera 'Warehouse PTZ' (192.0.2.14) went OFFLINE (1 failed check)
+2026-10-05 14:05:00,456 INFO [app.monitoring.engine] Camera 'Warehouse PTZ' (192.0.2.14) back ONLINE after 5 failed checks
+```
+
 ## System Restarts
 
 The monitoring engine stores its running state in SQLite (`monitoring_state`). If the admin PC or application restarts while monitoring was running, the engine automatically resumes probing on startup without requiring manual intervention.

@@ -29,11 +29,14 @@ These variables configure developer runners, the Vite development proxy, and iso
 | `E2E_BACKEND_HOST` | `127.0.0.1` | Valid IPv4 string | Host interface used by `scripts/e2e_backend.py` for isolated test runs. |
 | `E2E_BACKEND_PORT` | `18000` | `1024`–`65535` | Port used by `scripts/e2e_backend.py` to prevent conflicts with normal dev servers. |
 | `E2E_FRONTEND_PORT` | `15173` | `1024`–`65535` | Port used by Vite in Playwright webServer config to isolate test browsing. |
+| `E2E_PROD_PORT` | `18080` | `1024`–`65535` | Port used by the production single-process server during Playwright E2E testing. |
 | `SCREENSHOTS_SUBDIR` | `step09` | String (directory name) | Subdirectory under `frontend/screenshots/` where walkthrough images are written. |
 | `WALKTHROUGH` | Unset | `0` or `1` | When set to `1`, executes the opt-in 6-point screenshot walkthrough E2E test. |
 
-## Database & Backup File Locations
+## Database, Lock & File Locations
 
 - **Active Database File**: `backend/data/camera_monitor.db` (configured via `DATABASE_URL`).
-- **Temporary E2E Database**: `backend/.e2e-data/e2e_camera_monitor.db` (ephemeral SQLite database generated for Playwright tests, discarded after test runs).
+- **Instance Lock File**: `backend/data/camera-monitor.lock` (kernel byte-range lock preventing concurrent executions).
+- **Log Files**: `backend/data/logs/camera-monitor.log` (rotating application log, up to 5 backups of 5 MiB each).
+- **Temporary E2E Data**: `backend/.e2e-data/` (ephemeral databases and logs generated for Playwright tests, ignored by git).
 - **Migration Backup Folders**: `backend/data/backup-pre-step07/` and `backend/data/backup-pre-step09/` (cold snapshots taken prior to schema migrations).

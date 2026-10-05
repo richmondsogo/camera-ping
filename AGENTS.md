@@ -8,8 +8,8 @@ The application has no external cloud runtime dependencies and operates entirely
 
 ```text
 Admin PC (Local Network)
-├── Backend (FastAPI + SQLite + Alembic + SQLAlchemy)
-└── Frontend (React 19 + TypeScript + Vite + Tailwind CSS v4 + TanStack Query)
+├── Development: Backend (FastAPI :8000) + Frontend (Vite :5173 with proxy)
+└── Production: Single Process (FastAPI serving built React SPA on 127.0.0.1:8742)
 ```
 
 ## Technology Stack
@@ -32,6 +32,12 @@ All standard commands are executed from the repository root using Python:
   python scripts/dev.py
   ```
   Spawns both the FastAPI backend (`http://localhost:8000`) and the Vite frontend (`http://localhost:5173`) with clean process termination on shutdown.
+
+- **Production Server**:
+  ```powershell
+  python scripts/run_prod.py
+  ```
+  Runs single-process server (`http://127.0.0.1:8742`) hosting built React SPA and FastAPI backend with instance locking and rotating logs.
 
 - **Unified Quality & Test Check**:
   ```powershell
