@@ -161,3 +161,19 @@ export async function seedCameras(
   }
   return payloads;
 }
+
+export async function resetSettings(
+  intervalSeconds: number = 10,
+  apiBaseUrl: string = `http://127.0.0.1:${getExpectedE2eBackendPort()}`
+): Promise<void> {
+  assertE2eStack(apiBaseUrl);
+  try {
+    await fetch(`${apiBaseUrl}/api/settings`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ check_interval_seconds: intervalSeconds }),
+    });
+  } catch {
+    // ignore if unready
+  }
+}

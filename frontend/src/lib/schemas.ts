@@ -45,6 +45,19 @@ export const monitoringStatusSchema = z.object({
 export type MonitoringStatus = z.infer<typeof monitoringStatusSchema>;
 
 /**
+ * Schemas for Settings GET and PATCH endpoints.
+ */
+export const settingsResponseSchema = z.object({
+  check_interval_seconds: z.number().int().min(10).max(31536000),
+});
+export type SettingsResponse = z.infer<typeof settingsResponseSchema>;
+
+export const settingsUpdateSchema = z.object({
+  check_interval_seconds: z.number().int().min(10).max(31536000),
+});
+export type SettingsUpdate = z.infer<typeof settingsUpdateSchema>;
+
+/**
  * Trim whitespace while preserving U+FEFF (BOM), matching Python str.strip()
  * where U+FEFF is not a whitespace character.
  * This ensures the frontend never accepts invalid inputs containing BOM that the backend rejects.

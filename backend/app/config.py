@@ -8,6 +8,10 @@ DEFAULT_DATA_DIR = BACKEND_DIR / "data"
 DEFAULT_DB_PATH = DEFAULT_DATA_DIR / "camera_monitor.db"
 
 
+MIN_INTERVAL_SECONDS: int = 10
+MAX_INTERVAL_SECONDS: int = 31_536_000
+
+
 class Settings(BaseSettings):
     backend_host: str = "127.0.0.1"
     backend_port: int = 8000
@@ -17,8 +21,11 @@ class Settings(BaseSettings):
     @field_validator("monitor_interval_seconds")
     @classmethod
     def validate_interval(cls, v: int) -> int:
-        if v < 10:
-            msg = "monitor_interval_seconds must be at least 10 seconds"
+        if v < MIN_INTERVAL_SECONDS or v > MAX_INTERVAL_SECONDS:
+            msg = (
+                f"monitor_interval_seconds must be between {MIN_INTERVAL_SECONDS} "
+                f"and {MAX_INTERVAL_SECONDS} seconds"
+            )
             raise ValueError(msg)
         return v
 

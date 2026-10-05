@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,6 +28,8 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { StatusIndicator } from "@/components/StatusIndicator";
+
+import { useTheme } from "@/lib/theme";
 
 const STYLEGUIDE_INTERVAL_ITEMS = [
   { value: "30", label: "30 seconds" },
@@ -63,28 +64,8 @@ const SPECIMEN_LOCATION_ITEMS = [
 ];
 
 export function StyleguidePage() {
-  const [isDark, setIsDark] = React.useState(() =>
-    typeof document !== "undefined"
-      ? document.documentElement.classList.contains("dark")
-      : false
-  );
-
-  React.useEffect(() => {
-    // Ensure dark class is cleaned up on unmount so it never leaks to other routes
-    return () => {
-      document.documentElement.classList.remove("dark");
-    };
-  }, []);
-
-  const toggleDarkMode = () => {
-    const nextDark = !isDark;
-    setIsDark(nextDark);
-    if (nextDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  };
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === "dark";
 
   return (
     <div
@@ -106,7 +87,7 @@ export function StyleguidePage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={toggleDarkMode}
+          onClick={toggleTheme}
           data-testid="theme-toggle-button"
         >
           {isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}

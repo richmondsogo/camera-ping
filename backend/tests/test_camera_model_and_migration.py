@@ -36,11 +36,16 @@ def test_migration_upgrade_downgrade_cycle(tmp_path: Path) -> None:
     tables = {row[0] for row in cursor.fetchall()}
     assert "cameras" in tables
     assert "monitoring_state" in tables
+    assert "app_settings" in tables
     assert "alembic_version" in tables
 
     # Verify initial monitoring_state seed row
     cursor.execute("SELECT id, running FROM monitoring_state")
     assert cursor.fetchall() == [(1, 0)]
+
+    # Verify initial app_settings seed row
+    cursor.execute("SELECT id, check_interval_seconds FROM app_settings")
+    assert cursor.fetchall() == [(1, None)]
 
     # 2. Downgrade to base
     command.downgrade(cfg, "base")
@@ -48,6 +53,7 @@ def test_migration_upgrade_downgrade_cycle(tmp_path: Path) -> None:
     tables_after_down = {row[0] for row in cursor.fetchall()}
     assert "cameras" not in tables_after_down
     assert "monitoring_state" not in tables_after_down
+    assert "app_settings" not in tables_after_down
     assert "alembic_version" in tables_after_down
 
     # 3. Upgrade to head again
@@ -56,6 +62,7 @@ def test_migration_upgrade_downgrade_cycle(tmp_path: Path) -> None:
     tables_again = {row[0] for row in cursor.fetchall()}
     assert "cameras" in tables_again
     assert "monitoring_state" in tables_again
+    assert "app_settings" in tables_again
 
     conn.close()
 
@@ -94,6 +101,11 @@ def test_schema_drift(tmp_path: Path) -> None:
         "SELECT sql FROM sqlite_master WHERE type='table' AND name='monitoring_state'"
     )
     create_monitoring_sql = cursor.fetchone()[0]
+
+    cursor.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='app_settings'"
+    )
+    create_settings_sql = cursor.fetchone()[0]
     conn.close()
 
     assert "CONSTRAINT uq_cameras_ip_address UNIQUE (ip_address)" in create_cameras_sql
@@ -101,6 +113,11 @@ def test_schema_drift(tmp_path: Path) -> None:
     assert "CONSTRAINT ck_cameras_consecutive_failures CHECK" in create_cameras_sql
 
     assert "CONSTRAINT ck_monitoring_state_id CHECK (id = 1)" in create_monitoring_sql
+
+    assert "CONSTRAINT ck_app_settings_id CHECK (id = 1)" in create_settings_sql
+    assert (
+        "CONSTRAINT ck_app_settings_check_interval_seconds CHECK" in create_settings_sql
+    )
 
 
 def test_database_enforces_constraints(tmp_path: Path) -> None:
@@ -242,6 +259,100 @@ def test_monitoring_state_constraints(tmp_path: Path) -> None:
         session.execute(text("UPDATE monitoring_state SET id = 2 WHERE id = 1"))
         session.commit()
     session.rollback()
+
+    session.close()
+    engine.dispose()
+
+
+def test_app_settings_constraints(tmp_path: Path) -> None:
+    """Verify raw SQL operations enforce app_settings id = 1 and interval bounds."""
+    db_file = tmp_path / "settings_constraints.db"
+    db_url = f"sqlite:///{db_file.as_posix()}"
+    cfg = get_alembic_config(db_url)
+    command.upgrade(cfg, "head")
+
+    engine = create_db_engine(db_url)
+    session_factory = create_sessionmaker(engine)
+    session = session_factory()
+
+    # Initial row with id=1, check_interval_seconds=NULL seeded by migration
+    row = session.execute(
+        text("SELECT id, check_interval_seconds FROM app_settings")
+    ).fetchone()
+    assert row == (1, None)
+
+    # 1. DB rejects id != 1
+    with pytest.raises(IntegrityError, match="CHECK constraint failed"):
+        session.execute(
+            text("INSERT INTO app_settings (id, check_interval_seconds) VALUES (2, 60)")
+        )
+        session.commit()
+    session.rollback()
+
+    with pytest.raises(IntegrityError, match="CHECK constraint failed"):
+        session.execute(
+            text("INSERT INTO app_settings (id, check_interval_seconds) VALUES (0, 60)")
+        )
+        session.commit()
+    session.rollback()
+
+    with pytest.raises(IntegrityError, match="CHECK constraint failed"):
+        session.execute(text("UPDATE app_settings SET id = 2 WHERE id = 1"))
+        session.commit()
+    session.rollback()
+
+    # Second row with id=1 fails PK / UNIQUE
+    with pytest.raises(IntegrityError, match="UNIQUE constraint failed"):
+        session.execute(
+            text("INSERT INTO app_settings (id, check_interval_seconds) VALUES (1, 60)")
+        )
+        session.commit()
+    session.rollback()
+
+    # 2. DB rejects out of bound intervals (9 and 31536001)
+    with pytest.raises(IntegrityError, match="CHECK constraint failed"):
+        session.execute(
+            text("UPDATE app_settings SET check_interval_seconds = 9 WHERE id = 1")
+        )
+        session.commit()
+    session.rollback()
+
+    with pytest.raises(IntegrityError, match="CHECK constraint failed"):
+        session.execute(
+            text(
+                "UPDATE app_settings SET check_interval_seconds = 31536001 WHERE id = 1"
+            )
+        )
+        session.commit()
+    session.rollback()
+
+    # 3. DB accepts 10, 31536000, and NULL
+    session.execute(
+        text("UPDATE app_settings SET check_interval_seconds = 10 WHERE id = 1")
+    )
+    session.commit()
+    row = session.execute(
+        text("SELECT check_interval_seconds FROM app_settings WHERE id = 1")
+    ).fetchone()
+    assert row == (10,)
+
+    session.execute(
+        text("UPDATE app_settings SET check_interval_seconds = 31536000 WHERE id = 1")
+    )
+    session.commit()
+    row = session.execute(
+        text("SELECT check_interval_seconds FROM app_settings WHERE id = 1")
+    ).fetchone()
+    assert row == (31536000,)
+
+    session.execute(
+        text("UPDATE app_settings SET check_interval_seconds = NULL WHERE id = 1")
+    )
+    session.commit()
+    row = session.execute(
+        text("SELECT check_interval_seconds FROM app_settings WHERE id = 1")
+    ).fetchone()
+    assert row == (None,)
 
     session.close()
     engine.dispose()

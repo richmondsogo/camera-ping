@@ -57,7 +57,7 @@ describe("MonitoringPanel component", () => {
     );
     expect(screen.getByTestId("next-check")).toHaveTextContent("Next check —");
     expect(screen.getByTestId("check-interval")).toHaveTextContent(
-      "Checks every 60 seconds"
+      "Checks every 1 minute"
     );
 
     expect(screen.getByTestId("stopped-notice")).toHaveTextContent(
