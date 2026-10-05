@@ -3,10 +3,10 @@ import { Button } from "@/components/ui/button";
 import { useNow } from "@/features/monitoring/useNow";
 import {
   cycleInProgress,
-  formatTime24h,
   isStalled,
   type StatusCounts,
 } from "@/features/monitoring/utils";
+import { formatClockTime, formatInterval } from "@/features/settings/utils";
 import type { MonitoringStatus } from "@/lib/schemas";
 
 export interface MonitoringPanelProps {
@@ -80,22 +80,26 @@ export function MonitoringPanel({
   if (inProgress) {
     lastCheckDisplay = "Checking now…";
   } else if (status?.last_cycle_finished_at) {
-    const formatted = formatTime24h(status.last_cycle_finished_at);
-    if (formatted) lastCheckDisplay = formatted;
+    lastCheckDisplay = formatClockTime(status.last_cycle_finished_at, {
+      fallback: "Never",
+      now,
+    });
   }
 
   const nextCheckDisplay =
     isRunning && status?.next_check_at
-      ? (formatTime24h(status.next_check_at) ?? "—")
+      ? formatClockTime(status.next_check_at, { fallback: "—", now })
       : "—";
 
-  const intervalDisplay = status?.interval_seconds ?? 60;
+  const intervalDisplay = formatInterval(status?.interval_seconds ?? 60);
 
   // Stalled banner: per Amendment 2, suppressed while connection is lost
   const stalled = !isConnectionLost && isStalled(status, now);
   const stalledTime =
     status?.last_cycle_finished_at || status?.running_since
-      ? formatTime24h(status.last_cycle_finished_at ?? status.running_since)
+      ? formatClockTime(status.last_cycle_finished_at ?? status.running_since, {
+          now,
+        })
       : null;
 
   // All offline banner: when running, total >= 2, and offline === total
@@ -170,7 +174,7 @@ export function MonitoringPanel({
               </span>
               <span aria-hidden="true">·</span>
               <span data-testid="check-interval">
-                Checks every {intervalDisplay} seconds
+                Checks every {intervalDisplay}
               </span>
             </div>
 
@@ -241,8 +245,10 @@ export function MonitoringPanel({
           className="rounded-control border border-error bg-background p-control-x text-sm text-error"
         >
           Can't reach the server. Showing data from{" "}
-          {lastSuccessTime ? (formatTime24h(lastSuccessTime) ?? "—") : "—"}.
-          Retrying…
+          {lastSuccessTime
+            ? formatClockTime(lastSuccessTime, { fallback: "—", now })
+            : "—"}
+          . Retrying…
         </div>
       )}
 
