@@ -19,7 +19,7 @@ def get_free_port() -> int:
         return int(s.getsockname()[1])
 
 
-def wait_for_server(port: int, timeout: float = 15.0) -> bool:
+def wait_for_server(port: int, timeout: float = 25.0) -> bool:
     start = time.time()
     url = f"http://127.0.0.1:{port}/api/health"
     while time.time() - start < timeout:

@@ -83,7 +83,10 @@ async def test_engine_shorter_interval_wakes_and_runs_soon(tmp_path: Path) -> No
     try:
         await engine.start()
         # First cycle runs immediately on start
-        await asyncio.sleep(0.05)
+        for _ in range(20):
+            if cycle_count == 1:
+                break
+            await asyncio.sleep(0.05)
         assert cycle_count == 1
 
         # Now engine is sleeping with 100.0s target

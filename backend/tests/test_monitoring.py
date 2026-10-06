@@ -84,6 +84,7 @@ def test_rule_transitions(tmp_path: Path) -> None:
         first_online_time = cam_db.last_online
 
     # Cycle 2: Probe failure -> offline
+    time.sleep(0.01)
     engine_mon.pinger = lambda ip: False
     engine_mon.run_cycle_sync()
 

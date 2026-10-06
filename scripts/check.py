@@ -79,6 +79,7 @@ class CheckRunner:
         self.run_step("Scripts: Token Linter Tests", [sys.executable, "-m", "unittest", "scripts.tests.test_lint_tokens"], REPO_ROOT)
         self.run_step("Scripts: Docs Checker Tests", [sys.executable, "-m", "unittest", "scripts.tests.test_check_docs"], REPO_ROOT)
         self.run_step("Scripts: Bundle Builder Tests", [sys.executable, "-m", "unittest", "scripts.tests.test_build_bundle"], REPO_ROOT)
+        self.run_step("Scripts: Packaging Script Tests", [sys.executable, "-m", "unittest", "scripts.tests.test_packaging_scripts"], REPO_ROOT)
 
     def run_frontend_lint(self) -> None:
         self.run_step("Frontend: Design Token Lint", [sys.executable, "scripts/lint_tokens.py"], REPO_ROOT)
