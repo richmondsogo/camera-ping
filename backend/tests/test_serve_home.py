@@ -15,14 +15,26 @@ PYTHON_BIN = sys.executable
 
 def get_free_port() -> int:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         s.bind(("127.0.0.1", 0))
         return int(s.getsockname()[1])
 
 
-def wait_for_server(port: int, timeout: float = 25.0) -> bool:
+def wait_for_server(
+    port: int,
+    timeout: float = 25.0,
+    proc: subprocess.Popen[str] | None = None,
+) -> bool:
     start = time.time()
     url = f"http://127.0.0.1:{port}/api/health"
     while time.time() - start < timeout:
+        if proc is not None and proc.poll() is not None:
+            stdout, stderr = proc.communicate()
+            raise RuntimeError(
+                f"Server process terminated prematurely with exit code "
+                f"{proc.returncode}.\n"
+                f"Stdout: {stdout}\nStderr: {stderr}"
+            )
         try:
             with urllib.request.urlopen(url, timeout=0.5) as res:
                 if res.status == 200:
@@ -68,7 +80,7 @@ def test_home_layout_created_and_lifecycle(tmp_path: Path) -> None:
     )
 
     try:
-        assert wait_for_server(port), "Server failed to start in time"
+        assert wait_for_server(port, proc=proc), "Server failed to start in time"
         assert (home_dir / "data" / "camera_monitor.db").is_file()
         log_file = home_dir / "logs" / "camera-monitor.log"
         assert log_file.is_file()
@@ -299,7 +311,7 @@ def test_home_second_instance_exits_4_and_logs(tmp_path: Path) -> None:
     )
 
     try:
-        assert wait_for_server(port1)
+        assert wait_for_server(port1, proc=proc1)
 
         env2 = os.environ.copy()
         env2["BACKEND_PORT"] = str(port2)

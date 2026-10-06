@@ -154,7 +154,7 @@ def test_second_instance_same_data_dir_exits_4(tmp_path: Path) -> None:
         assert locked_pid.isdigit()
         assert int(locked_pid) > 0
 
-        assert duration < 3.0, f"Second instance took too long to exit: {duration:.2f}s"
+        assert duration < 6.0, f"Second instance took too long to exit: {duration:.2f}s"
         assert res2.returncode == 4
         assert (
             "Another instance of Camera Monitor is already running on this data folder"

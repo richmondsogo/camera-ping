@@ -227,7 +227,10 @@ async def test_scheduler_mechanics_start_stop_idempotency(tmp_path: Path) -> Non
     assert engine_mon.is_running is True
 
     # Wait briefly for cycles
-    await asyncio.sleep(0.12)
+    for _ in range(30):
+        if cycle_count >= 1:
+            break
+        await asyncio.sleep(0.05)
     assert cycle_count >= 1
 
     # Idempotent stop
