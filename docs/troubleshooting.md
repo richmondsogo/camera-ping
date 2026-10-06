@@ -54,18 +54,26 @@ This guide describes common symptoms, causes, and solutions verified in Camera M
 ## Production Runtime & Startup Issues
 
 ### Production Launcher Exit Codes
-The production launcher (`python scripts/run_prod.py` / `python -m app.serve`) uses distinct, machine-parseable exit codes:
+The production runtime (`python -m app.serve` with `--home`) logs fatal startup errors directly to `C:\ProgramData\CameraMonitor\logs\camera-monitor.log` (or `backend/data/logs/camera-monitor.log` in dev) and exits with distinct codes:
 - **Exit Code 2 (Configuration / Build Error)**:
   - Host is not a loopback address (`127.0.0.1` or `localhost`).
-  - Or frontend build is missing: `Frontend not built. Run: pnpm --dir frontend build`.
+  - Or frontend build directory is missing.
 - **Exit Code 3 (Port Busy or Blocked)**:
   - Port 8742 is occupied or falls within a dynamic port exclusion range reserved by Windows.
-  - Fix: Override port with `$env:BACKEND_PORT = "8743"; python scripts/run_prod.py`.
+  - Fix: Override port in `C:\ProgramData\CameraMonitor\camera-monitor.env` (or set `BACKEND_PORT=8743`).
 - **Exit Code 4 (Instance Lock Collision)**:
   - Another instance of Camera Monitor is already running on the same data folder.
   - The error message reports the holding PID: `Another instance of Camera Monitor is already running on this data folder (...) with PID <PID>.`
 - **Exit Code 5 (Database Migration Failure)**:
-  - Alembic database migration failed. Inspect terminal output or logs for SQLite schema conflicts.
+  - Alembic database migration failed. Inspect `camera-monitor.log` for SQLite schema conflicts.
+
+### Windows Scheduled Task Troubleshooting
+If the service does not appear online after system reboot:
+1. Open an administrative command prompt in `C:\Program Files\CameraMonitor\scripts`.
+2. Run `status.cmd` to check task registration state and last execution result.
+3. Check application logs at `C:\ProgramData\CameraMonitor\logs\camera-monitor.log`.
+4. Inspect Windows Task Scheduler History: open `taskschd.msc`, navigate to **Task Scheduler Library > CameraMonitor**, and check the **History** tab.
+5. If corrupted, run `install.cmd` as Administrator to reinstall the task.
 
 ### Stale Lock File Recovery & Process Termination
 - **Process Crash / Hard Kill Recovery**:

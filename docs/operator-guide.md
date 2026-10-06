@@ -68,8 +68,22 @@ Navigate to **Settings** in the header navigation:
 
 ## Running in Production
 
-### Starting the Application
-From the repository root on the admin PC, start the application with:
+### Windows Production Service
+
+In production, Camera Monitor is installed as an offline Windows system service via Task Scheduler.
+
+- **Desktop Shortcut**: Double-click the **Camera Monitor** shortcut on the Windows desktop to access `http://127.0.0.1:8742`.
+- **Boot-time Auto-start**: The service starts automatically at Windows boot under `NT AUTHORITY\SYSTEM` with a 30-second delay.
+- **Service Management**: Operational scripts are available in `C:\Program Files\CameraMonitor\scripts`:
+  - `status.cmd`: View service state, PID, memory, and monitoring engine status.
+  - `start.cmd`: Start the service.
+  - `stop.cmd`: Stop the service cleanly.
+  - `backup.cmd`: Run an immediate database backup.
+- For complete installation instructions, see the [Installation Guide](install-guide.md). For backup, restore, and maintenance details, see the [Operations & Maintenance Guide](maintenance.md).
+
+### Development or Manual Production Run
+
+Developers or administrators running outside Task Scheduler can start the production server directly from the repository root:
 ```powershell
 python scripts/run_prod.py
 ```
@@ -83,33 +97,22 @@ Open a web browser on the admin PC and navigate to:
 ```text
 http://127.0.0.1:8742
 ```
-> **Note**: Always use `http://127.0.0.1:8742`. (If `localhost` behaves differently on your network setup, verify at the office; `127.0.0.1` is guaranteed to bind strictly to loopback).
-
-### Stopping the Application
-To shut down Camera Monitor cleanly, return to the terminal running the launcher and press `Ctrl+C`. The server will stop background monitoring threads, release the instance lock, and terminate.
+> **Note**: Always use `http://127.0.0.1:8742`. (If `localhost` behaves differently on your network setup, `127.0.0.1` binds strictly to IPv4 loopback).
 
 ### Common Startup Messages & Solutions
 - **Port already in use or reserved**:
   `Port 8742 is already in use or reserved/blocked by Windows. Choose another port using BACKEND_PORT.`
-  *Solution*: Another application (or a Windows reserved port range) is using 8742. Set a different port for the session:
-  ```powershell
-  $env:BACKEND_PORT = "8743"
-  python scripts/run_prod.py
-  ```
+  *Solution*: Another application or Windows reservation is using 8742. Change the port in `C:\ProgramData\CameraMonitor\camera-monitor.env` (or pass `$env:BACKEND_PORT = "8743"`).
 - **Another instance is already running**:
-  `Another instance of Camera Monitor is already running on this data folder (C:\...\backend\data) with PID 12345.`
-  *Solution*: The application enforces single-instance locking. Camera Monitor is already running under process ID `12345`. To inspect or stop the existing process:
-  ```powershell
-  tasklist /FI "PID eq 12345"
-  taskkill /PID 12345
-  ```
+  `Another instance of Camera Monitor is already running on this data folder with PID 12345.`
+  *Solution*: The application enforces single-instance locking. Camera Monitor is already running. Check with `scripts\status.cmd` or stop with `scripts\stop.cmd`.
 
 ### Logs & Diagnostics
 Camera Monitor writes structured logs to:
-```text
-backend/data/logs/camera-monitor.log
-```
-The file automatically rotates up to 5 backup files of 5 MiB each (`camera-monitor.log.1`, `camera-monitor.log.2`, etc.).
+- Production installed: `C:\ProgramData\CameraMonitor\logs\camera-monitor.log`
+- Development manual: `backend/data/logs/camera-monitor.log`
+
+The log file automatically rotates up to 5 backup files (`camera-monitor.log.1`, etc.).
 
 Status changes are logged whenever a camera's state transitions:
 ```text

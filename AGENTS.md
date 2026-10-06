@@ -53,6 +53,9 @@ All standard commands are executed from the repository root using Python:
   python scripts/check.py --only-typecheck
   python scripts/check.py --only-tests
   python scripts/check.py --e2e   # Runs Playwright smoke/e2e tests
+  python scripts/check.py --bundle # Builds offline zip and executes 10-step smoke test
+  python scripts/build_bundle.py   # Builds dist-bundle/CameraMonitor-<version>.zip
+  python scripts/bundle_smoke.py   # Executes standalone bundle smoke test
   # Set env var CONTRAST_REPORT=1 to print contrast tables (quiet by default unless a pair fails)
   # Set env var WALKTHROUGH=1 to generate settings walkthrough screenshots during e2e
   ```
