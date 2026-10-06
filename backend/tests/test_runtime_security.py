@@ -1,13 +1,10 @@
 import mimetypes
 from pathlib import Path
+
 import pytest
-from fastapi import FastAPI, Response
-from fastapi.testclient import TestClient
 
 from app.config import Settings
 from app.main import create_app
-from app.models.camera import Camera
-from app.models.monitoring import MonitoringState
 from tests.conftest import make_test_client
 
 
@@ -42,13 +39,17 @@ def test_dev_mode_keeps_docs(tmp_path: Path) -> None:
         assert client.get("/openapi.json").status_code == 200
 
 
-def test_frontend_serving_spa_and_assets(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_frontend_serving_spa_and_assets(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     dist_dir = tmp_path / "dist"
     dist_dir.mkdir()
     assets_dir = dist_dir / "assets"
     assets_dir.mkdir()
 
-    (dist_dir / "index.html").write_text("<!doctype html><html>Root Index</html>", encoding="utf-8")
+    (dist_dir / "index.html").write_text(
+        "<!doctype html><html>Root Index</html>", encoding="utf-8"
+    )
     (dist_dir / "favicon.ico").write_bytes(b"\x00\x00\x01\x00")
     (assets_dir / "app.js").write_text("console.log('hi');", encoding="utf-8")
     (assets_dir / "style.css").write_text("body { margin: 0; }", encoding="utf-8")
@@ -127,16 +128,41 @@ def test_host_header_validation(tmp_path: Path) -> None:
 
     with make_test_client(app) as client:
         # Accepted Host headers
-        assert client.get("/api/health", headers={"host": "localhost"}).status_code == 200
-        assert client.get("/api/health", headers={"host": "localhost:8000"}).status_code == 200
-        assert client.get("/api/health", headers={"host": "127.0.0.1"}).status_code == 200
-        assert client.get("/api/health", headers={"host": "127.0.0.1:8742"}).status_code == 200
-        assert client.get("/api/health", headers={"host": "LOCALHOST:8742"}).status_code == 200
+        assert (
+            client.get("/api/health", headers={"host": "localhost"}).status_code == 200
+        )
+        assert (
+            client.get("/api/health", headers={"host": "localhost:8000"}).status_code
+            == 200
+        )
+        assert (
+            client.get("/api/health", headers={"host": "127.0.0.1"}).status_code == 200
+        )
+        assert (
+            client.get("/api/health", headers={"host": "127.0.0.1:8742"}).status_code
+            == 200
+        )
+        assert (
+            client.get("/api/health", headers={"host": "LOCALHOST:8742"}).status_code
+            == 200
+        )
 
         # Rejected Host headers (Amendment 10)
-        assert client.get("/api/health", headers={"host": "localhost.evil.com"}).status_code == 400
-        assert client.get("/api/health", headers={"host": "127.0.0.1.evil.com"}).status_code == 400
-        assert client.get("/api/health", headers={"host": "evil.com"}).status_code == 400
+        assert (
+            client.get(
+                "/api/health", headers={"host": "localhost.evil.com"}
+            ).status_code
+            == 400
+        )
+        assert (
+            client.get(
+                "/api/health", headers={"host": "127.0.0.1.evil.com"}
+            ).status_code
+            == 400
+        )
+        assert (
+            client.get("/api/health", headers={"host": "evil.com"}).status_code == 400
+        )
         assert client.get("/api/health", headers={"host": ""}).status_code == 400
 
 
@@ -183,19 +209,21 @@ def test_origin_header_validation_and_no_state_change(tmp_path: Path) -> None:
         assert start_again.json()["running"] is True
 
         # GET request with foreign origin is allowed
-        get_res = client.get("/api/monitoring/status", headers={"origin": "https://evil.com"})
+        get_res = client.get(
+            "/api/monitoring/status", headers={"origin": "https://evil.com"}
+        )
         assert get_res.status_code == 200
 
 
 def test_security_headers_on_all_responses(tmp_path: Path) -> None:
-    """Amendment 1: Security headers must be present on 200, 400, 403, 404, and injected 500."""
+    """Security headers must be present on 200, 400, 403, 404, and injected 500."""
     db_path = tmp_path / "headers.db"
     settings = Settings(database_url=f"sqlite:///{db_path.as_posix()}")
     app = create_app(settings)
 
     # Add a route that raises an unhandled exception for testing 500
     @app.get("/api/crash")
-    def crash():
+    def crash() -> None:
         raise RuntimeError("Injected 500 crash")
 
     with make_test_client(app, raise_server_exceptions=False) as client:
@@ -214,7 +242,9 @@ def test_security_headers_on_all_responses(tmp_path: Path) -> None:
         assert res400.headers["referrer-policy"] == "no-referrer"
 
         # 403 (Cross-site Origin)
-        res403 = client.post("/api/monitoring/stop", headers={"origin": "https://evil.com"})
+        res403 = client.post(
+            "/api/monitoring/stop", headers={"origin": "https://evil.com"}
+        )
         assert res403.status_code == 403
         assert res403.headers["x-content-type-options"] == "nosniff"
         assert res403.headers["x-frame-options"] == "DENY"

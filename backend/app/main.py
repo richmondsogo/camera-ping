@@ -1,9 +1,7 @@
+import logging
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
-import logging
 from pathlib import Path
-
-logger = logging.getLogger(__name__)
 
 from alembic.config import Config
 from fastapi import FastAPI, Request
@@ -24,6 +22,8 @@ from app.monitoring.engine import MonitoringEngine
 from app.monitoring.probe import ping_host
 from app.services.settings import get_effective_interval
 from app.static_serve import setup_frontend_serving
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -162,7 +162,8 @@ def create_app(
     if app_settings.frontend_dist is not None:
         setup_frontend_serving(application, app_settings.frontend_dist)
 
-    # Add middlewares: HostOriginMiddleware first, SecurityHeadersMiddleware last (outermost)
+    # Add middlewares: HostOriginMiddleware first,
+    # SecurityHeadersMiddleware last (outermost)
     application.add_middleware(HostOriginMiddleware)
     application.add_middleware(SecurityHeadersMiddleware)
 

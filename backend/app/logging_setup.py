@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import logging
+import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-import sys
 
 _logging_configured = False
 
@@ -22,7 +22,8 @@ def setup_logging(
     """Configure application logging with rotating file handler and console handler.
 
     Configures the root logger idempotently unless force=True.
-    Rotating file handler: 5 MB x 5 files, UTF-8 encoded at <log_dir>/camera-monitor.log.
+    Rotating file handler: 5 MB x 5 files, UTF-8 encoded at
+    <log_dir>/camera-monitor.log.
     Console handler uses errors='replace' to avoid UnicodeEncodeError on Windows.
     Disables uvicorn.access logging to avoid 5-second polling spam.
     """

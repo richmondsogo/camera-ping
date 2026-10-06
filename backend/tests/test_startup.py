@@ -2,10 +2,10 @@ import sqlite3
 from pathlib import Path
 
 import pytest
-from tests.conftest import make_test_client
 
 from app.config import Settings
 from app.main import create_app
+from tests.conftest import make_test_client
 
 
 def test_startup_migrates_fresh_database(

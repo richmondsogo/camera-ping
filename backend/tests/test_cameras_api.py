@@ -4,13 +4,13 @@ from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
-from tests.conftest import make_test_client
 from sqlalchemy.orm import Session
 
 from app import clock
 from app.config import Settings
 from app.main import create_app
 from app.models.camera import Camera, CameraStatus
+from tests.conftest import make_test_client
 
 
 def test_create_camera_happy_path(client: TestClient) -> None:

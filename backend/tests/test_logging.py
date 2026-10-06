@@ -1,23 +1,26 @@
 import asyncio
-import io
 import logging
+import re
+from collections.abc import Generator
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-import re
-import pytest
 
+import pytest
 from alembic.config import Config
+from sqlalchemy import Engine
+from sqlalchemy.orm import Session, sessionmaker
+
 from alembic import command
 from app import clock
 from app.config import BACKEND_DIR
 from app.database import create_db_engine, create_sessionmaker
 from app.logging_setup import setup_logging
-from app.models.camera import Camera, CameraStatus
+from app.models.camera import Camera
 from app.monitoring.engine import MonitoringEngine
 
 
 @pytest.fixture(autouse=True)
-def clean_logging_state():
+def clean_logging_state() -> Generator[None, None, None]:
     """Reset logging state before and after each logging test."""
     root = logging.getLogger()
     initial_handlers = list(root.handlers)
@@ -37,10 +40,11 @@ def clean_logging_state():
                 root.addHandler(h)
         root.setLevel(old_level)
         import app.logging_setup as ls
+
         ls._logging_configured = False
 
 
-def _create_db(db_path: Path):
+def _create_db(db_path: Path) -> tuple[sessionmaker[Session], Engine]:
     db_url = f"sqlite:///{db_path.as_posix()}"
     cfg = Config(str(BACKEND_DIR / "alembic.ini"))
     cfg.attributes["skip_logging_config"] = True
@@ -70,7 +74,10 @@ def test_logging_setup_rotation_and_format(tmp_path: Path) -> None:
     fh.flush()
 
     content = (log_dir / "camera-monitor.log").read_text(encoding="utf-8")
-    assert re.search(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} INFO test_logger Test message 123", content)
+    assert re.search(
+        r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} INFO test_logger Test message 123",
+        content,
+    )
 
 
 def test_logging_setup_idempotent(tmp_path: Path) -> None:
@@ -85,7 +92,7 @@ def test_logging_setup_idempotent(tmp_path: Path) -> None:
 
 
 def test_logging_unicode_camera_name(tmp_path: Path) -> None:
-    """Amendment 3: Camera named 'Café Ñandú 入口' logs a status change to both handlers without logging error."""
+    """Amendment 3: Unicode camera name logs to both handlers without error."""
     log_dir = tmp_path / "logs"
     setup_logging(log_dir=log_dir, force=True)
 
@@ -102,8 +109,10 @@ def test_logging_unicode_camera_name(tmp_path: Path) -> None:
     assert camera_name in content
 
 
-def test_engine_status_transition_logging(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
-    """Engine logs at INFO only when status changes, and unchanged statuses log nothing."""
+def test_engine_status_transition_logging(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Engine logs at INFO only when status changes; unchanged logs nothing."""
     session_factory, engine = _create_db(tmp_path / "test.db")
     now = clock.utc_now()
 
@@ -131,13 +140,17 @@ def test_engine_status_transition_logging(tmp_path: Path, caplog: pytest.LogCapt
 
     # Cycle 1: Cam 1 online, Cam 2 offline (transitions from UNKNOWN)
     probe_results = {"192.0.2.1": True, "192.0.2.2": False}
-    mon_engine = MonitoringEngine(session_factory=session_factory, pinger=lambda ip: probe_results[ip])
+    mon_engine = MonitoringEngine(
+        session_factory=session_factory, pinger=lambda ip: probe_results[ip]
+    )
 
     with caplog.at_level(logging.INFO):
         caplog.clear()
         mon_engine.run_cycle_sync()
 
-    records = [r.getMessage() for r in caplog.records if r.name == "app.monitoring.engine"]
+    records = [
+        r.getMessage() for r in caplog.records if r.name == "app.monitoring.engine"
+    ]
     assert "Camera 'Cam 1' (192.0.2.1) is ONLINE" in records
     assert "Camera 'Cam 2' (192.0.2.2) is OFFLINE" in records
 
@@ -146,7 +159,9 @@ def test_engine_status_transition_logging(tmp_path: Path, caplog: pytest.LogCapt
         caplog.clear()
         mon_engine.run_cycle_sync()
 
-    records = [r.getMessage() for r in caplog.records if r.name == "app.monitoring.engine"]
+    records = [
+        r.getMessage() for r in caplog.records if r.name == "app.monitoring.engine"
+    ]
     assert not any("Cam 1" in r or "Cam 2" in r for r in records)
 
     # Cycle 3: Cam 1 goes OFFLINE, Cam 2 goes ONLINE after failed checks
@@ -156,18 +171,24 @@ def test_engine_status_transition_logging(tmp_path: Path, caplog: pytest.LogCapt
         caplog.clear()
         mon_engine.run_cycle_sync()
 
-    records = [r.getMessage() for r in caplog.records if r.name == "app.monitoring.engine"]
+    records = [
+        r.getMessage() for r in caplog.records if r.name == "app.monitoring.engine"
+    ]
     assert "Camera 'Cam 1' (192.0.2.1) went OFFLINE" in records
     assert "Camera 'Cam 2' (192.0.2.2) back ONLINE after 2 failed checks" in records
 
     engine.dispose()
 
 
-def test_engine_start_stop_logs(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+def test_engine_start_stop_logs(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
     session_factory, engine = _create_db(tmp_path / "test.db")
-    mon_engine = MonitoringEngine(session_factory=session_factory, pinger=lambda ip: True, interval=60.0)
+    mon_engine = MonitoringEngine(
+        session_factory=session_factory, pinger=lambda ip: True, interval=60.0
+    )
 
-    async def _run():
+    async def _run() -> None:
         await mon_engine.start()
         await mon_engine.stop()
 
@@ -175,24 +196,31 @@ def test_engine_start_stop_logs(tmp_path: Path, caplog: pytest.LogCaptureFixture
         caplog.clear()
         asyncio.run(_run())
 
-    records = [r.getMessage() for r in caplog.records if r.name == "app.monitoring.engine"]
+    records = [
+        r.getMessage() for r in caplog.records if r.name == "app.monitoring.engine"
+    ]
     assert "Monitoring engine started" in records
     assert "Monitoring engine stopped" in records
 
     engine.dispose()
 
 
-def test_engine_cycle_overrun_warning(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+def test_engine_cycle_overrun_warning(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
     session_factory, engine = _create_db(tmp_path / "test.db")
-    mon_engine = MonitoringEngine(session_factory=session_factory, pinger=lambda ip: True, interval=0.01)
+    mon_engine = MonitoringEngine(
+        session_factory=session_factory, pinger=lambda ip: True, interval=0.01
+    )
 
-    def slow_run():
+    def slow_run() -> None:
         import time
+
         time.sleep(0.05)
 
     mon_engine.run_cycle_sync = slow_run  # type: ignore[method-assign]
 
-    async def _run():
+    async def _run() -> None:
         mon_engine._stop_event.clear()
         task = asyncio.create_task(mon_engine._scheduler_loop())
         await asyncio.sleep(0.08)
@@ -207,22 +235,30 @@ def test_engine_cycle_overrun_warning(tmp_path: Path, caplog: pytest.LogCaptureF
         caplog.clear()
         asyncio.run(_run())
 
-    records = [r.getMessage() for r in caplog.records if r.name == "app.monitoring.engine" and r.levelno == logging.WARNING]
+    records = [
+        r.getMessage()
+        for r in caplog.records
+        if r.name == "app.monitoring.engine" and r.levelno == logging.WARNING
+    ]
     assert any("exceeding configured interval" in r for r in records)
 
     engine.dispose()
 
 
-def test_engine_cycle_exception_logged(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+def test_engine_cycle_exception_logged(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
     session_factory, engine = _create_db(tmp_path / "test.db")
-    mon_engine = MonitoringEngine(session_factory=session_factory, pinger=lambda ip: True, interval=60.0)
+    mon_engine = MonitoringEngine(
+        session_factory=session_factory, pinger=lambda ip: True, interval=60.0
+    )
 
-    def failing_run():
+    def failing_run() -> None:
         raise RuntimeError("Simulated database failure")
 
     mon_engine.run_cycle_sync = failing_run  # type: ignore[method-assign]
 
-    async def _run():
+    async def _run() -> None:
         mon_engine._stop_event.clear()
         task = asyncio.create_task(mon_engine._scheduler_loop())
         await asyncio.sleep(0.05)
@@ -237,7 +273,11 @@ def test_engine_cycle_exception_logged(tmp_path: Path, caplog: pytest.LogCapture
         caplog.clear()
         asyncio.run(_run())
 
-    records = [r for r in caplog.records if r.name == "app.monitoring.engine" and r.levelno == logging.ERROR]
+    records = [
+        r
+        for r in caplog.records
+        if r.name == "app.monitoring.engine" and r.levelno == logging.ERROR
+    ]
     assert len(records) >= 1
     assert "Unexpected error in monitoring cycle execution" in records[0].getMessage()
     assert records[0].exc_info is not None

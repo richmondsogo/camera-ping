@@ -6,8 +6,6 @@ from pathlib import Path
 
 import pytest
 from alembic.config import Config
-from fastapi.testclient import TestClient
-from tests.conftest import make_test_client
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -19,6 +17,7 @@ from app.main import create_app
 from app.models.camera import Camera, CameraStatus
 from app.models.monitoring import MonitoringState
 from app.monitoring.engine import MonitoringEngine
+from tests.conftest import make_test_client
 
 
 def _create_migrated_db(db_path: Path) -> tuple[sessionmaker[Session], Engine]:

@@ -2,10 +2,10 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
-from tests.conftest import make_test_client
 
 from app.config import Settings
 from app.main import create_app
+from tests.conftest import make_test_client
 
 
 def test_get_settings_returns_env_default_when_nothing_saved(

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import json
-from typing import Any
 import urllib.parse
+from typing import Any
 
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
@@ -17,7 +17,7 @@ SECURITY_HEADERS = [
 
 
 class SecurityHeadersMiddleware:
-    """Outermost plain ASGI middleware to attach security headers to every HTTP response."""
+    """Outermost plain ASGI middleware to attach security headers to responses."""
 
     def __init__(self, app: ASGIApp) -> None:
         self.app = app
@@ -69,7 +69,7 @@ class SecurityHeadersMiddleware:
 
 
 class HostOriginMiddleware:
-    """Plain ASGI middleware validating Host and Origin headers to prevent DNS rebinding and CSRF."""
+    """Plain ASGI middleware validating Host and Origin headers."""
 
     def __init__(self, app: ASGIApp) -> None:
         self.app = app
@@ -98,7 +98,9 @@ class HostOriginMiddleware:
 
         # 1. Host header validation
         if not host_val:
-            await self._send_json(send, 400, {"detail": "Invalid or missing Host header."})
+            await self._send_json(
+                send, 400, {"detail": "Invalid or missing Host header."}
+            )
             return
 
         # Extract hostname, ignoring port (handling optional IPv6 brackets)
@@ -115,13 +117,17 @@ class HostOriginMiddleware:
         method = scope.get("method", "").upper()
         if method in MUTATING_METHODS and origin_val is not None:
             if origin_val.lower() == "null":
-                await self._send_json(send, 403, {"detail": "Cross-site request refused."})
+                await self._send_json(
+                    send, 403, {"detail": "Cross-site request refused."}
+                )
                 return
 
             parsed = urllib.parse.urlsplit(origin_val)
             origin_host = (parsed.hostname or "").lower()
             if origin_host not in ALLOWED_HOSTS:
-                await self._send_json(send, 403, {"detail": "Cross-site request refused."})
+                await self._send_json(
+                    send, 403, {"detail": "Cross-site request refused."}
+                )
                 return
 
         await self.app(scope, receive, send)

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from pathlib import Path
 import urllib.parse
+from pathlib import Path
 
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
@@ -112,7 +112,9 @@ def setup_frontend_serving(application: FastAPI, dist_dir: Path) -> None:
         # Path has no extension -> client-side route fallback to index.html
         index_file = dist_resolved / "index.html"
         if not index_file.is_file():
-            return Response(status_code=404, content="Index not found", media_type="text/plain")
+            return Response(
+                status_code=404, content="Index not found", media_type="text/plain"
+            )
 
         index_headers = {"Cache-Control": "no-cache"}
         if request.method == "HEAD":

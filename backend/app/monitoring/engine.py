@@ -156,11 +156,18 @@ class MonitoringEngine:
                         cam.last_online = now
 
                         if prev_status == CameraStatus.UNKNOWN:
-                            status_changes.append(f"Camera '{name}' ({probed_ip}) is ONLINE")
-                        elif prev_status == CameraStatus.OFFLINE:
-                            suffix = "failed check" if prev_failures == 1 else "failed checks"
                             status_changes.append(
-                                f"Camera '{name}' ({probed_ip}) back ONLINE after {prev_failures} {suffix}"
+                                f"Camera '{name}' ({probed_ip}) is ONLINE"
+                            )
+                        elif prev_status == CameraStatus.OFFLINE:
+                            suffix = (
+                                "failed check"
+                                if prev_failures == 1
+                                else "failed checks"
+                            )
+                            status_changes.append(
+                                f"Camera '{name}' ({probed_ip}) back ONLINE after "
+                                f"{prev_failures} {suffix}"
                             )
                     else:
                         cam.status = CameraStatus.OFFLINE
@@ -168,9 +175,13 @@ class MonitoringEngine:
                         cam.last_checked = now
 
                         if prev_status == CameraStatus.UNKNOWN:
-                            status_changes.append(f"Camera '{name}' ({probed_ip}) is OFFLINE")
+                            status_changes.append(
+                                f"Camera '{name}' ({probed_ip}) is OFFLINE"
+                            )
                         elif prev_status == CameraStatus.ONLINE:
-                            status_changes.append(f"Camera '{name}' ({probed_ip}) went OFFLINE")
+                            status_changes.append(
+                                f"Camera '{name}' ({probed_ip}) went OFFLINE"
+                            )
 
                 state = session.get(MonitoringState, 1)
                 if state is not None:
@@ -194,7 +205,8 @@ class MonitoringEngine:
             interval = self.interval_seconds
             if cycle_elapsed > interval:
                 logger.warning(
-                    "Monitoring cycle took %.2fs, exceeding configured interval of %.2fs",
+                    "Monitoring cycle took %.2fs, "
+                    "exceeding configured interval of %.2fs",
                     cycle_elapsed,
                     interval,
                 )
