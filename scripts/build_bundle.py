@@ -237,6 +237,38 @@ def verify_bundle_contents(bundle_dir: Path, repo_root: Path) -> list[str]:
     return errors
 
 
+def find_python312_executable(repo_root: Path) -> Path:
+    """Find a Python 3.12 executable to build clean venv for target wheels."""
+    # 1. Check backend/.venv
+    backend_py = (
+        repo_root
+        / "backend"
+        / ".venv"
+        / ("Scripts" if os.name == "nt" else "bin")
+        / ("python.exe" if os.name == "nt" else "python")
+    )
+    if backend_py.is_file():
+        return backend_py
+    # 2. Check current sys.executable
+    if sys.version_info[:2] == (3, 12):
+        return Path(sys.executable)
+    # 3. Check py -3.12 launcher on Windows
+    if os.name == "nt":
+        try:
+            res = subprocess.run(
+                ["py", "-3.12", "-c", "import sys; print(sys.executable)"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            candidate = Path(res.stdout.strip())
+            if candidate.is_file():
+                return candidate
+        except Exception:
+            pass
+    return Path(sys.executable)
+
+
 def build_bundle(
     repo_root: Path = REPO_ROOT,
     skip_frontend_build: bool = False,
@@ -323,9 +355,10 @@ def build_bundle(
         )
         with tempfile.TemporaryDirectory(prefix="bundle_venv_") as temp_venv_dir:
             temp_venv_path = Path(temp_venv_dir)
-            # Create isolated venv
+            # Create isolated venv using Python 3.12
+            python312_bin = find_python312_executable(repo_root)
             res = subprocess.run(
-                [sys.executable, "-m", "venv", str(temp_venv_path)],
+                [str(python312_bin), "-m", "venv", str(temp_venv_path)],
                 check=True,
                 capture_output=True,
                 text=True,

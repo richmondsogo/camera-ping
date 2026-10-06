@@ -125,10 +125,11 @@ class CheckRunner:
         self.run_frontend_build_verification()
         if self.failures:
             return
-        build_step = [sys.executable, "scripts/build_bundle.py"]
+        backend_python = str(get_backend_binary("python"))
+        build_step = [backend_python, "scripts/build_bundle.py"]
         if not self.run_step("Bundle: Build Offline Package", build_step, REPO_ROOT):
             return
-        smoke_step = [sys.executable, "scripts/bundle_smoke.py"]
+        smoke_step = [backend_python, "scripts/bundle_smoke.py"]
         self.run_step("Bundle: Offline Smoke Test", smoke_step, REPO_ROOT)
 
 
