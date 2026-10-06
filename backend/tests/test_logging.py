@@ -283,3 +283,10 @@ def test_engine_cycle_exception_logged(
     assert records[0].exc_info is not None
 
     engine.dispose()
+
+
+def test_alembic_logger_silenced_to_warning(tmp_path: Path) -> None:
+    """Alembic plugin and migration discovery messages are silenced to WARNING."""
+    setup_logging(log_dir=tmp_path / "logs", force=True)
+    alembic_logger = logging.getLogger("alembic")
+    assert alembic_logger.level == logging.WARNING

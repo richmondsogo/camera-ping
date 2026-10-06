@@ -400,3 +400,45 @@ def test_wrapper_kill_orphans_child(tmp_path: Path) -> None:
             wrapper_proc.kill()
         except Exception:
             pass
+
+
+def test_subprocess_run_honors_log_dir(tmp_path: Path) -> None:
+    """Subprocess server run honors LOG_DIR and writes strictly to configured path."""
+    dist_dir = tmp_path / "dist"
+    dist_dir.mkdir()
+    (dist_dir / "index.html").write_text("<html>App</html>", encoding="utf-8")
+
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    db_file = data_dir / "camera_monitor.db"
+    temp_log_dir = tmp_path / "custom_logs"
+
+    port = get_free_port()
+    env = os.environ.copy()
+    env["DATABASE_URL"] = f"sqlite:///{db_file.as_posix()}"
+    env["LOG_DIR"] = str(temp_log_dir)
+    env["FRONTEND_DIST"] = str(dist_dir)
+    env["BACKEND_PORT"] = str(port)
+    env["BACKEND_HOST"] = "127.0.0.1"
+
+    proc = subprocess.Popen(
+        [PYTHON_BIN, "-m", "app.serve"],
+        cwd=BACKEND_DIR,
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+
+    try:
+        assert wait_for_server(port)
+        log_file = temp_log_dir / "camera-monitor.log"
+        assert log_file.is_file(), f"Expected log file at {log_file}"
+        assert log_file.stat().st_size > 0
+    finally:
+        proc.terminate()
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait(timeout=2)

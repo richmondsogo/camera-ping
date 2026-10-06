@@ -79,4 +79,7 @@ def setup_logging(
     logging.getLogger("uvicorn").propagate = True
     logging.getLogger("uvicorn.error").propagate = True
 
+    # Silence verbose alembic plugin and migration discovery messages
+    logging.getLogger("alembic").setLevel(logging.WARNING)
+
     _logging_configured = True

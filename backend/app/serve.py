@@ -126,10 +126,7 @@ def create_bound_socket(
 
 
 def main() -> None:
-    # 1. Configure logging
-    setup_logging(log_dir=settings.log_dir)
-
-    # 2. Validate loopback host (exit 2)
+    # 1. Validate loopback host (exit 2 before touching filesystem)
     host = os.environ.get("BACKEND_HOST", settings.backend_host)
     if host.lower() not in ("127.0.0.1", "localhost"):
         print(
@@ -137,22 +134,34 @@ def main() -> None:
         )
         sys.exit(2)
 
-    # 3. Require frontend dist with index.html (exit 2)
+    # 2. Require frontend dist with index.html (exit 2)
     repo_root = BACKEND_DIR.parent
     frontend_dist_default = repo_root / "frontend" / "dist"
-    frontend_dist = settings.frontend_dist or frontend_dist_default
+    frontend_dist_env = os.environ.get("FRONTEND_DIST")
+    frontend_dist = (
+        Path(frontend_dist_env)
+        if frontend_dist_env
+        else (settings.frontend_dist or frontend_dist_default)
+    )
     if not (frontend_dist.is_dir() and (frontend_dist / "index.html").is_file()):
         print("Frontend not built. Run: pnpm --dir frontend build", file=sys.stderr)
         sys.exit(2)
 
-    # Determine data directory for lock
-    if settings.database_url.startswith("sqlite:///"):
-        db_path = Path(settings.database_url.replace("sqlite:///", ""))
+    # 3. Configure logging (honoring LOG_DIR env var dynamically)
+    log_dir_env = os.environ.get("LOG_DIR")
+    log_dir = Path(log_dir_env) if log_dir_env else settings.log_dir
+    setup_logging(log_dir=log_dir)
+
+    # 4. Determine data directory for lock (honoring DATABASE_URL env var)
+    db_url_env = os.environ.get("DATABASE_URL")
+    database_url = db_url_env if db_url_env else settings.database_url
+    if database_url.startswith("sqlite:///"):
+        db_path = Path(database_url.replace("sqlite:///", ""))
         data_dir = db_path.parent
     else:
-        data_dir = settings.log_dir.parent
+        data_dir = log_dir.parent
 
-    # 4. Acquire instance lock (exit 4)
+    # 5. Acquire instance lock (exit 4)
     acquired, pid = acquire_instance_lock(data_dir)
     if not acquired:
         pid_msg = f" with PID {pid}" if pid else ""
@@ -163,20 +172,20 @@ def main() -> None:
         )
         sys.exit(4)
 
-    # 5. Bind port (default 8742 in prod launcher; exit 3 on failure)
+    # 6. Bind port (default 8742 in prod launcher; exit 3 on failure)
     port_env = os.environ.get("BACKEND_PORT")
     port = int(port_env) if port_env else 8742
 
     sock = create_bound_socket(host, port)
 
-    # 6. Run migrations (exit 5 on failure)
+    # 7. Run migrations (exit 5 on failure)
     app_settings = Settings(
         backend_host=host,
         backend_port=port,
-        database_url=settings.database_url,
+        database_url=database_url,
         monitor_interval_seconds=settings.monitor_interval_seconds,
         frontend_dist=frontend_dist,
-        log_dir=settings.log_dir,
+        log_dir=log_dir,
     )
 
     from alembic.config import Config
