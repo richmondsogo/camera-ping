@@ -120,6 +120,16 @@ class CheckRunner:
             return
         self.run_step("E2E: Playwright Smoke Test", [self.pnpm, "run", "test:e2e"], FRONTEND_DIR)
 
+    def run_bundle_check(self) -> None:
+        self.run_frontend_build_verification()
+        if self.failures:
+            return
+        build_step = [sys.executable, "scripts/build_bundle.py"]
+        if not self.run_step("Bundle: Build Offline Package", build_step, REPO_ROOT):
+            return
+        smoke_step = [sys.executable, "scripts/bundle_smoke.py"]
+        self.run_step("Bundle: Offline Smoke Test", smoke_step, REPO_ROOT)
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run quality checks for Camera Monitor")
@@ -129,6 +139,7 @@ def main() -> None:
     parser.add_argument("--only-typecheck", action="store_true", help="Run only typecheckers")
     parser.add_argument("--only-tests", action="store_true", help="Run only unit tests")
     parser.add_argument("--e2e", action="store_true", help="Run Playwright end-to-end / smoke tests")
+    parser.add_argument("--bundle", action="store_true", help="Build and smoke test the offline distribution bundle")
 
     args = parser.parse_args()
     runner = CheckRunner()
@@ -140,7 +151,9 @@ def main() -> None:
 
     start_total = time.time()
 
-    if args.e2e:
+    if args.bundle:
+        runner.run_bundle_check()
+    elif args.e2e:
         runner.run_e2e_tests()
     elif args.only_backend:
         runner.run_backend_lint()

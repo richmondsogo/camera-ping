@@ -48,10 +48,14 @@ async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
             )
             raise RuntimeError(msg) from e
 
-    alembic_ini_path = BACKEND_DIR / "alembic.ini"
+    alembic_ini_path = (BACKEND_DIR / "alembic.ini").resolve()
     alembic_cfg = Config(str(alembic_ini_path))
     alembic_cfg.attributes["skip_logging_config"] = True
     alembic_cfg.set_main_option("sqlalchemy.url", app_settings.database_url)
+    alembic_cfg.set_main_option(
+        "script_location", str((BACKEND_DIR / "alembic").resolve())
+    )
+    alembic_cfg.set_main_option("prepend_sys_path", str(BACKEND_DIR.resolve()))
 
     try:
         command.upgrade(alembic_cfg, "head")

@@ -68,6 +68,8 @@ EXCLUDE_EXTENSIONS: Final[set[str]] = {
     ".log",
     ".lock",
     ".pdf",
+    ".pyc",
+    ".pyo",
 }
 
 FIXED_DATETIME: Final[tuple[int, int, int, int, int, int]] = (2026, 1, 1, 0, 0, 0)
@@ -381,7 +383,7 @@ def build_bundle(
                     continue
                 dest = site_packages_dir / item.name
                 if item.is_dir():
-                    shutil.copytree(item, dest)
+                    copy_directory_filtered(item, dest)
                 else:
                     shutil.copy2(item, dest)
                 copied_packages += 1
