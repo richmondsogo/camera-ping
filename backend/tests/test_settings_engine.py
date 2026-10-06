@@ -182,7 +182,10 @@ async def test_engine_wake_thread_safe_from_worker_thread(tmp_path: Path) -> Non
 
     try:
         await engine.start()
-        await asyncio.sleep(0.05)
+        for _ in range(20):
+            if cycle_count == 1:
+                break
+            await asyncio.sleep(0.05)
         assert cycle_count == 1
 
         # Wake from a background thread
@@ -196,7 +199,10 @@ async def test_engine_wake_thread_safe_from_worker_thread(tmp_path: Path) -> Non
         t.join()
 
         # Engine scheduler should wake via call_soon_threadsafe and run cycle 2
-        await asyncio.sleep(0.2)
+        for _ in range(30):
+            if cycle_count >= 2:
+                break
+            await asyncio.sleep(0.05)
         assert cycle_count >= 2
     finally:
         await engine.stop()
