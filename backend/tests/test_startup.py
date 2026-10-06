@@ -2,10 +2,10 @@ import sqlite3
 from pathlib import Path
 
 import pytest
-from fastapi.testclient import TestClient
 
 from app.config import Settings
 from app.main import create_app
+from tests.conftest import make_test_client
 
 
 def test_startup_migrates_fresh_database(
@@ -15,7 +15,7 @@ def test_startup_migrates_fresh_database(
     app = create_app(test_settings)
     assert not test_db_path.exists()
 
-    with TestClient(app) as client:
+    with make_test_client(app) as client:
         response = client.get("/api/health")
         assert response.status_code == 200
 
@@ -41,7 +41,7 @@ def test_startup_fails_on_non_sqlite_file(tmp_path: Path) -> None:
     app = create_app(app_settings)
 
     with pytest.raises(RuntimeError) as exc_info:
-        with TestClient(app):
+        with make_test_client(app):
             pass
 
     error_message = str(exc_info.value)
@@ -69,7 +69,7 @@ def test_startup_fails_on_unknown_alembic_revision(tmp_path: Path) -> None:
     app = create_app(app_settings)
 
     with pytest.raises(RuntimeError) as exc_info:
-        with TestClient(app):
+        with make_test_client(app):
             pass
 
     error_message = str(exc_info.value)

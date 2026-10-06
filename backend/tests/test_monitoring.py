@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pytest
 from alembic.config import Config
-from fastapi.testclient import TestClient
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -18,6 +17,7 @@ from app.main import create_app
 from app.models.camera import Camera, CameraStatus
 from app.models.monitoring import MonitoringState
 from app.monitoring.engine import MonitoringEngine
+from tests.conftest import make_test_client
 
 
 def _create_migrated_db(db_path: Path) -> tuple[sessionmaker[Session], Engine]:
@@ -168,7 +168,7 @@ def test_running_flag_persistence_across_app_restart(tmp_path: Path) -> None:
 
     # App 1: Start monitoring via POST /api/monitoring/start
     app1 = create_app(settings, pinger=lambda ip: True)
-    with TestClient(app1) as client1:
+    with make_test_client(app1) as client1:
         res = client1.post("/api/monitoring/start")
         assert res.status_code == 200
         assert res.json()["running"] is True
@@ -184,7 +184,7 @@ def test_running_flag_persistence_across_app_restart(tmp_path: Path) -> None:
 
     # App 2: Startup should automatically resume monitoring because DB was running
     app2 = create_app(settings, pinger=lambda ip: True)
-    with TestClient(app2) as client2:
+    with make_test_client(app2) as client2:
         status_res = client2.get("/api/monitoring/status")
         assert status_res.status_code == 200
         assert status_res.json()["running"] is True
@@ -196,7 +196,7 @@ def test_running_flag_persistence_across_app_restart(tmp_path: Path) -> None:
 
     # App 3: Startup should stay stopped because running was set to False
     app3 = create_app(settings, pinger=lambda ip: True)
-    with TestClient(app3) as client3:
+    with make_test_client(app3) as client3:
         status_res3 = client3.get("/api/monitoring/status")
         assert status_res3.status_code == 200
         assert status_res3.json()["running"] is False
@@ -503,7 +503,7 @@ def test_monitoring_api_endpoints_and_hidden_fields_absent(tmp_path: Path) -> No
     settings = Settings(database_url=f"sqlite:///{db_path.as_posix()}")
 
     app = create_app(settings, pinger=lambda ip: True)
-    with TestClient(app) as client:
+    with make_test_client(app) as client:
         # GET /api/monitoring/status initial
         res = client.get("/api/monitoring/status")
         assert res.status_code == 200
@@ -627,7 +627,7 @@ def test_resume_at_startup_sets_running_since_and_nulls_stale_next_check_at(
 
     app.state.monitoring_engine._cycle_lock.acquire()
     try:
-        with TestClient(app) as client:
+        with make_test_client(app) as client:
             # Upon startup, engine resumed but cycle 1 is blocked by cycle_lock
             res = client.get("/api/monitoring/status")
             assert res.status_code == 200
@@ -669,7 +669,7 @@ def test_consecutive_failures_tracking_and_reset_in_cycles(
 
     app = create_app(settings, pinger=_pinger)
 
-    with TestClient(app) as client:
+    with make_test_client(app) as client:
         # Create camera
         cam_res = client.post(
             "/api/cameras",

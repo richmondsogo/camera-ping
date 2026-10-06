@@ -6,6 +6,7 @@
  */
 
 export const DEFAULT_E2E_BACKEND_PORT = 18000;
+export const DEFAULT_E2E_PROD_PORT = 18080;
 
 export function getExpectedE2eBackendPort(): number {
   if (typeof process !== "undefined" && process.env?.E2E_BACKEND_PORT) {
@@ -17,8 +18,22 @@ export function getExpectedE2eBackendPort(): number {
   return DEFAULT_E2E_BACKEND_PORT;
 }
 
-export function assertE2eStack(apiUrlOrPort: string | number): void {
+export function getExpectedE2eProdPort(): number {
+  if (typeof process !== "undefined" && process.env?.E2E_PROD_PORT) {
+    const parsed = Number.parseInt(process.env.E2E_PROD_PORT, 10);
+    if (!Number.isNaN(parsed)) {
+      return parsed;
+    }
+  }
+  return DEFAULT_E2E_PROD_PORT;
+}
+
+export function assertE2eStack(
+  apiUrlOrPort: string | number,
+  explicitAllowedPort?: number
+): void {
   const expectedPort = getExpectedE2eBackendPort();
+  const expectedProdPort = getExpectedE2eProdPort();
   let port: number;
 
   if (typeof apiUrlOrPort === "number") {
@@ -43,15 +58,24 @@ export function assertE2eStack(apiUrlOrPort: string | number): void {
     }
   }
 
-  if (port === 8000 || port === 5173) {
+  if (port === 8000 || port === 5173 || port === 8742) {
     throw new Error(
-      `Refusing to run destructive e2e action against protected production/development port ${port}. Only e2e port ${expectedPort} is permitted.`
+      `Refusing to run destructive e2e action against protected production/development port ${port}.`
     );
   }
 
-  if (port !== expectedPort) {
+  const allowed =
+    explicitAllowedPort !== undefined
+      ? port === explicitAllowedPort
+      : port === expectedPort || port === expectedProdPort;
+
+  if (!allowed) {
+    const expected =
+      explicitAllowedPort !== undefined
+        ? String(explicitAllowedPort)
+        : `${expectedPort} or ${expectedProdPort}`;
     throw new Error(
-      `Target port ${port} does not match configured e2e backend port ${expectedPort}. Destructive e2e actions are prohibited.`
+      `Target port ${port} does not match configured e2e port (${expected}). Destructive e2e actions are prohibited.`
     );
   }
 }

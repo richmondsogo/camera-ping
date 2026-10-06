@@ -1,3 +1,4 @@
+import logging
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -15,10 +16,14 @@ from app.api.settings import router as settings_router
 from app.config import BACKEND_DIR, Settings, settings
 from app.database import create_db_engine, create_sessionmaker
 from app.exceptions import CameraNotFoundError, DuplicateIpError
+from app.middleware import HostOriginMiddleware, SecurityHeadersMiddleware
 from app.models.monitoring import MonitoringState
 from app.monitoring.engine import MonitoringEngine
 from app.monitoring.probe import ping_host
 from app.services.settings import get_effective_interval
+from app.static_serve import setup_frontend_serving
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -45,6 +50,7 @@ async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
 
     alembic_ini_path = BACKEND_DIR / "alembic.ini"
     alembic_cfg = Config(str(alembic_ini_path))
+    alembic_cfg.attributes["skip_logging_config"] = True
     alembic_cfg.set_main_option("sqlalchemy.url", app_settings.database_url)
 
     try:
@@ -62,6 +68,7 @@ async def lifespan(application: FastAPI) -> AsyncGenerator[None, None]:
         should_resume = state.running if state is not None else False
 
     if should_resume:
+        logger.info("Resuming monitoring engine from previous state")
         await application.state.monitoring_engine.start()
 
     yield
@@ -87,10 +94,15 @@ def create_app(
     if pinger is None:
         pinger = ping_host
 
+    is_production = app_settings.frontend_dist is not None
+
     application = FastAPI(
         title="Camera Monitor API",
         version="0.1.0",
         lifespan=lifespan,
+        docs_url=None if is_production else "/docs",
+        redoc_url=None if is_production else "/redoc",
+        openapi_url=None if is_production else "/openapi.json",
     )
 
     engine = create_db_engine(app_settings.database_url)
@@ -146,6 +158,14 @@ def create_app(
     application.include_router(cameras_router)
     application.include_router(monitoring_router)
     application.include_router(settings_router)
+
+    if app_settings.frontend_dist is not None:
+        setup_frontend_serving(application, app_settings.frontend_dist)
+
+    # Add middlewares: HostOriginMiddleware first,
+    # SecurityHeadersMiddleware last (outermost)
+    application.add_middleware(HostOriginMiddleware)
+    application.add_middleware(SecurityHeadersMiddleware)
 
     return application
 

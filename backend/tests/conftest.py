@@ -14,20 +14,29 @@ from app.main import create_app
 def guard_data_directory() -> Generator[None, None, None]:
     """Autouse guard ensuring tests never create, modify, or touch backend/data/."""
 
-    def get_snapshot() -> tuple[bool, list[str]]:
+    def get_snapshot() -> dict[str, tuple[int, int]]:
         if not DEFAULT_DATA_DIR.exists():
-            return (False, [])
-        return (True, sorted(f.name for f in DEFAULT_DATA_DIR.iterdir()))
+            return {}
+        result: dict[str, tuple[int, int]] = {}
+        for p in DEFAULT_DATA_DIR.rglob("*"):
+            if p.is_file():
+                stat = p.stat()
+                result[str(p.relative_to(DEFAULT_DATA_DIR))] = (
+                    stat.st_size,
+                    int(stat.st_mtime_ns),
+                )
+        return result
 
-    before_exists, before_files = get_snapshot()
+    before = get_snapshot()
     yield
-    after_exists, after_files = get_snapshot()
+    after = get_snapshot()
 
-    if before_exists != after_exists or before_files != after_files:
+    if before != after:
+        diff_keys = set(before.keys()) ^ set(after.keys())
+        changed = [k for k in before if k in after and before[k] != after[k]]
         raise AssertionError(
             f"Test touched production data directory {DEFAULT_DATA_DIR}! "
-            f"Before: exists={before_exists}, files={before_files}; "
-            f"After: exists={after_exists}, files={after_files}"
+            f"Added/removed: {diff_keys}; Modified: {changed}"
         )
 
 
@@ -49,10 +58,16 @@ def app_instance(test_settings: Settings) -> FastAPI:
     return create_app(test_settings)
 
 
+def make_test_client(app: FastAPI, **kwargs: object) -> TestClient:
+    """Create a TestClient with base_url defaulting to http://localhost."""
+    kwargs.setdefault("base_url", "http://localhost")
+    return TestClient(app, **kwargs)  # type: ignore[arg-type]
+
+
 @pytest.fixture
 def client(app_instance: FastAPI) -> Generator[TestClient, None, None]:
     """TestClient that runs app lifespan (migrating tmp_path database)."""
-    with TestClient(app_instance) as test_client:
+    with make_test_client(app_instance) as test_client:
         yield test_client
 
 

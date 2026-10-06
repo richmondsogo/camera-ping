@@ -40,25 +40,39 @@ describe("assertE2eStack", () => {
     );
   });
 
-  it("throws when called with an arbitrary non-e2e port", () => {
-    expect(() => assertE2eStack(3000)).toThrow(
-      /does not match configured e2e backend port 18000/
+  it("throws when called with protected production port 8742", () => {
+    expect(() => assertE2eStack(8742)).toThrow(
+      /protected production\/development port 8742/
     );
-    expect(() => assertE2eStack("http://127.0.0.1:15173")).toThrow(
-      /does not match configured e2e backend port 18000/
+    expect(() => assertE2eStack("http://127.0.0.1:8742")).toThrow(
+      /protected production\/development port 8742/
+    );
+    expect(() => assertE2eStack("http://localhost:8742/api")).toThrow(
+      /protected production\/development port 8742/
     );
   });
 
-  it("succeeds when called with the default e2e backend port 18000", () => {
+  it("throws when called with an arbitrary non-e2e port", () => {
+    expect(() => assertE2eStack(3000)).toThrow(
+      /does not match configured e2e port/
+    );
+    expect(() => assertE2eStack("http://127.0.0.1:15173")).toThrow(
+      /does not match configured e2e port/
+    );
+  });
+
+  it("succeeds when called with default e2e backend port 18000 or e2e prod port 18080", () => {
     expect(() => assertE2eStack(DEFAULT_E2E_BACKEND_PORT)).not.toThrow();
     expect(() => assertE2eStack("http://127.0.0.1:18000")).not.toThrow();
     expect(() => assertE2eStack("http://localhost:18000/api")).not.toThrow();
+    expect(() => assertE2eStack(18080)).not.toThrow();
+    expect(() => assertE2eStack("http://127.0.0.1:18080")).not.toThrow();
   });
 
   it("respects custom E2E_BACKEND_PORT environment variable", () => {
     process.env.E2E_BACKEND_PORT = "19000";
     expect(() => assertE2eStack(18000)).toThrow(
-      /does not match configured e2e backend port 19000/
+      /does not match configured e2e port.*19000/
     );
     expect(() => assertE2eStack(19000)).not.toThrow();
     expect(() => assertE2eStack("http://127.0.0.1:19000")).not.toThrow();

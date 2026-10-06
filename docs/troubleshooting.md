@@ -51,6 +51,47 @@ This guide describes common symptoms, causes, and solutions verified in Camera M
 - **Cause**: A camera with an identical IP was added in another session between validation preview and commit.
 - **Fix**: Export the current inventory to identify the conflicting IP, update your CSV, and re-import.
 
+## Production Runtime & Startup Issues
+
+### Production Launcher Exit Codes
+The production launcher (`python scripts/run_prod.py` / `python -m app.serve`) uses distinct, machine-parseable exit codes:
+- **Exit Code 2 (Configuration / Build Error)**:
+  - Host is not a loopback address (`127.0.0.1` or `localhost`).
+  - Or frontend build is missing: `Frontend not built. Run: pnpm --dir frontend build`.
+- **Exit Code 3 (Port Busy or Blocked)**:
+  - Port 8742 is occupied or falls within a dynamic port exclusion range reserved by Windows.
+  - Fix: Override port with `$env:BACKEND_PORT = "8743"; python scripts/run_prod.py`.
+- **Exit Code 4 (Instance Lock Collision)**:
+  - Another instance of Camera Monitor is already running on the same data folder.
+  - The error message reports the holding PID: `Another instance of Camera Monitor is already running on this data folder (...) with PID <PID>.`
+- **Exit Code 5 (Database Migration Failure)**:
+  - Alembic database migration failed. Inspect terminal output or logs for SQLite schema conflicts.
+
+### Stale Lock File Recovery & Process Termination
+- **Process Crash / Hard Kill Recovery**:
+  If Camera Monitor or Windows crashes unexpectedly, `camera-monitor.lock` remains on disk. However, Windows byte-range locks are held by the operating system kernel and are **automatically released** the instant the process terminates. A newly started instance will immediately acquire the lock without manual cleanup.
+- **Hung Process Termination**:
+  If a background instance has genuinely hung or failed to stop:
+  1. Note the PID printed by the Exit Code 4 error message (or check `camera-monitor.lock`).
+  2. Inspect the process in PowerShell:
+     ```powershell
+     tasklist /FI "PID eq <PID>"
+     ```
+  3. Terminate the hung process:
+     ```powershell
+     taskkill /PID <PID>
+     ```
+     (If unresponsive, force-kill with `taskkill /F /PID <PID>`).
+
+### Windows Console Non-ASCII Encoding Safety
+- **Symptom**: Past Python scripts crashed with `UnicodeEncodeError: 'charmap' codec can't encode character...` when printing camera names with accents or non-Latin scripts.
+- **Resolution**: Camera Monitor automatically reconfigures console output streams with `errors="replace"` on startup. Accented or non-Latin camera names (such as "Café Ñandú 入口") will safely print without crashing the server process, while full UTF-8 characters are preserved verbatim in `backend/data/logs/camera-monitor.log`.
+
+### Browser Cached Old Build
+- **Symptom**: Changes to the user interface do not appear when loading `http://127.0.0.1:8742`.
+- **Cause**: The browser cached an older bundle before `pnpm --dir frontend build` ran.
+- **Fix**: Perform a hard refresh in Google Chrome or Microsoft Edge by pressing `Ctrl + F5` (or `Shift + Reload`).
+
 ## Server & Startup Issues
 
 ### Dev Port Already in Use (Port 8000 or 5173)
@@ -75,3 +116,4 @@ This guide describes common symptoms, causes, and solutions verified in Camera M
 - **Symptom**: Reachable cameras reported as Offline on target admin PC.
 - **Cause**: The online rule requires `"TTL="` in stdout. If the Windows OS language produces translated output without TTL, reachability parsing could fail.
 - **Fix**: Verify raw `ping.exe` output on the target PC and update probe matching if needed. *(verify at the office)*
+

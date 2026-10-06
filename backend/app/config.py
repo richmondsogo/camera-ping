@@ -6,6 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 DEFAULT_DATA_DIR = BACKEND_DIR / "data"
 DEFAULT_DB_PATH = DEFAULT_DATA_DIR / "camera_monitor.db"
+DEFAULT_LOG_DIR = DEFAULT_DATA_DIR / "logs"
 
 
 MIN_INTERVAL_SECONDS: int = 10
@@ -17,6 +18,8 @@ class Settings(BaseSettings):
     backend_port: int = 8000
     database_url: str = f"sqlite:///{DEFAULT_DB_PATH.as_posix()}"
     monitor_interval_seconds: int = 60
+    frontend_dist: Path | None = None
+    log_dir: Path = DEFAULT_LOG_DIR
 
     @field_validator("monitor_interval_seconds")
     @classmethod

@@ -6,12 +6,12 @@ backend and frontend with cross-platform OS handling.
 """
 
 import argparse
-from pathlib import Path
 import platform
 import shutil
 import subprocess
 import sys
 import time
+from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 BACKEND_DIR = REPO_ROOT / "backend"
@@ -114,6 +114,9 @@ class CheckRunner:
             self.failures.append("Frontend: Build + Utility Verification")
 
     def run_e2e_tests(self) -> None:
+        self.run_frontend_build_verification()
+        if self.failures:
+            return
         self.run_step("E2E: Playwright Smoke Test", [self.pnpm, "run", "test:e2e"], FRONTEND_DIR)
 
 

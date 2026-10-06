@@ -3,7 +3,6 @@ from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
-from fastapi.testclient import TestClient
 from sqlalchemy import Column, Integer, Table, select
 from sqlalchemy.exc import StatementError
 from sqlalchemy.orm import Session
@@ -12,6 +11,7 @@ from app import clock
 from app.config import DEFAULT_DATA_DIR, DEFAULT_DB_PATH, Settings
 from app.database import Base, UTCDateTime, create_db_engine, create_sessionmaker
 from app.main import create_app
+from tests.conftest import make_test_client
 
 
 def test_utc_now_timezone_aware() -> None:
@@ -115,7 +115,7 @@ def test_in_process_upgrade_preserves_existing_loggers(tmp_path: Path) -> None:
     test_settings = Settings(database_url=f"sqlite:///{db_path.as_posix()}")
     test_app = create_app(test_settings)
 
-    with TestClient(test_app):
+    with make_test_client(test_app):
         pass
 
     logger.info("Message after Alembic upgrade")
