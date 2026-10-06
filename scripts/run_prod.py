@@ -5,6 +5,7 @@ Locates backend virtualenv Python, verifies frontend build assets, sets cwd to b
 runs `app.serve` as a child process, forwards signals/Ctrl+C, and returns the child's exit code.
 """
 
+import os
 import platform
 import subprocess
 import sys
@@ -29,7 +30,9 @@ def main() -> None:
         )
         sys.exit(1)
 
-    if not (FRONTEND_DIST.is_dir() and (FRONTEND_DIST / "index.html").is_file()):
+    frontend_dist_env = os.environ.get("FRONTEND_DIST")
+    frontend_dist = Path(frontend_dist_env) if frontend_dist_env else FRONTEND_DIST
+    if not (frontend_dist.is_dir() and (frontend_dist / "index.html").is_file()):
         print(
             "Frontend not built. Run: pnpm --dir frontend build",
             file=sys.stderr,
