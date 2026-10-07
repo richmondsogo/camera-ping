@@ -129,7 +129,18 @@ class CheckRunner:
         build_step = [backend_python, "scripts/build_bundle.py"]
         if not self.run_step("Bundle: Build Offline Package", build_step, REPO_ROOT):
             return
-        smoke_step = [backend_python, "scripts/bundle_smoke.py"]
+
+        bundle_zips = sorted(
+            (REPO_ROOT / "dist-bundle").glob("CameraMonitor-*.zip"),
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
+        )
+        if not bundle_zips:
+            print("     FAIL: No bundle zip found in dist-bundle/")
+            self.failures.append("Bundle: Offline Smoke Test")
+            return
+        target_zip = bundle_zips[0]
+        smoke_step = [backend_python, "scripts/bundle_smoke.py", str(target_zip)]
         self.run_step("Bundle: Offline Smoke Test", smoke_step, REPO_ROOT)
 
 

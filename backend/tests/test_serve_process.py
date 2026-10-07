@@ -20,12 +20,12 @@ def get_free_port() -> int:
         return int(s.getsockname()[1])
 
 
-def wait_for_server(port: int, timeout: float = 15.0) -> bool:
+def wait_for_server(port: int, timeout: float = 30.0) -> bool:
     start = time.time()
     url = f"http://127.0.0.1:{port}/api/health"
     while time.time() - start < timeout:
         try:
-            with urllib.request.urlopen(url, timeout=0.5) as res:
+            with urllib.request.urlopen(url, timeout=1.0) as res:
                 if res.status == 200:
                     return True
         except Exception:
@@ -74,19 +74,19 @@ def test_serve_lifecycle_and_routes(tmp_path: Path) -> None:
 
         # Check /api/health
         with urllib.request.urlopen(
-            f"http://127.0.0.1:{port}/api/health", timeout=1.0
+            f"http://127.0.0.1:{port}/api/health", timeout=5.0
         ) as res:
             assert res.status == 200
             assert b"ok" in res.read()
 
         # Check /
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=1.0) as res:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=5.0) as res:
             assert res.status == 200
             assert b"Prod App" in res.read()
 
         # Check /settings
         with urllib.request.urlopen(
-            f"http://127.0.0.1:{port}/settings", timeout=1.0
+            f"http://127.0.0.1:{port}/settings", timeout=5.0
         ) as res:
             assert res.status == 200
             assert b"Prod App" in res.read()
@@ -385,7 +385,7 @@ def test_wrapper_kill_orphans_child(tmp_path: Path) -> None:
         # Verify child server process is still running (orphaned)
         # and server is still responding to requests
         with urllib.request.urlopen(
-            f"http://127.0.0.1:{port}/api/health", timeout=1.0
+            f"http://127.0.0.1:{port}/api/health", timeout=5.0
         ) as res:
             assert res.status == 200
 

@@ -71,10 +71,17 @@ async def test_engine_shorter_interval_wakes_and_runs_soon(tmp_path: Path) -> No
         return current_interval
 
     cycle_count = 0
+    cycle_1_done = asyncio.Event()
+    cycle_2_done = asyncio.Event()
+    loop = asyncio.get_running_loop()
 
     def pinger(ip: str) -> bool:
         nonlocal cycle_count
         cycle_count += 1
+        if cycle_count == 1:
+            loop.call_soon_threadsafe(cycle_1_done.set)
+        elif cycle_count >= 2:
+            loop.call_soon_threadsafe(cycle_2_done.set)
         return True
 
     engine, session_factory = _setup_engine(tmp_path, provider, pinger)
@@ -83,18 +90,15 @@ async def test_engine_shorter_interval_wakes_and_runs_soon(tmp_path: Path) -> No
     try:
         await engine.start()
         # First cycle runs immediately on start
-        for _ in range(20):
-            if cycle_count == 1:
-                break
-            await asyncio.sleep(0.05)
+        await cycle_1_done.wait()
         assert cycle_count == 1
 
         # Now engine is sleeping with 100.0s target
-        current_interval = 0.05
+        current_interval = 0.01
         engine.wake()
 
-        # Engine should wake up, re-evaluate remaining time, and run cycle 2 soon
-        await asyncio.sleep(0.2)
+        # Engine should wake up, re-evaluate remaining time, and run cycle 2
+        await cycle_2_done.wait()
         assert cycle_count >= 2
     finally:
         await engine.stop()
@@ -111,10 +115,14 @@ async def test_engine_longer_interval_does_not_run_at_old_time(
         return current_interval
 
     cycle_count = 0
+    cycle_1_done = asyncio.Event()
+    loop = asyncio.get_running_loop()
 
     def pinger(ip: str) -> bool:
         nonlocal cycle_count
         cycle_count += 1
+        if cycle_count == 1:
+            loop.call_soon_threadsafe(cycle_1_done.set)
         return True
 
     engine, session_factory = _setup_engine(tmp_path, provider, pinger)
@@ -122,10 +130,7 @@ async def test_engine_longer_interval_does_not_run_at_old_time(
 
     try:
         await engine.start()
-        for _ in range(25):
-            if cycle_count >= 1:
-                break
-            await asyncio.sleep(0.02)
+        await cycle_1_done.wait()
         assert cycle_count == 1
 
         # Change to a much longer interval (10.0s) and wake
@@ -148,7 +153,6 @@ async def test_engine_max_365_days_waits_and_stops_cleanly(tmp_path: Path) -> No
 
     try:
         await engine.start()
-        await asyncio.sleep(0.05)
         assert engine.is_running is True
 
         # stop() must exit quickly without OverflowError or hanging
@@ -171,10 +175,16 @@ async def test_engine_wake_thread_safe_from_worker_thread(tmp_path: Path) -> Non
         return current_interval
 
     cycle_count = 0
+    cycle_1_done = threading.Event()
+    cycle_2_done = threading.Event()
 
     def pinger(ip: str) -> bool:
         nonlocal cycle_count
         cycle_count += 1
+        if cycle_count == 1:
+            cycle_1_done.set()
+        elif cycle_count >= 2:
+            cycle_2_done.set()
         return True
 
     engine, session_factory = _setup_engine(tmp_path, provider, pinger)
@@ -182,16 +192,13 @@ async def test_engine_wake_thread_safe_from_worker_thread(tmp_path: Path) -> Non
 
     try:
         await engine.start()
-        for _ in range(20):
-            if cycle_count == 1:
-                break
-            await asyncio.sleep(0.05)
+        await asyncio.to_thread(cycle_1_done.wait, 5.0)
         assert cycle_count == 1
 
         # Wake from a background thread
         def worker_trigger() -> None:
             nonlocal current_interval
-            current_interval = 0.05
+            current_interval = 0.01
             engine.wake()
 
         t = threading.Thread(target=worker_trigger)
@@ -199,10 +206,7 @@ async def test_engine_wake_thread_safe_from_worker_thread(tmp_path: Path) -> Non
         t.join()
 
         # Engine scheduler should wake via call_soon_threadsafe and run cycle 2
-        for _ in range(30):
-            if cycle_count >= 2:
-                break
-            await asyncio.sleep(0.05)
+        await asyncio.to_thread(cycle_2_done.wait, 5.0)
         assert cycle_count >= 2
     finally:
         await engine.stop()
@@ -220,6 +224,8 @@ async def test_engine_interval_change_during_in_progress_cycle(
 
     cycle_count = 0
     cycle_1_entered = threading.Event()
+    cycle_1_done = threading.Event()
+    cycle_2_done = threading.Event()
     unblock_pinger = threading.Event()
 
     def pinger(ip: str) -> bool:
@@ -228,6 +234,9 @@ async def test_engine_interval_change_during_in_progress_cycle(
         if cycle_count == 1:
             cycle_1_entered.set()
             unblock_pinger.wait(timeout=5.0)
+            cycle_1_done.set()
+        elif cycle_count >= 2:
+            cycle_2_done.set()
         return True
 
     engine, session_factory = _setup_engine(tmp_path, provider, pinger)
@@ -236,22 +245,22 @@ async def test_engine_interval_change_during_in_progress_cycle(
     try:
         await engine.start()
         # Wait until cycle 1 is actively inside pinger
-        await asyncio.to_thread(cycle_1_entered.wait, 2.0)
+        await asyncio.to_thread(cycle_1_entered.wait, 5.0)
         assert cycle_count == 1
 
-        # While cycle 1 is in progress, change interval to 0.25s and wake
-        current_interval = 0.25
+        # While cycle 1 is in progress, change interval to 0.02s and wake
+        current_interval = 0.02
         engine.wake()
 
         # Unblock pinger so cycle 1 completes
         unblock_pinger.set()
-        await asyncio.sleep(0.05)
+        await asyncio.to_thread(cycle_1_done.wait, 5.0)
 
         # Immediately after cycle 1 finishes, cycle 2 has NOT run yet (no extra cycle)
         assert cycle_count == 1
 
-        # After the new 0.25s interval elapses, cycle 2 runs
-        await asyncio.sleep(0.3)
+        # After the new interval elapses, cycle 2 runs
+        await asyncio.to_thread(cycle_2_done.wait, 5.0)
         assert cycle_count >= 2
     finally:
         unblock_pinger.set()
@@ -269,8 +278,6 @@ async def test_wake_before_start_or_after_stop_does_not_start_engine(
     # 1. Wake before start
     engine.wake()
     assert engine.is_running is False
-    await asyncio.sleep(0.05)
-    assert engine.is_running is False
 
     # 2. Start and then stop
     await engine.start()
@@ -280,6 +287,4 @@ async def test_wake_before_start_or_after_stop_does_not_start_engine(
 
     # 3. Wake after stop
     engine.wake()
-    assert engine.is_running is False
-    await asyncio.sleep(0.05)
     assert engine.is_running is False

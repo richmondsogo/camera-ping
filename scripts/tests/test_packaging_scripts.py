@@ -95,9 +95,9 @@ class TestPackagingScripts(unittest.TestCase):
                 f"verify-install.cmd -DryRun failed (code {res_dry.returncode}):\n{res_dry.stderr}\n{res_dry.stdout}",
             )
 
-            # 2. Live execution without elevation must fail preflight (exit code 1)
+            # 2. Deliberately failing preflight via launcher must pass through non-zero exit code (exit code 1)
             res_fail = subprocess.run(
-                ["cmd.exe", "/c", str(verify_cmd)],
+                ["cmd.exe", "/c", str(verify_cmd), "-TaskName", "CameraMonitor"],
                 cwd=temp_path,
                 capture_output=True,
                 text=True,
@@ -105,9 +105,11 @@ class TestPackagingScripts(unittest.TestCase):
             self.assertEqual(
                 res_fail.returncode,
                 1,
-                f"verify-install.cmd should return exit code 1 when not elevated, got {res_fail.returncode}",
+                f"verify-install.cmd should return exit code 1 on safety preflight failure, got {res_fail.returncode}",
             )
-            self.assertIn("Administrator privileges are required", res_fail.stderr + res_fail.stdout)
+            self.assertIn(
+                "safety violation", (res_fail.stderr + res_fail.stdout).lower()
+            )
 
     def test_verify_install_safety_guardrails(self) -> None:
         """Ensure verify-install refuses production task name or production install paths."""
@@ -150,6 +152,87 @@ class TestPackagingScripts(unittest.TestCase):
         )
         self.assertNotEqual(res_path.returncode, 0)
         self.assertIn("Safety Violation", res_path.stderr + res_path.stdout)
+
+    def test_scheduled_task_definitions_in_install_ps1(self) -> None:
+        """Parse install.ps1 and assert all required Scheduled Task parameters."""
+        install_ps1 = PACKAGING_DIR / "install.ps1"
+        self.assertTrue(install_ps1.is_file())
+        content = install_ps1.read_text(encoding="ascii")
+
+        # 1. Main CameraMonitor Task parameters
+        self.assertIn('-UserId "S-1-5-18"', content)
+        self.assertIn("-RunLevel Highest", content)
+        self.assertIn("New-ScheduledTaskTrigger -AtStartup", content)
+        self.assertIn('$trigger.Delay = "PT30S"', content)
+        self.assertIn('python\\python.exe', content)
+        self.assertIn('-m app.serve --home', content)
+        self.assertIn('--frontend-dist', content)
+        self.assertIn('-WorkingDirectory "$InstallPath\\app"', content)
+        self.assertIn("-ExecutionTimeLimit ([TimeSpan]::Zero)", content)
+        self.assertIn("-MultipleInstances IgnoreNew", content)
+        self.assertIn("-StartWhenAvailable", content)
+        self.assertIn("-AllowStartIfOnBatteries", content)
+        self.assertIn("-DontStopIfGoingOnBatteries", content)
+        self.assertIn("-RestartCount 999", content)
+        self.assertIn("-RestartInterval (New-TimeSpan -Minutes 1)", content)
+
+        # 2. Backup Task parameters (daily 03:00, SYSTEM)
+        self.assertIn('New-ScheduledTaskTrigger -Daily -At "03:00"', content)
+        self.assertIn("-Principal $principal", content)
+        self.assertIn('scripts\\backup.ps1', content)
+
+    def test_uninstall_power_settings_restoration(self) -> None:
+        """Verify uninstall.ps1 restores AC power settings from power-before.txt."""
+        uninstall_ps1 = PACKAGING_DIR / "uninstall.ps1"
+        self.assertTrue(uninstall_ps1.is_file())
+
+        with tempfile.TemporaryDirectory(prefix="camera_test_power_") as temp_dir:
+            temp_home = Path(temp_dir)
+            power_file = temp_home / "power-before.txt"
+            power_file.write_text(
+                "STANDBY_TIMEOUT_AC=15\nHIBERNATE_TIMEOUT_AC=30\n", encoding="ascii"
+            )
+
+            # Test DryRun with power-before.txt present
+            res_with_file = subprocess.run(
+                [
+                    "powershell.exe",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(uninstall_ps1),
+                    "-HomeDir",
+                    str(temp_home),
+                    "-DryRun",
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(res_with_file.returncode, 0)
+            output = res_with_file.stdout
+            self.assertIn("Would restore AC sleep (15 min) and hibernate (30 min)", output)
+
+            # Test DryRun when power-before.txt is missing
+            power_file.unlink()
+            res_without_file = subprocess.run(
+                [
+                    "powershell.exe",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(uninstall_ps1),
+                    "-HomeDir",
+                    str(temp_home),
+                    "-DryRun",
+                ],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(res_without_file.returncode, 0)
+            output_missing = res_without_file.stdout
+            self.assertIn("power-before.txt found; leaving power settings unchanged", output_missing)
 
 
 if __name__ == "__main__":

@@ -4,8 +4,8 @@
 
 [CmdletBinding()]
 param(
-    [string]$TestTaskName = "CameraMonitorTest",
-    [string]$TestBackupTaskName = "CameraMonitorTest Backup",
+    [Alias("TaskName")][string]$TestTaskName = "CameraMonitorTest",
+    [Alias("BackupTaskName")][string]$TestBackupTaskName = "CameraMonitorTest Backup",
     [string]$TestInstallPath = "",
     [string]$TestHomePath = "",
     [int]$TestPort = 0,

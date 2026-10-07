@@ -104,15 +104,35 @@ For error codes and resolution steps, consult the [Troubleshooting Guide](troubl
 
 ## Uninstallation
 
-To remove the scheduled tasks, desktop shortcut, and program files while preserving all camera records, ping history, and backups:
+### Standard Uninstallation (Preserving Data)
+
+To remove scheduled tasks, desktop shortcuts, and program files while preserving all camera records, ping history, configuration, and database backups:
 
 ```cmd
 cd "C:\Program Files\CameraMonitor\scripts"
 uninstall.cmd
 ```
 
-To perform a complete removal including all data and logs:
+### Complete Removal (Including Data)
+
+To perform a complete removal including all data, configuration, and logs:
 
 ```cmd
 uninstall.cmd -RemoveData DELETE
 ```
+
+### What Uninstallation Reverts
+
+When `uninstall.cmd` runs, it executes the following cleanup sequence:
+
+1. **Scheduled Tasks**: Stops and unregisters both the `CameraMonitor` boot task and the `CameraMonitor Backup` task.
+2. **Processes**: Terminates any active backend processes originating from `C:\Program Files\CameraMonitor`.
+3. **Desktop Shortcut**: Deletes the public `Camera Monitor.lnk` shortcut from the common desktop.
+4. **Power Settings**: Checks for `C:\ProgramData\CameraMonitor\power-before.txt`:
+   - If present, restores the original AC standby and hibernate timeouts via `powercfg /change standby-timeout-ac <min>` and `powercfg /change hibernate-timeout-ac <min>`, printing the restored values.
+   - If `-SkipPowerSettings` was used at install time or the file is missing, it prints a note and leaves the existing Windows power policy unchanged.
+5. **Program Binaries**: Completely deletes `C:\Program Files\CameraMonitor` and any `C:\Program Files\CameraMonitor.previous` backup directory.
+6. **Data Retention**: Preserves `C:\ProgramData\CameraMonitor` (database, ping logs, and backups) unless `-RemoveData DELETE` is specified.
+
+> [!NOTE]
+> Like the installer, uninstallation is strictly self-contained. It leaves system PATH, firewall rules, and external Windows components untouched.

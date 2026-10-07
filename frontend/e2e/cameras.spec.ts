@@ -382,6 +382,9 @@ test.describe("Camera Management & Dashboard CRUD", () => {
   test("toolbar layout geometry, non-overlapping controls, select labels and indicator alignment at viewports 1024, 1280, 1920", async ({
     page,
   }) => {
+    // Multi-viewport geometry and popup alignment test iterates over 3 separate viewports (1024px, 1280px, 1920px)
+    test.setTimeout(60000);
+
     function boxesIntersect(
       a: { x: number; y: number; width: number; height: number },
       b: { x: number; y: number; width: number; height: number }

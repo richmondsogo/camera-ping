@@ -4,8 +4,8 @@
 
 [CmdletBinding()]
 param(
-    [string]$InstallPath = "C:\Program Files\CameraMonitor",
-    [string]$HomePath = "C:\ProgramData\CameraMonitor",
+    [Alias("InstallDir")][string]$InstallPath = "C:\Program Files\CameraMonitor",
+    [Alias("HomeDir")][string]$HomePath = "C:\ProgramData\CameraMonitor",
     [string]$TaskName = "CameraMonitor",
     [string]$BackupTaskName = "CameraMonitor Backup",
     [string]$RemoveData = "",
@@ -44,6 +44,19 @@ if ($DryRun) {
     Write-Host "Target Install Path: $InstallPath"
     Write-Host "Target Home Path:    $HomePath (RemoveData: '$RemoveData')"
     Write-Host "Scheduled Tasks:     $TaskName, $BackupTaskName"
+    $powerBeforeFile = Join-Path $HomePath "power-before.txt"
+    if (Test-Path $powerBeforeFile) {
+        $standby = 0
+        $hibernate = 0
+        $lines = Get-Content $powerBeforeFile -ErrorAction SilentlyContinue
+        foreach ($line in $lines) {
+            if ($line -match "STANDBY_TIMEOUT_AC=(\d+)") { $standby = [int]$matches[1] }
+            if ($line -match "HIBERNATE_TIMEOUT_AC=(\d+)") { $hibernate = [int]$matches[1] }
+        }
+        Write-Host "Power Settings:      Would restore AC sleep ($standby min) and hibernate ($hibernate min) from $powerBeforeFile"
+    } else {
+        Write-Host "Power Settings:      No $powerBeforeFile found; leaving power settings unchanged."
+    }
     Write-Host "============================================================"
     Write-Host "[DRY-RUN] Uninstaller plan validated successfully."
     exit 0
@@ -98,7 +111,40 @@ try {
     Write-Warning "Could not remove desktop shortcut: $_"
 }
 
-# 5. Remove Program Files
+# 5. Restore Power Settings
+$powerBeforeFile = Join-Path $HomePath "power-before.txt"
+if (Test-Path $powerBeforeFile) {
+    $standby = 0
+    $hibernate = 0
+    $hasStandby = $false
+    $hasHibernate = $false
+    $lines = Get-Content $powerBeforeFile -ErrorAction SilentlyContinue
+    foreach ($line in $lines) {
+        if ($line -match "STANDBY_TIMEOUT_AC=(\d+)") {
+            $standby = [int]$matches[1]
+            $hasStandby = $true
+        }
+        if ($line -match "HIBERNATE_TIMEOUT_AC=(\d+)") {
+            $hibernate = [int]$matches[1]
+            $hasHibernate = $true
+        }
+    }
+    try {
+        if ($hasStandby) {
+            & powercfg /change standby-timeout-ac $standby
+        }
+        if ($hasHibernate) {
+            & powercfg /change hibernate-timeout-ac $hibernate
+        }
+        Write-Info "Restored AC power settings from $powerBeforeFile (standby-timeout-ac=$standby min, hibernate-timeout-ac=$hibernate min)."
+    } catch {
+        Write-Warning "Could not restore power configuration: $_"
+    }
+} else {
+    Write-Info "No power-before.txt found at $powerBeforeFile (or -SkipPowerSettings was used at install); leaving power policy unchanged."
+}
+
+# 6. Remove Program Files
 if (Test-Path $InstallPath) {
     Write-Info "Removing program files at $InstallPath..."
     Remove-Item -Path $InstallPath -Recurse -Force -ErrorAction SilentlyContinue

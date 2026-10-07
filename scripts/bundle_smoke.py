@@ -96,6 +96,34 @@ def run_smoke_test(zip_path: Path) -> None:
     print(f"Archive: {zip_path}")
     print("=" * 60)
 
+    # Verify SHA-256 against .sha256 file before extracting
+    sha256_file = zip_path.with_name(f"{zip_path.name}.sha256")
+    if not sha256_file.is_file():
+        raise FileNotFoundError(
+            f"Bundle checksum file not found: {sha256_file}\n"
+            f"Expected .sha256 file alongside {zip_path.name}"
+        )
+
+    expected_line = sha256_file.read_text(encoding="utf-8").strip()
+    expected_hash = expected_line.split()[0].lower()
+
+    import hashlib
+
+    hasher = hashlib.sha256()
+    with zip_path.open("rb") as f:
+        while chunk := f.read(65536):
+            hasher.update(chunk)
+    actual_hash = hasher.hexdigest().lower()
+
+    if actual_hash != expected_hash:
+        raise AssertionError(
+            f"Bundle SHA-256 mismatch!\n"
+            f"File:     {zip_path}\n"
+            f"Expected: {expected_hash} (from {sha256_file.name})\n"
+            f"Actual:   {actual_hash}"
+        )
+    print(f"[CHECKSUM] Verified SHA-256 matches {sha256_file.name}: {actual_hash}")
+
     # 1. Extract into directory containing a space
     extract_parent = Path(tempfile.mkdtemp(prefix="camera bundle smoke space "))
     home_dir = Path(tempfile.mkdtemp(prefix="camera home space "))

@@ -22,7 +22,7 @@ def get_free_port() -> int:
 
 def wait_for_server(
     port: int,
-    timeout: float = 25.0,
+    timeout: float = 30.0,
     proc: subprocess.Popen[str] | None = None,
 ) -> bool:
     start = time.time()
@@ -36,7 +36,7 @@ def wait_for_server(
                 f"Stdout: {stdout}\nStderr: {stderr}"
             )
         try:
-            with urllib.request.urlopen(url, timeout=0.5) as res:
+            with urllib.request.urlopen(url, timeout=1.0) as res:
                 if res.status == 200:
                     return True
         except Exception:

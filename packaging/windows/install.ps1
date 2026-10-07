@@ -4,8 +4,8 @@
 
 [CmdletBinding()]
 param(
-    [string]$InstallPath = "C:\Program Files\CameraMonitor",
-    [string]$HomePath = "C:\ProgramData\CameraMonitor",
+    [Alias("InstallDir")][string]$InstallPath = "C:\Program Files\CameraMonitor",
+    [Alias("HomeDir")][string]$HomePath = "C:\ProgramData\CameraMonitor",
     [string]$TaskName = "CameraMonitor",
     [string]$BackupTaskName = "CameraMonitor Backup",
     [int]$Port = 8742,
@@ -51,21 +51,40 @@ $sourceApp = Join-Path $bundleRoot "app"
 $sourceFrontend = Join-Path $bundleRoot "frontend\dist"
 
 if (-not (Test-Path $sourcePython) -or -not (Test-Path $sourceApp)) {
-    Write-Error "Cannot locate bundle payload at $bundleRoot. Please run installer from an extracted CameraMonitor release bundle."
-    exit 1
+    $repoCandidate = (Resolve-Path "$scriptDir\..\..").Path
+    if (Test-Path (Join-Path $repoCandidate "backend\app")) {
+        $bundleRoot = $repoCandidate
+    } elseif (-not $DryRun) {
+        Write-Error "Cannot locate bundle payload at $bundleRoot. Please run installer from an extracted CameraMonitor release bundle."
+        exit 1
+    }
 }
 
 if ($DryRun) {
+    $pythonExe = Join-Path $InstallPath "python\python.exe"
+    $frontendDist = Join-Path $InstallPath "frontend\dist"
+    $serveArgs = "-m app.serve --home `"$HomePath`" --frontend-dist `"$frontendDist`""
+    $backupScript = Join-Path $InstallPath "scripts\backup.ps1"
+
     Write-Host "============================================================"
     Write-Host "Camera Monitor - Installer Dry Run Plan"
     Write-Host "============================================================"
     Write-Host "Bundle Source:       $bundleRoot"
     Write-Host "Target Install Path: $InstallPath"
     Write-Host "Target Home Path:    $HomePath"
-    Write-Host "Scheduled Task:      $TaskName (Principal: NT AUTHORITY\SYSTEM, Trigger: AtStartup + 30s delay)"
-    Write-Host "Backup Task:         $BackupTaskName (Daily at 03:00)"
     Write-Host "Port:                $Port"
-    Write-Host "Power Settings:      $(-not $SkipPowerSettings)"
+    Write-Host "Scheduled Task:      $TaskName"
+    Write-Host "  Principal:         S-1-5-18 (Highest run level)"
+    Write-Host "  Trigger:           AtStartup (Delay: 30s)"
+    Write-Host "  Action:            $pythonExe $serveArgs"
+    Write-Host "  WorkingDirectory:  $InstallPath\app"
+    Write-Host "  Settings:          ExecutionTimeLimit=PT0S, MultipleInstances=IgnoreNew, StartWhenAvailable, AllowStartIfOnBatteries, DontStopIfGoingOnBatteries, RestartInterval=PT1M, RestartCount=999"
+    Write-Host "Backup Task:         $BackupTaskName"
+    Write-Host "  Principal:         S-1-5-18 (Highest run level)"
+    Write-Host "  Trigger:           Daily 03:00"
+    Write-Host "  Action:            powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$backupScript`" -HomePath `"$HomePath`" -InstallPath `"$InstallPath`""
+    Write-Host "  Settings:          AllowStartIfOnBatteries, DontStopIfGoingOnBatteries, StartWhenAvailable, ExecutionTimeLimit=PT2H"
+    Write-Host "Power Settings:      $(-not $SkipPowerSettings) (Saves previous timeouts to $HomePath\power-before.txt)"
     Write-Host "Auto Start:          $(-not $SkipTaskStart)"
     Write-Host "============================================================"
     Write-Host "[DRY-RUN] Preflight checks and plan validated successfully."
@@ -171,15 +190,16 @@ $trigger = New-ScheduledTaskTrigger -AtStartup
 $trigger.Delay = "PT30S"
 
 $principal = New-ScheduledTaskPrincipal `
-    -UserId "NT AUTHORITY\SYSTEM" `
+    -UserId "S-1-5-18" `
     -LogonType ServiceAccount `
     -RunLevel Highest
 
 $settings = New-ScheduledTaskSettingsSet `
     -AllowStartIfOnBatteries `
     -DontStopIfGoingOnBatteries `
+    -StartWhenAvailable `
     -ExecutionTimeLimit ([TimeSpan]::Zero) `
-    -RestartCount 3 `
+    -RestartCount 999 `
     -RestartInterval (New-TimeSpan -Minutes 1) `
     -MultipleInstances IgnoreNew
 
@@ -202,6 +222,7 @@ $backupTrigger = New-ScheduledTaskTrigger -Daily -At "03:00"
 $backupSettings = New-ScheduledTaskSettingsSet `
     -AllowStartIfOnBatteries `
     -DontStopIfGoingOnBatteries `
+    -StartWhenAvailable `
     -ExecutionTimeLimit (New-TimeSpan -Hours 2)
 
 Register-ScheduledTask `
@@ -215,7 +236,31 @@ Register-ScheduledTask `
 # 9. Power Settings
 if (-not $SkipPowerSettings) {
     Write-Info "Configuring power policy to prevent standby sleep on AC power..."
+    $powerBeforeFile = Join-Path $HomePath "power-before.txt"
     try {
+        $standbyAc = 0
+        $hibernateAc = 0
+        $qStandby = & powercfg /query SCHEME_CURRENT SUB_SLEEP STANDBYIDLE 2>$null
+        if ($qStandby) {
+            foreach ($line in $qStandby) {
+                if ($line -match "Current AC Power Setting Index:\s+(0x[0-9a-fA-F]+)") {
+                    $standbyAc = [int]([Convert]::ToInt32($matches[1], 16) / 60)
+                }
+            }
+        }
+        $qHibernate = & powercfg /query SCHEME_CURRENT SUB_SLEEP HIBERNATEIDLE 2>$null
+        if ($qHibernate) {
+            foreach ($line in $qHibernate) {
+                if ($line -match "Current AC Power Setting Index:\s+(0x[0-9a-fA-F]+)") {
+                    $hibernateAc = [int]([Convert]::ToInt32($matches[1], 16) / 60)
+                }
+            }
+        }
+        if (-not (Test-Path $powerBeforeFile)) {
+            $pbContent = "STANDBY_TIMEOUT_AC=$standbyAc`r`nHIBERNATE_TIMEOUT_AC=$hibernateAc`r`n"
+            [System.IO.File]::WriteAllText($powerBeforeFile, $pbContent, [System.Text.Encoding]::ASCII)
+            Write-Info "Saved original AC power timeouts to $powerBeforeFile (standby=$standbyAc min, hibernate=$hibernateAc min)"
+        }
         & powercfg /change standby-timeout-ac 0
         & powercfg /change monitor-timeout-ac 15
     } catch {

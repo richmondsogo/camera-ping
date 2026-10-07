@@ -56,6 +56,7 @@ EXCLUDE_PATTERNS: Final[list[str]] = [
     "node_modules",
     ".git",
     "screenshots",
+    "record",
 ]
 
 EXCLUDE_EXTENSIONS: Final[set[str]] = {
@@ -384,6 +385,7 @@ def build_bundle(
                 "-m",
                 "pip",
                 "install",
+                "--no-compile",
                 "--only-binary=:all:",
                 "-r",
                 str(requirements_lock),
@@ -484,7 +486,7 @@ def build_bundle(
         # 11. Write manifest
         manifest_lines: list[str] = [
             f"Camera Monitor Offline Bundle Manifest v{version}",
-            f"Generated: {time.strftime('%Y-%m-%d %H:%M:%SZ', time.gmtime())}",
+            f"Package: CameraMonitor-{version}.zip",
             "",
             "Files:",
         ]

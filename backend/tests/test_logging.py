@@ -206,30 +206,30 @@ def test_engine_start_stop_logs(
 
 
 def test_engine_cycle_overrun_warning(
-    tmp_path: Path, caplog: pytest.LogCaptureFixture
+    tmp_path: Path, caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     session_factory, engine = _create_db(tmp_path / "test.db")
     mon_engine = MonitoringEngine(
         session_factory=session_factory, pinger=lambda ip: True, interval=0.01
     )
 
-    def slow_run() -> None:
-        import time
+    current_time = 0.0
 
-        time.sleep(0.05)
+    def mock_monotonic() -> float:
+        return current_time
+
+    monkeypatch.setattr("app.monitoring.engine.time.monotonic", mock_monotonic)
+
+    def slow_run() -> None:
+        nonlocal current_time
+        current_time = 10.0
+        mon_engine._stop_event.set()
 
     mon_engine.run_cycle_sync = slow_run  # type: ignore[method-assign]
 
     async def _run() -> None:
         mon_engine._stop_event.clear()
-        task = asyncio.create_task(mon_engine._scheduler_loop())
-        await asyncio.sleep(0.08)
-        mon_engine._stop_event.set()
-        task.cancel()
-        try:
-            await task
-        except asyncio.CancelledError:
-            pass
+        await mon_engine._scheduler_loop()
 
     with caplog.at_level(logging.WARNING):
         caplog.clear()
@@ -254,20 +254,14 @@ def test_engine_cycle_exception_logged(
     )
 
     def failing_run() -> None:
+        mon_engine._stop_event.set()
         raise RuntimeError("Simulated database failure")
 
     mon_engine.run_cycle_sync = failing_run  # type: ignore[method-assign]
 
     async def _run() -> None:
         mon_engine._stop_event.clear()
-        task = asyncio.create_task(mon_engine._scheduler_loop())
-        await asyncio.sleep(0.05)
-        mon_engine._stop_event.set()
-        task.cancel()
-        try:
-            await task
-        except asyncio.CancelledError:
-            pass
+        await mon_engine._scheduler_loop()
 
     with caplog.at_level(logging.ERROR):
         caplog.clear()
