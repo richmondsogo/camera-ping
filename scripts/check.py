@@ -78,6 +78,8 @@ class CheckRunner:
     def run_script_tests(self) -> None:
         self.run_step("Scripts: Token Linter Tests", [sys.executable, "-m", "unittest", "scripts.tests.test_lint_tokens"], REPO_ROOT)
         self.run_step("Scripts: Docs Checker Tests", [sys.executable, "-m", "unittest", "scripts.tests.test_check_docs"], REPO_ROOT)
+        self.run_step("Scripts: Bundle Builder Tests", [sys.executable, "-m", "unittest", "scripts.tests.test_build_bundle"], REPO_ROOT)
+        self.run_step("Scripts: Packaging Script Tests", [sys.executable, "-m", "unittest", "scripts.tests.test_packaging_scripts"], REPO_ROOT)
 
     def run_frontend_lint(self) -> None:
         self.run_step("Frontend: Design Token Lint", [sys.executable, "scripts/lint_tokens.py"], REPO_ROOT)
@@ -119,6 +121,28 @@ class CheckRunner:
             return
         self.run_step("E2E: Playwright Smoke Test", [self.pnpm, "run", "test:e2e"], FRONTEND_DIR)
 
+    def run_bundle_check(self) -> None:
+        self.run_frontend_build_verification()
+        if self.failures:
+            return
+        backend_python = str(get_backend_binary("python"))
+        build_step = [backend_python, "scripts/build_bundle.py"]
+        if not self.run_step("Bundle: Build Offline Package", build_step, REPO_ROOT):
+            return
+
+        bundle_zips = sorted(
+            (REPO_ROOT / "dist-bundle").glob("CameraMonitor-*.zip"),
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
+        )
+        if not bundle_zips:
+            print("     FAIL: No bundle zip found in dist-bundle/")
+            self.failures.append("Bundle: Offline Smoke Test")
+            return
+        target_zip = bundle_zips[0]
+        smoke_step = [backend_python, "scripts/bundle_smoke.py", str(target_zip)]
+        self.run_step("Bundle: Offline Smoke Test", smoke_step, REPO_ROOT)
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run quality checks for Camera Monitor")
@@ -128,6 +152,7 @@ def main() -> None:
     parser.add_argument("--only-typecheck", action="store_true", help="Run only typecheckers")
     parser.add_argument("--only-tests", action="store_true", help="Run only unit tests")
     parser.add_argument("--e2e", action="store_true", help="Run Playwright end-to-end / smoke tests")
+    parser.add_argument("--bundle", action="store_true", help="Build and smoke test the offline distribution bundle")
 
     args = parser.parse_args()
     runner = CheckRunner()
@@ -139,7 +164,9 @@ def main() -> None:
 
     start_total = time.time()
 
-    if args.e2e:
+    if args.bundle:
+        runner.run_bundle_check()
+    elif args.e2e:
         runner.run_e2e_tests()
     elif args.only_backend:
         runner.run_backend_lint()

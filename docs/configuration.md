@@ -40,3 +40,14 @@ These variables configure developer runners, the Vite development proxy, and iso
 - **Log Files**: `backend/data/logs/camera-monitor.log` (rotating application log, up to 5 backups of 5 MiB each).
 - **Temporary E2E Data**: `backend/.e2e-data/` (ephemeral databases and logs generated for Playwright tests, ignored by git).
 - **Migration Backup Folders**: `backend/data/backup-pre-step07/` and `backend/data/backup-pre-step09/` (cold snapshots taken prior to schema migrations).
+
+## Production Server CLI Options & Home Directory
+
+When running the standalone server via `python -m app.serve`, the following CLI options are available:
+
+- `--home <DIR>`: Specifies an isolated runtime root (e.g. `C:\ProgramData\CameraMonitor`). In `--home` mode:
+  - Database defaults to `<DIR>/data/camera_monitor.db`.
+  - Rotating logs are written to `<DIR>/logs/camera-monitor.log`. Logging initializes first, capturing all fatal startup errors (exit codes 2, 3, 4, 5).
+  - An optional `<DIR>/camera-monitor.env` file is read if present. Only `BACKEND_PORT` and `MONITOR_INTERVAL_SECONDS` are allowed; real environment variables take precedence.
+- `--frontend-dist <DIR>`: Path to built frontend static assets containing `index.html`.
+

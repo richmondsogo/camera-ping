@@ -1,6 +1,5 @@
 import asyncio
 import threading
-import time
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -59,9 +58,14 @@ def _add_camera(
 
 
 # 1. Rule transitions
-def test_rule_transitions(tmp_path: Path) -> None:
+def test_rule_transitions(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     db_path = tmp_path / "rules.db"
     session_factory, engine = _create_migrated_db(db_path)
+
+    t0 = datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC)
+    t1 = datetime(2026, 1, 1, 12, 0, 1, tzinfo=UTC)
+    current_time = t0
+    monkeypatch.setattr(clock, "utc_now", lambda: current_time)
 
     with session_factory() as session:
         cam = _add_camera(session, "192.0.2.10", status="unknown")
@@ -84,6 +88,7 @@ def test_rule_transitions(tmp_path: Path) -> None:
         first_online_time = cam_db.last_online
 
     # Cycle 2: Probe failure -> offline
+    current_time = t1
     engine_mon.pinger = lambda ip: False
     engine_mon.run_cycle_sync()
 
@@ -212,21 +217,24 @@ async def test_scheduler_mechanics_start_stop_idempotency(tmp_path: Path) -> Non
         _add_camera(session, "192.0.2.10")
 
     cycle_count = 0
+    cycle_event = asyncio.Event()
+    loop = asyncio.get_running_loop()
 
     def pinger(ip: str) -> bool:
         nonlocal cycle_count
         cycle_count += 1
+        loop.call_soon_threadsafe(cycle_event.set)
         return True
 
-    engine_mon = MonitoringEngine(session_factory, pinger=pinger, interval=0.05)
+    engine_mon = MonitoringEngine(session_factory, pinger=pinger, interval=60.0)
 
     # Idempotent start
     await engine_mon.start()
     await engine_mon.start()
     assert engine_mon.is_running is True
 
-    # Wait briefly for cycles
-    await asyncio.sleep(0.12)
+    # Wait for first cycle via event
+    await cycle_event.wait()
     assert cycle_count >= 1
 
     # Idempotent stop
@@ -235,7 +243,7 @@ async def test_scheduler_mechanics_start_stop_idempotency(tmp_path: Path) -> Non
     assert engine_mon.is_running is False
 
     count_after_stop = cycle_count
-    await asyncio.sleep(0.15)
+    await asyncio.sleep(0)
     # No more cycles should run after stop
     assert cycle_count == count_after_stop
 
@@ -314,18 +322,16 @@ def test_concurrency_and_performance(tmp_path: Path) -> None:
         for i in range(30):
             _add_camera(session, f"192.0.2.{i + 1}", name=f"Cam-{i + 1}")
 
+    barrier = threading.Barrier(30)
+
     def slow_pinger(ip: str) -> bool:
-        time.sleep(0.2)
+        barrier.wait(timeout=5.0)
         return True
 
     engine_mon = MonitoringEngine(session_factory, pinger=slow_pinger)
-
-    start_time = time.monotonic()
     engine_mon.run_cycle_sync()
-    duration = time.monotonic() - start_time
 
-    # 30 cameras * 0.2s = 6.0s sequential, should easily finish < 1.5s with concurrency
-    assert duration < 1.5, f"Cycle took {duration:.2f}s, expected < 1.5s"
+    assert barrier.n_waiting == 0
 
     engine.dispose()
 
@@ -341,6 +347,7 @@ def test_worker_thread_pool_capped_at_32(tmp_path: Path) -> None:
     lock = threading.Lock()
     active_workers = 0
     max_active_workers = 0
+    barrier = threading.Barrier(32)
 
     def tracking_pinger(ip: str) -> bool:
         nonlocal active_workers, max_active_workers
@@ -348,7 +355,11 @@ def test_worker_thread_pool_capped_at_32(tmp_path: Path) -> None:
             active_workers += 1
             if active_workers > max_active_workers:
                 max_active_workers = active_workers
-        time.sleep(0.05)
+        if barrier.n_waiting < 32:
+            try:
+                barrier.wait(timeout=5.0)
+            except threading.BrokenBarrierError:
+                pass
         with lock:
             active_workers -= 1
         return True
@@ -357,7 +368,7 @@ def test_worker_thread_pool_capped_at_32(tmp_path: Path) -> None:
     engine_mon.run_cycle_sync()
 
     assert max_active_workers <= 32
-    assert max_active_workers > 1
+    assert max_active_workers == 32
 
     engine.dispose()
 
@@ -481,7 +492,6 @@ def test_thread_isolation_no_sqlite_objects_shared(tmp_path: Path) -> None:
 
     def pinger(ip: str) -> bool:
         # Verify pinger executes in a thread without accessing any DB objects
-        time.sleep(0.01)
         return True
 
     engine_mon = MonitoringEngine(session_factory, pinger=pinger)
@@ -557,9 +567,19 @@ def test_running_since_and_next_check_at_behavior(
 
         monkeypatch.setattr(clock, "utc_now", lambda: t0)
 
+        cycle_done = asyncio.Event()
+        loop = asyncio.get_running_loop()
+
         engine = MonitoringEngine(
             session_factory, pinger=lambda ip: True, interval=60.0
         )
+        orig_run_cycle = engine.run_cycle_sync
+
+        def tracked_run_cycle() -> None:
+            orig_run_cycle()
+            loop.call_soon_threadsafe(cycle_done.set)
+
+        engine.run_cycle_sync = tracked_run_cycle  # type: ignore[method-assign]
 
         # 1. Stopped initially: running_since is None, next_check_at is None
         status0 = engine.get_status()
@@ -581,7 +601,7 @@ def test_running_since_and_next_check_at_behavior(
 
         # 3. Allow cycle 1 to run
         monkeypatch.setattr(clock, "utc_now", lambda: t1)
-        await asyncio.sleep(0.1)
+        await cycle_done.wait()
 
         status2 = engine.get_status()
         assert status2.running is True
@@ -622,8 +642,18 @@ def test_resume_at_startup_sets_running_since_and_nulls_stale_next_check_at(
     startup_time = datetime(2026, 10, 1, 12, 0, 0, tzinfo=UTC)
     monkeypatch.setattr(clock, "utc_now", lambda: startup_time)
 
+    cycle_done = threading.Event()
+
     settings = Settings(database_url=f"sqlite:///{db_path.as_posix()}")
     app = create_app(settings, pinger=lambda ip: True)
+
+    orig_run_cycle = app.state.monitoring_engine.run_cycle_sync
+
+    def tracked_run_cycle() -> None:
+        orig_run_cycle()
+        cycle_done.set()
+
+    app.state.monitoring_engine.run_cycle_sync = tracked_run_cycle
 
     app.state.monitoring_engine._cycle_lock.acquire()
     try:
@@ -639,7 +669,7 @@ def test_resume_at_startup_sets_running_since_and_nulls_stale_next_check_at(
 
             # Release the lock so cycle 1 can proceed
             app.state.monitoring_engine._cycle_lock.release()
-            time.sleep(0.1)
+            cycle_done.wait(timeout=5.0)
 
             res2 = client.get("/api/monitoring/status")
             data2 = res2.json()

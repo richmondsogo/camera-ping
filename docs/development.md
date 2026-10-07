@@ -53,8 +53,9 @@ python scripts/check.py
 - `python scripts/check.py --only-frontend`: Token lint, ESLint, Prettier, tsc strict, Vitest, and build verification.
 - `python scripts/check.py --only-lint`: Ruff, token linter, ESLint, and Prettier.
 - `python scripts/check.py --only-typecheck`: mypy strict and tsc strict.
-- `python scripts/check.py --only-tests`: pytest, token linter unit tests, and Vitest.
+- `python scripts/check.py --only-tests`: pytest, token linter unit tests, docs checker tests, bundle builder tests, packaging script tests, and Vitest.
 - `python scripts/check.py --e2e`: Runs Playwright end-to-end suite across dev and production projects.
+- `python scripts/check.py --bundle`: Builds the offline distribution zip and executes the 10-step bundle smoke test.
 
 ### Opt-In Environment Variables
 - `CONTRAST_REPORT=1`: Prints complete WCAG contrast measurement tables during Playwright runs.
@@ -96,6 +97,20 @@ Design tokens are centralized in `frontend/src/index.css`.
    ```powershell
    python scripts/lint_tokens.py
    ```
+
+## Offline Bundle & Packaging
+
+To package and validate the offline Windows distribution:
+1. **Build the Bundle**:
+   ```powershell
+   python scripts/build_bundle.py
+   ```
+   Compiles the frontend, retrieves verified embeddable Python 3.12, installs locked runtime wheels into `python/Lib/site-packages`, and produces `dist-bundle/CameraMonitor-0.9.0.zip`.
+2. **Execute the Smoke Test**:
+   ```powershell
+   python scripts/bundle_smoke.py
+   ```
+   Extracts into a path with spaces, verifies isolated DLLs, tests dual-cwd execution, auto-resume, and process resilience.
 
 ## Repository Layout
 

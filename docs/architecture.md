@@ -97,8 +97,15 @@ Production mode is defined as `settings.frontend_dist` being configured (pointin
 ## Security & File Locations
 
 - **Security Stance**: Binds strictly to `127.0.0.1`. No external network exposure, no cloud connections, and no login system.
-- **File Locations**:
-  - Database: `backend/data/camera_monitor.db` (configured via `DATABASE_URL`).
+- **Production File Layout (`--home C:\ProgramData\CameraMonitor`)**:
+  - Code & Assets: `C:\Program Files\CameraMonitor` (read-only executable payload).
+  - Runtime Data: `C:\ProgramData\CameraMonitor\data\camera_monitor.db` (SQLite in WAL mode).
+  - Instance Lock: `C:\ProgramData\CameraMonitor\camera-monitor.lock`.
+  - Logs: `C:\ProgramData\CameraMonitor\logs\camera-monitor.log` (rotating UTF-8 log).
+  - Backups: `C:\ProgramData\CameraMonitor\backups\camera_monitor-YYYYMMDD-HHMMSS.db`.
+  - Environment File: `C:\ProgramData\CameraMonitor\camera-monitor.env`.
+- **Development File Layout**:
+  - Database: `backend/data/camera_monitor.db`.
   - Instance Lock: `backend/data/camera-monitor.lock`.
-  - Logs: `backend/data/logs/camera-monitor.log` (configured via `LOG_DIR`).
+  - Logs: `backend/data/logs/camera-monitor.log`.
   - Backups: `backend/data/backups/`.
