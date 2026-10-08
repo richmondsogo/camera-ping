@@ -424,7 +424,7 @@ class TestPackagingScripts(unittest.TestCase):
                     1,
                     f"{script.name} should reject bad TaskName '{bad}', got code {res.returncode}\n{res.stderr}\n{res.stdout}",
                 )
-                output = res.stderr + res.stdout
+                output = " ".join((res.stderr + res.stdout).split())
                 self.assertIn("Invalid TaskName", output)
                 self.assertIn("1 to 64 characters", output)
 
@@ -465,7 +465,7 @@ class TestPackagingScripts(unittest.TestCase):
             env={"CAMERA_MONITOR_TEST_EXISTING_TASK": "1"},
         )
         self.assertEqual(res.returncode, 1)
-        output = res.stderr + res.stdout
+        output = " ".join((res.stderr + res.stdout).split())
         self.assertIn("Safety Violation", output)
         self.assertIn("already exists", output)
 
