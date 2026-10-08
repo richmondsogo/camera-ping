@@ -48,7 +48,7 @@ No external runtime dependencies, package managers, or compilers are needed on t
    - Initializes runtime state, logs, and backups in `C:\ProgramData\CameraMonitor`.
    - Creates the default configuration file at `C:\ProgramData\CameraMonitor\camera-monitor.env` (configured for port `8742`).
    - Registers Windows Scheduled Task **`CameraMonitor`** configured to start at system boot under `NT AUTHORITY\SYSTEM` (principal `S-1-5-18` with highest run level, 30-second delay, infinite execution time limit `PT0S`, `StartWhenAvailable`, `MultipleInstances=IgnoreNew`, `AllowStartIfOnBatteries`, and automatic restart every 1 minute with restart count 999).
-   - Registers Windows Scheduled Task **`CameraMonitor Backup`** to run database backups daily at 03:00 under `NT AUTHORITY\SYSTEM`.
+   - Registers Windows Scheduled Task **`<TaskName> Backup`** (default `CameraMonitor Backup`) to run database backups daily at 03:00 under `NT AUTHORITY\SYSTEM`.
    - Configures Windows power policy: queries current AC standby and hibernate timeouts via `powercfg /query` and preserves them in `C:\ProgramData\CameraMonitor\power-before.txt`, then disables standby (`standby-timeout-ac 0`) and hibernate (`hibernate-timeout-ac 0`) to prevent the PC from sleeping during continuous camera monitoring. (Use `-SkipPowerSettings` to bypass).
    - Creates a public desktop shortcut named **Camera Monitor** pointing to `http://127.0.0.1:8742`.
    - Starts the service and verifies health endpoint response.
