@@ -11,6 +11,11 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+if ($TaskName -notmatch '^[a-zA-Z0-9 _-]{1,64}$') {
+    Write-Error "Invalid TaskName '$TaskName'. TaskName must be 1 to 64 characters and contain only letters, digits, spaces, dashes, or underscores."
+    exit 1
+}
+
 if ($DryRun) {
     Write-Host "[DRY-RUN] Will start scheduled task '$TaskName' and verify health on port $Port."
     exit 0

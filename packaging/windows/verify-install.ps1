@@ -5,7 +5,7 @@
 [CmdletBinding()]
 param(
     [Alias("TaskName")][string]$TestTaskName = "CameraMonitorTest",
-    [Alias("BackupTaskName")][string]$TestBackupTaskName = "CameraMonitorTest Backup",
+    [Alias("BackupTaskName")][string]$TestBackupTaskName = "$TestTaskName Backup",
     [string]$TestInstallPath = "",
     [string]$TestHomePath = "",
     [int]$TestPort = 0,
@@ -23,12 +23,62 @@ function Write-StepFail($stepNum, $desc) {
     Write-Host "[STEP $($stepNum): FAIL] $desc"
 }
 
-# 1. Safety Guardrails - Refuse production task names and production paths
-if ($TestTaskName -in @("CameraMonitor", "CameraMonitor Backup") -or $TestBackupTaskName -in @("CameraMonitor", "CameraMonitor Backup")) {
+function Test-ScheduledTaskExists([string]$Name) {
+    try {
+        $task = Get-ScheduledTask -TaskName $Name -ErrorAction SilentlyContinue
+        return ($null -ne $task)
+    } catch {
+        return $false
+    }
+}
+
+# 1. Safety Guardrails - Refuse production task names (pure string check, case-insensitive, first executable statement)
+$forbiddenNames = @("CameraMonitor", "CameraMonitor Backup")
+if ($TestTaskName -in $forbiddenNames -or $TestBackupTaskName -in $forbiddenNames) {
     Write-Error "Safety Violation: verify-install.ps1 refuses to run with production TaskName '$TestTaskName'. Use 'CameraMonitorTest'."
     exit 1
 }
 
+# 2. Validate TaskName format
+if ($TestTaskName -notmatch '^[a-zA-Z0-9 _-]{1,64}$') {
+    Write-Error "Invalid TaskName '$TestTaskName'. TaskName must be 1 to 64 characters and contain only letters, digits, spaces, dashes, or underscores."
+    exit 1
+}
+
+# 3. Refuse if scheduled task named CameraMonitor or CameraMonitor Backup already exists on the machine
+$hasExistingProdTask = $false
+if ($DryRun -and $env:CAMERA_MONITOR_TEST_EXISTING_TASK -eq "1") {
+    $hasExistingProdTask = $true
+} else {
+    if ((Test-ScheduledTaskExists "CameraMonitor") -or (Test-ScheduledTaskExists "CameraMonitor Backup")) {
+        $hasExistingProdTask = $true
+    }
+}
+
+if ($hasExistingProdTask) {
+    Write-Error "Safety Violation: A scheduled task named 'CameraMonitor' or 'CameraMonitor Backup' already exists on this machine. verify-install refuses to run."
+    exit 1
+}
+
+# 4. Check elevation
+$identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+$principal = New-Object Security.Principal.WindowsPrincipal($identity)
+$isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+if ($DryRun -and ($env:CAMERA_MONITOR_TEST_ELEVATED -eq "0" -or $env:CAMERA_MONITOR_TEST_ELEVATED -eq "1")) {
+    $isAdmin = ($env:CAMERA_MONITOR_TEST_ELEVATED -eq "1")
+}
+
+if (-not $isAdmin) {
+    if ($DryRun) {
+        Write-Host "[DRY-RUN] Notice: Session is NOT elevated. (Live execution requires Administrator)."
+    } else {
+        Write-Error "Administrator privileges are required for verify-install.ps1 to configure Windows Task Scheduler."
+        exit 1
+    }
+}
+
+# 5. Safety Guardrails - Refuse production paths
 $prodInstall = "C:\Program Files\CameraMonitor"
 $prodHome = "C:\ProgramData\CameraMonitor"
 if ($TestInstallPath -and ($TestInstallPath.TrimEnd("\/") -eq $prodInstall.TrimEnd("\/"))) {
@@ -58,21 +108,7 @@ if ($TestPort -eq 0) {
     $listener.Stop()
 }
 
-# 2. Check elevation
-$identity = [Security.Principal.WindowsIdentity]::GetCurrent()
-$principal = New-Object Security.Principal.WindowsPrincipal($identity)
-$isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-
-if (-not $isAdmin) {
-    if ($DryRun) {
-        Write-Host "[DRY-RUN] Notice: Session is NOT elevated. (Live execution requires Administrator)."
-    } else {
-        Write-Error "Administrator privileges are required for verify-install.ps1 to configure Windows Task Scheduler."
-        exit 1
-    }
-}
-
-# 3. Print plan and prompt confirmation
+# 6. Print plan and prompt confirmation
 Write-Host "============================================================"
 Write-Host "Camera Monitor - Automated Installation Verification Suite"
 Write-Host "============================================================"

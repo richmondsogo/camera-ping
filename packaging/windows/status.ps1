@@ -5,7 +5,7 @@
 [CmdletBinding()]
 param(
     [string]$TaskName = "CameraMonitor",
-    [string]$BackupTaskName = "CameraMonitor Backup",
+    [string]$BackupTaskName = "$TaskName Backup",
     [int]$Port = 8742,
     [string]$HomePath = "C:\ProgramData\CameraMonitor",
     [switch]$DryRun
@@ -13,8 +13,13 @@ param(
 
 $ErrorActionPreference = "Continue"
 
+if ($TaskName -notmatch '^[a-zA-Z0-9 _-]{1,64}$') {
+    Write-Error "Invalid TaskName '$TaskName'. TaskName must be 1 to 64 characters and contain only letters, digits, spaces, dashes, or underscores."
+    exit 1
+}
+
 if ($DryRun) {
-    Write-Host "[DRY-RUN] Will inspect scheduled task '$TaskName', processes, and API health."
+    Write-Host "[DRY-RUN] Will inspect scheduled task '$TaskName' (Backup Task: '$BackupTaskName'), processes, and API health."
     exit 0
 }
 

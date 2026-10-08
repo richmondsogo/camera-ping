@@ -7,7 +7,7 @@ param(
     [Alias("InstallDir")][string]$InstallPath = "C:\Program Files\CameraMonitor",
     [Alias("HomeDir")][string]$HomePath = "C:\ProgramData\CameraMonitor",
     [string]$TaskName = "CameraMonitor",
-    [string]$BackupTaskName = "CameraMonitor Backup",
+    [string]$BackupTaskName = "$TaskName Backup",
     [int]$Port = 8742,
     [switch]$SkipPowerSettings,
     [switch]$SkipTaskStart,
@@ -29,10 +29,20 @@ function Write-Fail($msg) {
     Write-Host "[FAIL] $msg"
 }
 
-# 1. Elevation check
+# 1. Validate TaskName format
+if ($TaskName -notmatch '^[a-zA-Z0-9 _-]{1,64}$') {
+    Write-Error "Invalid TaskName '$TaskName'. TaskName must be 1 to 64 characters and contain only letters, digits, spaces, dashes, or underscores."
+    exit 1
+}
+
+# 2. Elevation check
 $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $principal = New-Object Security.Principal.WindowsPrincipal($identity)
 $isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+if ($DryRun -and ($env:CAMERA_MONITOR_TEST_ELEVATED -eq "0" -or $env:CAMERA_MONITOR_TEST_ELEVATED -eq "1")) {
+    $isAdmin = ($env:CAMERA_MONITOR_TEST_ELEVATED -eq "1")
+}
 
 if (-not $isAdmin) {
     if ($DryRun) {
