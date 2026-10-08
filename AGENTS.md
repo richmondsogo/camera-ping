@@ -58,6 +58,8 @@ All standard commands are executed from the repository root using Python:
   python scripts/bundle_smoke.py   # Executes standalone bundle smoke test
   # Set env var CONTRAST_REPORT=1 to print contrast tables (quiet by default unless a pair fails)
   # Set env var WALKTHROUGH=1 to generate settings walkthrough screenshots during e2e
+  # Set env var CAMERA_MONITOR_TEST_ELEVATED=0|1 to simulate non-elevated (0) or elevated (1) execution in installer dry-run tests (honored strictly with -DryRun)
+  # Set env var CAMERA_MONITOR_TEST_EXISTING_TASK=1 to simulate existing production task detection in verify-install (honored strictly with -DryRun)
   ```
 
 ## Conventions
@@ -67,6 +69,7 @@ All standard commands are executed from the repository root using Python:
 - **API Boundaries**: Frontend communicates with `/api/*` through the Vite proxy in development. No CORS headers or direct host URLs hardcoded.
 - **Fixtures**: All test addresses must use reserved RFC 5737 documentation blocks (`192.0.2.0/24`). Never hardcode production IP addresses.
 - **Monitoring Engine**: Periodic ICMP pings run concurrently off the event loop (`ThreadPoolExecutor` max 32 workers). Probing interval is configured via `MONITOR_INTERVAL_SECONDS` (default 60s, min 10s). The engine's running state persists in SQLite (`monitoring_state`), automatically resuming on application restart if running prior to shutdown. Frontend polls cameras and monitoring status at 5000ms intervals (`POLL_INTERVAL_MS = 5000`), injectable in hooks and tests. E2E backend executes with `MONITOR_INTERVAL_SECONDS=10`.
+- **Packaging & Installer Testing**: Installer PowerShell scripts support `-DryRun` for safe validation without administrative privileges or system mutations. Elevation check injection is supported via `CAMERA_MONITOR_TEST_ELEVATED=0|1`, honored strictly when `-DryRun` is active (ignored in live runs). Backup tasks derive dynamically as `<TaskName> Backup`. `verify-install.ps1` protects production environments by refusing to execute if production tasks (`CameraMonitor` or `CameraMonitor Backup`) already exist or if `-TaskName` equals `CameraMonitor`.
 
 ## Working Agreement
 1. **Strict Git Discipline**:

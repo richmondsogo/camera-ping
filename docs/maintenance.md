@@ -53,7 +53,7 @@ Starts the `CameraMonitor` task and polls `http://127.0.0.1:8742/api/health` unt
 
 ### Automated Backups
 
-The Windows Scheduled Task **`CameraMonitor Backup`** executes `scripts\backup.cmd` every night at 03:00.
+The Windows Scheduled Task **`<TaskName> Backup`** (default `CameraMonitor Backup`) executes `scripts\backup.cmd` every night at 03:00.
 The backup procedure uses the SQLite Online Backup API, enabling non-blocking, transactionally consistent backups while the live monitoring engine is actively writing ping records.
 
 Backups are saved to:
@@ -125,7 +125,7 @@ uninstall.cmd -RemoveData DELETE
 
 When `uninstall.cmd` runs, it executes the following cleanup sequence:
 
-1. **Scheduled Tasks**: Stops and unregisters both the `CameraMonitor` boot task and the `CameraMonitor Backup` task.
+1. **Scheduled Tasks**: Stops and unregisters both the `<TaskName>` boot task (default `CameraMonitor`) and the `<TaskName> Backup` task (default `CameraMonitor Backup`).
 2. **Processes**: Terminates any active backend processes originating from `C:\Program Files\CameraMonitor`.
 3. **Desktop Shortcut**: Deletes the public `Camera Monitor.lnk` shortcut from the common desktop.
 4. **Power Settings**: Checks for `C:\ProgramData\CameraMonitor\power-before.txt`:
