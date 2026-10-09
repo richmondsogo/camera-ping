@@ -73,6 +73,14 @@ The admin PC has no internet at any time. Plan: one folder or zip containing the
 - A hard kill (Task Scheduler "End") must be safe (tested in Step 13).
 - Record Windows reserved port ranges.
 
+### Step 14b & 14c (Installer Safety & Runtime Resilience)
+- Step 14b introduced strict TaskName validation, production safety guardrails in `verify-install.ps1`, and dynamic `<TaskName> Backup` derivation.
+- Step 14c addresses runtime resilience:
+  - Pre-flight bundle root validation in `install.ps1` ensuring payload directories (`python`, `app`, `frontend\dist`) exist prior to installation, with friendly error messages pointing to `scripts/build_bundle.py`.
+  - Elimination of PowerShell automatic `$PID` collision in `verify-install.ps1` by renaming `$pId` to `$servicePrincipalId`.
+  - Direct execution via call operator (`& $pythonExe -c $script ...`) in `backup.ps1` and `restore.ps1` with `$LASTEXITCODE` checks to prevent argument unquoting or newline breakage under PowerShell 5.1.
+  - Verification of integrity check connection closing (`d.close()`).
+
 ## Questions for the office visit
 
 - `winver` / `systeminfo` output (Windows version, 64-bit?)
