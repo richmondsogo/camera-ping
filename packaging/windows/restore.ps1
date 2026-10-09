@@ -62,8 +62,8 @@ if (-not (Test-Path $pythonExe)) {
 
 Write-Info "Verifying backup file integrity: $BackupFile..."
 $verifyScript = "import sqlite3, sys; d = sqlite3.connect(sys.argv[1]); c = d.cursor(); res = c.execute('PRAGMA integrity_check;').fetchall(); d.close(); sys.exit(0 if res == [('ok',)] else 1)"
-$proc = Start-Process -FilePath $pythonExe -ArgumentList @("-c", $verifyScript, $BackupFile) -NoNewWindow -Wait -PassThru
-if ($proc.ExitCode -ne 0) {
+& $pythonExe -c $verifyScript $BackupFile
+if ($LASTEXITCODE -ne 0) {
     Write-Error "Backup file failed PRAGMA integrity_check. Restore aborted."
     exit 1
 }

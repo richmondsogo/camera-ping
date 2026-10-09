@@ -159,13 +159,13 @@ try {
     Write-Host "`n--> Step 2: Reading back task principal, trigger, and restart settings..."
     $taskObj = Get-ScheduledTask -TaskName $TestTaskName
     if (-not $taskObj) { throw "Task $TestTaskName was not registered" }
-    $pId = $taskObj.Principal.UserId
+    $servicePrincipalId = $taskObj.Principal.UserId
     $timeLimit = $taskObj.Settings.ExecutionTimeLimit
     $restartCount = $taskObj.Settings.RestartCount
-    Write-Host "    Principal:          $pId"
+    Write-Host "    Principal:          $servicePrincipalId"
     Write-Host "    ExecutionTimeLimit: $timeLimit"
     Write-Host "    RestartCount:       $restartCount"
-    if ($pId -notlike "*SYSTEM*") { throw "Expected SYSTEM principal, got $pId" }
+    if ($servicePrincipalId -notlike "*SYSTEM*") { throw "Expected SYSTEM principal, got $servicePrincipalId" }
     Write-StepPass 2 "Task principal and execution settings verified."
 
     # Step 3: Health check
