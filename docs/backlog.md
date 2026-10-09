@@ -81,9 +81,19 @@ The admin PC has no internet at any time. Plan: one folder or zip containing the
   - Direct execution via call operator (`& $pythonExe -c $script ...`) in `backup.ps1` and `restore.ps1` with `$LASTEXITCODE` checks to prevent argument unquoting or newline breakage under PowerShell 5.1.
   - Verification of integrity check connection closing (`d.close()`).
 
+## Step 15a (Documentation Refactoring - Google Developer Documentation Style Guide)
+
+- Standardize operator and administrator documentation to follow the Google Developer Documentation Style Guide:
+  - Second-person ("you"), active voice, present tense, clear and direct phrasing without filler words.
+  - Action-oriented headings (gerunds or imperative verbs), explicit prerequisites, numbered procedures, and expected outcomes.
+- Target admin PC specifications verified: Windows 10 Pro, Version 10.0.19045 (22H2), 64-bit architecture.
+- Document operator quick card constraint: `docs/operator-card.md` strictly under 40 lines to fit on a single printed index card.
+- Scoped files: `docs/operator-guide.md`, `docs/operator-card.md`, `docs/install-guide.md`, `docs/maintenance.md`, `docs/troubleshooting.md`, `README.md`, `docs/roadmap.md`, `docs/backlog.md`.
+- No code, script, or test logic changes.
+
 ## Questions for the office visit
 
-- `winver` / `systeminfo` output (Windows version, 64-bit?)
+- `winver` / `systeminfo` output: Verified on target admin PC — Windows 10 Pro, Version 10.0.19045 (22H2), 64-bit architecture.
 - Whether the Windows account has administrator rights
 - Whether Python is already installed on the admin PC
 - Whether the PC is set to sleep or hibernate
