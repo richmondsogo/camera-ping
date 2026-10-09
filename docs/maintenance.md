@@ -1,138 +1,171 @@
-# Camera Monitor - Operations & Maintenance Guide
+# Operations & Maintenance Guide
 
-This document describes routine maintenance, service management, backup/restore procedures, and uninstallation for Camera Monitor on Windows.
+This guide shows you how to manage the background service, perform backups, restore databases, monitor logs, and uninstall Camera Monitor on the server room administration PC (Windows 10 Pro 64-bit, Version 10.0.19045, 22H2).
 
-## Directory Structure
+## Understanding the Directory Structure
 
-In production, the application splits code and runtime data across two dedicated locations:
+Camera Monitor strictly separates application code from persistent runtime data:
 
-- **Program Files (`C:\Program Files\CameraMonitor`)**:
-  Read-only executable payload containing embedded Python, backend application code, prebuilt React frontend assets, and operational scripts.
-- **Application Data (`C:\ProgramData\CameraMonitor`)**:
+- **Program Directory (`C:\Program Files\CameraMonitor`)**:
+  Read-only directory containing the embedded Python 3.12 64-bit runtime, FastAPI backend code, prebuilt React single-page application, and operational batch scripts.
+- **Application Data Directory (`C:\ProgramData\CameraMonitor`)**:
   Read-write directory containing:
   - `camera-monitor.env`: Optional local environment configuration file.
   - `camera-monitor.lock`: Exclusive instance file lock.
-  - `data\camera_monitor.db`: Primary SQLite database in WAL mode.
-  - `logs\camera-monitor.log`: Rotating application logs (10 MB per file, 5 rotated backups).
+  - `data\camera_monitor.db`: Primary SQLite database configured in WAL (Write-Ahead Logging) mode.
+  - `logs\camera-monitor.log`: Rotating application logs (10 MB limit per file, retaining 5 rotated backups).
   - `backups\`: Rolling database snapshot archives.
+  - `power-before.txt`: Original system power policy timeouts saved during installation.
 
-## Service Control
+## Controlling the Windows Service
 
-Administrative operations scripts are located in `C:\Program Files\CameraMonitor\scripts`.
+Administrative management scripts are located in `C:\Program Files\CameraMonitor\scripts`.
+
+Before running service management commands, open Command Prompt or PowerShell as Administrator and navigate to the scripts folder:
+```cmd
+cd "C:\Program Files\CameraMonitor\scripts"
+```
 
 ### Checking Service Status
 
-To inspect task health, running process IDs, memory usage, and monitoring engine status:
+To inspect task registration, process state, memory consumption, and monitoring status:
 
-```cmd
-cd "C:\Program Files\CameraMonitor\scripts"
-status.cmd
-```
-
-The script prints the Windows Scheduled Task state, process WorkingSet memory, `/api/health` response, and current monitoring engine state.
+1. Run the status script:
+   ```cmd
+   status.cmd
+   ```
+2. Review the printed diagnostics:
+   - Windows Scheduled Task state (`Running` or `Ready`).
+   - WorkingSet memory usage of the active Python process.
+   - HTTP response status from `http://127.0.0.1:8742/api/health`.
+   - Current monitoring engine state (`running` or `stopped`).
 
 ### Stopping the Service
 
-```cmd
-cd "C:\Program Files\CameraMonitor\scripts"
-stop.cmd
-```
+1. Run the stop script:
+   ```cmd
+   stop.cmd
+   ```
 
-Stops the `CameraMonitor` task and terminates any lingering backend processes.
+**Result**: Stops the `CameraMonitor` task and cleanly terminates any active backend processes.
 
 ### Starting the Service
 
-```cmd
-cd "C:\Program Files\CameraMonitor\scripts"
-start.cmd
-```
+1. Run the start script:
+   ```cmd
+   start.cmd
+   ```
 
-Starts the `CameraMonitor` task and polls `http://127.0.0.1:8742/api/health` until the service responds.
+**Result**: Triggers the `CameraMonitor` task and polls the health endpoint until the server confirms readiness.
 
-## Backup & Restore
+### Restarting the Service
 
-### Automated Backups
+To apply configuration changes or reset service state:
 
-The Windows Scheduled Task **`<TaskName> Backup`** (default `CameraMonitor Backup`) executes `scripts\backup.cmd` every night at 03:00.
-The backup procedure uses the SQLite Online Backup API, enabling non-blocking, transactionally consistent backups while the live monitoring engine is actively writing ping records.
+1. Run `stop.cmd`.
+2. Run `start.cmd`.
 
-Backups are saved to:
-`C:\ProgramData\CameraMonitor\backups\camera_monitor-YYYYMMDD-HHMMSS.db`
+**Result**: The service restarts cleanly and reloads configuration from `C:\ProgramData\CameraMonitor\camera-monitor.env`.
 
-Each backup automatically runs a `PRAGMA integrity_check;`. The backup script retains the newest 14 backups and prunes older archives.
+## Backing Up and Restoring Data
 
-### Manual Backup
+Camera Monitor provides automated daily backups and manual backup capabilities.
 
-To trigger an immediate backup:
+### Understanding Automated Backups
 
-```cmd
-cd "C:\Program Files\CameraMonitor\scripts"
-backup.cmd
-```
+The Windows Scheduled Task **`CameraMonitor Backup`** (or `<TaskName> Backup`) executes `scripts\backup.cmd` every night at 03:00 under `NT AUTHORITY\SYSTEM`.
+
+The backup process uses the SQLite Online Backup API. This API performs non-blocking, transactionally consistent snapshots while the monitoring engine actively records live camera ping events.
+
+- **Backup destination**: `C:\ProgramData\CameraMonitor\backups\camera_monitor-YYYYMMDD-HHMMSS.db`
+- **Integrity verification**: Every backup automatically executes `PRAGMA integrity_check;`.
+- **Retention policy**: The script retains the 14 newest backup archives and automatically deletes older archives.
+
+### Creating a Manual Backup
+
+To trigger an immediate snapshot before performing system maintenance or upgrades:
+
+1. Open an elevated command prompt in `C:\Program Files\CameraMonitor\scripts`.
+2. Run the backup script:
+   ```cmd
+   backup.cmd
+   ```
+
+**Result**: A new timestamped database snapshot is created and verified in `C:\ProgramData\CameraMonitor\backups`.
 
 ### Restoring from a Backup
 
-Restoring replaces the active SQLite database and requires stopping the service first:
+Restoring replaces the live SQLite database. Because database files cannot be replaced while in use, you must stop the service before restoring.
 
 1. Stop the running service:
    ```cmd
    stop.cmd
    ```
-
-2. Execute the restore script, specifying the full path to the desired backup:
+2. Run the restore script, specifying the full path to your selected backup file:
    ```cmd
    restore.cmd "C:\ProgramData\CameraMonitor\backups\camera_monitor-20261006-120000.db"
    ```
-
-   The script verifies database integrity before applying changes, archives the existing database to `camera_monitor.db.before-restore`, replaces `camera_monitor.db`, and purges any stale `.db-wal` or `.db-shm` files.
-
+   The restore script automatically:
+   - Runs `PRAGMA integrity_check;` on the target backup file before applying it.
+   - Archives the current database to `camera_monitor.db.before-restore`.
+   - Replaces `camera_monitor.db` with the backup copy.
+   - Cleans up any existing `.db-wal` or `.db-shm` temporary journal files.
 3. Restart the service:
    ```cmd
    start.cmd
    ```
 
-## Log Monitoring & Troubleshooting
+**Result**: The service restarts using the restored database and resumes camera monitoring.
 
-Logs are written to `C:\ProgramData\CameraMonitor\logs\camera-monitor.log`.
-To view real-time log activity using PowerShell:
+## Monitoring Application Logs
 
-```powershell
-Get-Content -Path "C:\ProgramData\CameraMonitor\logs\camera-monitor.log" -Wait -Tail 50
-```
+To inspect live log events using PowerShell:
 
-For error codes and resolution steps, consult the [Troubleshooting Guide](troubleshooting.md).
+1. Open PowerShell and run:
+   ```powershell
+   Get-Content -Path "C:\ProgramData\CameraMonitor\logs\camera-monitor.log" -Wait -Tail 50
+   ```
+2. Press `Ctrl + C` when you want to stop streaming logs.
 
-## Uninstallation
+For detailed explanations of error messages and diagnostic codes, see the [Troubleshooting Guide](troubleshooting.md).
 
-### Standard Uninstallation (Preserving Data)
+## Uninstalling Camera Monitor
 
-To remove scheduled tasks, desktop shortcuts, and program files while preserving all camera records, ping history, configuration, and database backups:
+You can uninstall Camera Monitor while preserving your database and ping history, or perform a complete cleanup.
 
-```cmd
-cd "C:\Program Files\CameraMonitor\scripts"
-uninstall.cmd
-```
+### Standard Uninstallation (Preserving Inventory and Data)
 
-### Complete Removal (Including Data)
+To remove scheduled tasks, desktop shortcuts, and program binaries while retaining all camera records, ping history, and backups:
 
-To perform a complete removal including all data, configuration, and logs:
+1. Open an elevated command prompt in `C:\Program Files\CameraMonitor\scripts`.
+2. Run the uninstaller:
+   ```cmd
+   uninstall.cmd
+   ```
 
-```cmd
-uninstall.cmd -RemoveData DELETE
-```
+**Result**: Program files and tasks are removed. All data in `C:\ProgramData\CameraMonitor` remains intact for future reinstallation.
 
-### What Uninstallation Reverts
+### Complete Removal (Purging All Data)
 
-When `uninstall.cmd` runs, it executes the following cleanup sequence:
+To completely remove Camera Monitor including all databases, configuration files, and backups:
 
-1. **Scheduled Tasks**: Stops and unregisters both the `<TaskName>` boot task (default `CameraMonitor`) and the `<TaskName> Backup` task (default `CameraMonitor Backup`).
-2. **Processes**: Terminates any active backend processes originating from `C:\Program Files\CameraMonitor`.
-3. **Desktop Shortcut**: Deletes the public `Camera Monitor.lnk` shortcut from the common desktop.
-4. **Power Settings**: Checks for `C:\ProgramData\CameraMonitor\power-before.txt`:
-   - If present, restores the original AC standby and hibernate timeouts via `powercfg /change standby-timeout-ac <min>` and `powercfg /change hibernate-timeout-ac <min>`, printing the restored values.
-   - If `-SkipPowerSettings` was used at install time or the file is missing, it prints a note and leaves the existing Windows power policy unchanged.
-5. **Program Binaries**: Completely deletes `C:\Program Files\CameraMonitor` and any `C:\Program Files\CameraMonitor.previous` backup directory.
-6. **Data Retention**: Preserves `C:\ProgramData\CameraMonitor` (database, ping logs, and backups) unless `-RemoveData DELETE` is specified.
+1. Open an elevated command prompt in `C:\Program Files\CameraMonitor\scripts`.
+2. Run the uninstaller with the data deletion parameter:
+   ```cmd
+   uninstall.cmd -RemoveData DELETE
+   ```
 
-> [!NOTE]
-> Like the installer, uninstallation is strictly self-contained. It leaves system PATH, firewall rules, and external Windows components untouched.
+**Result**: All tasks, program files, databases, logs, and backups are permanently deleted.
+
+### Reviewing Uninstaller Cleanup Actions
+
+When `uninstall.cmd` executes, it performs the following steps:
+
+1. **Stops and unregisters tasks**: Unregisters both the boot task (`CameraMonitor`) and daily backup task (`CameraMonitor Backup`).
+2. **Terminates running processes**: Stops any lingering backend processes running from `C:\Program Files\CameraMonitor`.
+3. **Deletes shortcut**: Removes the public `Camera Monitor` shortcut from the Windows desktop.
+4. **Restores power settings**: Checks for `C:\ProgramData\CameraMonitor\power-before.txt`. If found, restores the original AC standby and hibernate timeouts using `powercfg /change standby-timeout-ac` and `powercfg /change hibernate-timeout-ac`.
+5. **Removes program binaries**: Deletes `C:\Program Files\CameraMonitor` and any rollback folder `C:\Program Files\CameraMonitor.previous`.
+6. **Data handling**: Deletes `C:\ProgramData\CameraMonitor` only if `-RemoveData DELETE` was explicitly passed; otherwise, preserves all data.
+
+For daily operation procedures, see the [Operator Guide](operator-guide.md). For initial setup instructions, see the [Installation Guide](install-guide.md).

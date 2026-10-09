@@ -1,125 +1,208 @@
 # Operator Guide
 
-This guide explains how to use Camera Monitor to track office CCTV camera availability.
+This guide shows you how to operate Camera Monitor to track office network camera availability from the administration PC in the server room (Windows 10 Pro 64-bit, Version 10.0.19045, 22H2).
 
-## The Dashboard
+## Accessing the Dashboard
 
-The dashboard provides a live overview of camera reachability across the office network.
+You can access the Camera Monitor dashboard locally on the server room PC:
 
-### Camera Statuses
-- **Online**: The camera is reachable and replied to ICMP echo requests.
-- **Offline**: The camera failed to respond. When offline, a badge indicates failure duration: `(1 check)` or `(N checks)`.
-- **Unknown**: The camera has been added or edited and has not yet been probed in an active monitoring cycle.
+- **Desktop shortcut**: Double-click the **Camera Monitor** shortcut on the Windows desktop.
+- **Web browser**: Open any modern browser and navigate to `http://127.0.0.1:8742`.
 
-### Monitoring Controls & Panel Fields
-- **Start**: Begins automated reachability checks in the background. State changes to `Monitoring running` with a green indicator.
-- **Stop**: Pauses reachability checks. State changes to `Monitoring stopped` with a gray indicator.
-- **Summary Counts**: Shows total cameras and how many are currently `online`, `offline`, or `unknown`.
-- **Last check**: Displays when the previous probing cycle completed (e.g. `Last check 10:45 AM`).
-- **Next check**: Displays when the next cycle is scheduled to start (e.g. `Next check in 45s`).
-- **Checks every**: Current configured probing interval (e.g. `Checks every 1 minute`).
+> [!NOTE]
+> Always use `http://127.0.0.1:8742`. Camera Monitor binds exclusively to IPv4 loopback (`127.0.0.1`) and denies external network traffic.
 
-### Banners and Notices
-- **Stopped Notice**:
+## Navigating the Dashboard
+
+The dashboard provides a real-time overview of camera reachability across the office network.
+
+### Interpreting Camera Statuses
+
+Each camera row displays one of three reachability statuses:
+
+- **Online (green)**: The camera is reachable and replied to ICMP echo requests.
+- **Offline (red)**: The camera failed to reply to ICMP echo requests. The badge indicates the failure duration: `(1 check)` or `(N checks)`.
+- **Unknown (gray)**: The camera is newly added or edited and has not yet been probed in an active monitoring cycle.
+
+### Reading Monitoring Indicators
+
+The top monitoring panel provides operational controls and cycle information:
+
+- **Summary counts**: Displays total monitored cameras and counts for `online`, `offline`, and `unknown` devices.
+- **Last check**: Displays the completion time of the previous probing cycle (for example, `Last check 10:45 AM`).
+- **Next check**: Displays a countdown to the next scheduled probing cycle (for example, `Next check in 45s`).
+- **Checks every**: Displays the configured probing interval (for example, `Checks every 1 minute`).
+
+### Responding to Dashboard Banners
+
+The dashboard displays situational banners when attention is required:
+
+- **Stopped notice**:
   `Monitoring is stopped. Statuses below are from the last check.`
-  *Action*: Press the **Start** button if reachability checks should resume.
-- **Connection Lost Banner**:
+  - **Action**: Click **Start** to resume automated reachability checks.
+- **Connection lost banner**:
   `Can't reach the server. Showing data from <time>. Retrying…`
-  *Action*: The dashboard cannot communicate with the local backend service. The dashboard will automatically retry. Check that the backend process is running.
-- **Stalled Banner**:
+  - **Action**: The dashboard cannot communicate with the local backend service. The browser retries automatically. If the condition persists, verify the backend process is running using `scripts\status.cmd`.
+- **Stalled banner**:
   `Monitoring looks stalled: no completed check since <time>.`
-  *Action*: Monitoring is marked running, but no check cycle has finished recently. Check server workload or restart the monitor.
-- **All Offline Banner**:
+  - **Action**: Monitoring is marked as active, but no cycle completed recently. Click **Stop**, wait 3 seconds, and click **Start** to restart the monitoring thread.
+- **All offline banner**:
   `Every camera is offline. If that's unexpected, check this PC's network connection.`
-  *Action*: Check whether the admin PC's network cable is disconnected or the local network switch is down.
+  - **Action**: Verify that the admin PC network cable is connected and that the local network switch is powered on.
+
+## Controlling Monitoring Cycles
+
+You can start and stop automated ICMP checks at any time.
+
+### Starting Monitoring
+
+1. Click **Start** in the monitoring panel.
+2. Observe the indicator state change to `Monitoring running` with a green indicator.
+
+**Result**: Camera Monitor begins background reachability cycles at the configured interval.
+
+### Stopping Monitoring
+
+1. Click **Stop** in the monitoring panel.
+2. Observe the indicator state change to `Monitoring stopped` with a gray indicator.
+
+**Result**: Camera Monitor pauses probing. The dashboard continues displaying statuses from the final check cycle.
 
 ## Managing Cameras
 
+You can add, edit, or delete camera records directly in the dashboard interface.
+
 ### Adding a Camera
-Click **Add Camera**. Enter the camera name, optional location, optional description, and a valid IPv4 address. Click **Add Camera** to save. New cameras appear in `Unknown` status until the next cycle.
+
+Before you begin, ensure you have the camera name and its static IPv4 address.
+
+1. Click **Add Camera** in the toolbar.
+2. Enter the camera name in the **Camera Name** field.
+3. Optional: Enter the physical location and description.
+4. Enter the static IPv4 address in the **IP Address** field.
+5. Click **Add Camera**.
+
+**Result**: The new camera appears in the table with `Unknown` status until the next probing cycle runs.
 
 ### Editing a Camera
-Click **Edit** next to any camera row.
-> **Note**: Changing the IP address displays the warning: `Changing the IP address resets this camera's reachability statistics and monitoring history.` The status resets to `Unknown` and failure counts clear.
+
+1. Locate the camera row and click **Edit**.
+2. Update the name, location, or description as needed.
+3. If updating the IP address, observe the warning:
+   `Changing the IP address resets this camera's reachability statistics and monitoring history.`
+4. Click **Save Changes**.
+
+**Result**: Camera Monitor saves the updated attributes. If you changed the IP address, its status resets to `Unknown` and failure counts clear.
 
 ### Deleting a Camera
-Click **Delete** next to a camera row. A confirmation dialog will prompt: `Are you sure you want to delete camera "<Name>" (<IP>)? This action cannot be undone.` Click **Delete Camera** to confirm.
 
-## CSV Import & Export
+1. Locate the camera row and click **Delete**.
+2. When the confirmation prompt appears (`Are you sure you want to delete camera "<Name>" (<IP>)? This action cannot be undone.`), click **Delete Camera**.
 
-### Importing Cameras via CSV
+**Result**: Camera Monitor permanently removes the camera and its historical reachability records from the database.
+
+## Importing and Exporting Camera Inventory
+
+You can manage large camera inventories through CSV files.
+
+### Importing Cameras from CSV
+
+Before you begin, prepare a CSV file formatted as UTF-8 with exactly four header columns:
+`camera_name,location,description,ip_address`
+
+For detailed formatting rules, see the [CSV Format Specification](csv-format.md).
+
 1. Click **Import CSV** in the toolbar.
-2. Ensure your CSV file has the exact 4 header columns:
-   `camera_name,location,description,ip_address`
-3. If creating the file in Microsoft Excel, select **Save As** and choose **CSV UTF-8 (Comma delimited) (*.csv)**.
-4. Select your file in the dialog. The system performs dry-run validation automatically.
-5. If errors are found, an error table shows **Line**, **Column**, and the specific **Problem**. **Nothing is imported if any row is wrong.** Correct the file and re-upload.
-6. Once valid, review the row preview and click **Import Cameras** to commit.
+2. If you create or edit your file in Microsoft Excel, click **File > Save As** and choose **CSV UTF-8 (Comma delimited) (*.csv)**.
+3. Select your file in the upload dialog. Camera Monitor validates all rows automatically in a dry run.
+4. If validation errors occur, inspect the table displaying **Line**, **Column**, and **Problem**.
+   > [!IMPORTANT]
+   > Camera Monitor imports nothing if any row fails validation. Correct all reported errors in your file and select it again.
+5. Once validation passes, review the row preview and click **Import Cameras**.
 
-### Exporting Cameras
-Click **Export CSV** to download the current camera list. The export includes all inventory fields plus current status and timestamps.
+**Result**: Camera Monitor adds the validated camera records to the inventory.
 
-## Settings
+### Exporting Cameras to CSV
 
-Navigate to **Settings** in the header navigation:
-- **Check Interval**: Select a preset (`10 seconds`, `30 seconds`, `1 minute`, `2 minutes`, `5 minutes`, `10 minutes`) or choose `Custom…` to specify any duration between 10 seconds and 365 days.
-- **Long Interval Warning**: Selecting an interval of 1 hour or greater displays: `Outages may take up to <duration> to detect.`
-- **Appearance**: Toggle between `Light` and `Dark` theme.
+1. Click **Export CSV** in the toolbar.
 
-## Running in Production
+**Result**: Your browser downloads a CSV file containing all camera inventory fields, current reachability status, and timestamps.
 
-### Windows Production Service
+## Configuring Settings
 
-In production, Camera Monitor is installed as an offline Windows system service via Task Scheduler.
+Click **Settings** in the navigation header to adjust operational preferences.
 
-- **Desktop Shortcut**: Double-click the **Camera Monitor** shortcut on the Windows desktop to access `http://127.0.0.1:8742`.
-- **Boot-time Auto-start**: The service starts automatically at Windows boot under `NT AUTHORITY\SYSTEM` with a 30-second delay.
-- **Service Management**: Operational scripts are available in `C:\Program Files\CameraMonitor\scripts`:
-  - `status.cmd`: View service state, PID, memory, and monitoring engine status.
-  - `start.cmd`: Start the service.
-  - `stop.cmd`: Stop the service cleanly.
-  - `backup.cmd`: Run an immediate database backup.
-- For complete installation instructions, see the [Installation Guide](install-guide.md). For backup, restore, and maintenance details, see the [Operations & Maintenance Guide](maintenance.md).
+### Adjusting Check Intervals
 
-### Development or Manual Production Run
+1. Navigate to **Settings**.
+2. Under **Check Interval**, select a preset duration (`10 seconds`, `30 seconds`, `1 minute`, `2 minutes`, `5 minutes`, or `10 minutes`) or select `Custom…`.
+3. If using `Custom…`, enter an interval between 10 seconds and 365 days.
+   > [!NOTE]
+   > Selecting an interval of 1 hour or greater displays the advisory notice: `Outages may take up to <duration> to detect.`
 
-Developers or administrators running outside Task Scheduler can start the production server directly from the repository root:
-```powershell
-python scripts/run_prod.py
-```
+**Result**: The monitoring engine applies the new interval immediately to subsequent cycles.
 
-When ready, the server prints:
-```text
-Camera Monitor is running at http://127.0.0.1:8742  (press Ctrl+C to stop)
-```
+### Selecting Appearance Theme
 
-Open a web browser on the admin PC and navigate to:
-```text
-http://127.0.0.1:8742
-```
-> **Note**: Always use `http://127.0.0.1:8742`. (If `localhost` behaves differently on your network setup, `127.0.0.1` binds strictly to IPv4 loopback).
+1. Navigate to **Settings**.
+2. Under **Appearance**, select either **Light** or **Dark**.
 
-### Common Startup Messages & Solutions
+**Result**: The interface applies the selected theme immediately.
+
+## Managing the Production Service
+
+In production, Camera Monitor runs as an automated background service managed by Windows Task Scheduler under `NT AUTHORITY\SYSTEM` (principal `S-1-5-18`).
+
+### Running Service Commands
+
+Open Command Prompt or PowerShell as Administrator and change to `C:\Program Files\CameraMonitor\scripts`:
+
+- **Check service state**:
+  ```cmd
+  status.cmd
+  ```
+  Displays Windows task state, process ID (PID), memory usage, and monitoring engine status.
+- **Start the service**:
+  ```cmd
+  start.cmd
+  ```
+- **Stop the service**:
+  ```cmd
+  stop.cmd
+  ```
+- **Trigger immediate backup**:
+  ```cmd
+  backup.cmd
+  ```
+
+For detailed service procedures, see the [Operations & Maintenance Guide](maintenance.md). For installation details, see the [Installation Guide](install-guide.md).
+
+### Resolving Startup Messages
+
 - **Port already in use or reserved**:
   `Port 8742 is already in use or reserved/blocked by Windows. Choose another port using BACKEND_PORT.`
-  *Solution*: Another application or Windows reservation is using 8742. Change the port in `C:\ProgramData\CameraMonitor\camera-monitor.env` (or pass `$env:BACKEND_PORT = "8743"`).
+  - **Resolution**: Another process or Windows exclusion holds port 8742. Set a different port in `C:\ProgramData\CameraMonitor\camera-monitor.env` (or set `$env:BACKEND_PORT = "8743"`).
 - **Another instance is already running**:
   `Another instance of Camera Monitor is already running on this data folder with PID 12345.`
-  *Solution*: The application enforces single-instance locking. Camera Monitor is already running. Check with `scripts\status.cmd` or stop with `scripts\stop.cmd`.
+  - **Resolution**: Camera Monitor enforces single-instance locking. Check running instances using `scripts\status.cmd` or stop active processes using `scripts\stop.cmd`.
 
-### Logs & Diagnostics
+### Viewing Application Logs
+
 Camera Monitor writes structured logs to:
-- Production installed: `C:\ProgramData\CameraMonitor\logs\camera-monitor.log`
-- Development manual: `backend/data/logs/camera-monitor.log`
 
-The log file automatically rotates up to 5 backup files (`camera-monitor.log.1`, etc.).
+- Production: `C:\ProgramData\CameraMonitor\logs\camera-monitor.log`
+- Development: `backend/data/logs/camera-monitor.log`
 
-Status changes are logged whenever a camera's state transitions:
+The logging system automatically rotates up to 5 archived files (`camera-monitor.log.1` through `.5`).
+
+Each camera state transition is logged with failure metrics:
 ```text
 2026-10-05 14:00:00,123 INFO [app.monitoring.engine] Camera 'Warehouse PTZ' (192.0.2.14) went OFFLINE (1 failed check)
 2026-10-05 14:05:00,456 INFO [app.monitoring.engine] Camera 'Warehouse PTZ' (192.0.2.14) back ONLINE after 5 failed checks
 ```
 
-## System Restarts
+### Handling System Restarts
 
-The monitoring engine stores its running state in SQLite (`monitoring_state`). If the admin PC or application restarts while monitoring was running, the engine automatically resumes probing on startup without requiring manual intervention.
+The monitoring engine records its operational state in SQLite (`monitoring_state`). When the admin PC reboots, the service starts automatically at boot with a 30-second delay. If monitoring was running prior to shutdown, the engine automatically resumes probing without requiring operator intervention.
+
+For quick reference on index cards in the server room, consult the [Operator Quick Card](operator-card.md). For unexpected behavior and error codes, consult the [Troubleshooting Guide](troubleshooting.md).

@@ -15,6 +15,7 @@
 | 11       | email-alerts               | dropped: no email, admin PC is offline                                                            | dropped     |
 | 12       | ci-e2e-cleanup-docs        | CI e2e + cleanup + documentation foundation                                                        | done        |
 | 13       | production-runtime         | production runtime (single port serving the built frontend, configurable port, port-in-use message, Host-header check, log file) | done        |
-| 14 / 14b / 14c | offline-bundle & installer resilience | offline bundle (portable Python 3.12 runtime, pre-installed dependencies, prebuilt frontend, install/start/stop/uninstall scripts, boot-time scheduled task, backup/restore, safety guardrails, argument resilience, pre-flight validation, and operator guides) | in progress |
+| 14 / 14b / 14c | offline-bundle & installer resilience | offline bundle (portable Python 3.12 runtime, pre-installed dependencies, prebuilt frontend, install/start/stop/uninstall scripts, boot-time scheduled task, backup/restore, safety guardrails, argument resilience, pre-flight validation, and operator guides) | done        |
+| 15a      | documentation-refactor     | Google Developer Documentation Style Guide refactoring of operator, installation, maintenance, and troubleshooting guides | in progress |
 | 15       | office-acceptance          | office acceptance and handover                                                                    | later       |
 
