@@ -53,19 +53,31 @@ if (-not $isAdmin) {
     }
 }
 
-# 2. Source resolution
+# 2. Bundle payload pre-flight validation
 $scriptDir = $PSScriptRoot
 $bundleRoot = (Resolve-Path "$scriptDir\..").Path
-$sourcePython = Join-Path $bundleRoot "python\python.exe"
-$sourceApp = Join-Path $bundleRoot "app"
-$sourceFrontend = Join-Path $bundleRoot "frontend\dist"
+$bundlePython = Join-Path $bundleRoot "python"
+$bundleApp = Join-Path $bundleRoot "app"
+$bundleFrontend = Join-Path $bundleRoot "frontend\dist"
 
-if (-not (Test-Path $sourcePython) -or -not (Test-Path $sourceApp)) {
-    $repoCandidate = (Resolve-Path "$scriptDir\..\..").Path
-    if (Test-Path (Join-Path $repoCandidate "backend\app")) {
+$hasBundlePayload = (Test-Path $bundlePython) -and (Test-Path $bundleApp) -and (Test-Path $bundleFrontend)
+
+if (-not $hasBundlePayload) {
+    $repoCandidate = $null
+    try {
+        $repoCandidate = (Resolve-Path "$scriptDir\..\.." -ErrorAction SilentlyContinue).Path
+    } catch {
+        $repoCandidate = $null
+    }
+    $isRepo = $false
+    if ($repoCandidate) {
+        $isRepo = Test-Path (Join-Path $repoCandidate "backend\app")
+    }
+
+    if ($DryRun -and $isRepo) {
         $bundleRoot = $repoCandidate
-    } elseif (-not $DryRun) {
-        Write-Error "Cannot locate bundle payload at $bundleRoot. Please run installer from an extracted CameraMonitor release bundle."
+    } else {
+        Write-Error "Cannot locate required bundle directories (..\python, ..\app, ..\frontend\dist) at $bundleRoot. install.ps1 must be run from an extracted distribution bundle (referencing scripts/build_bundle.py)."
         exit 1
     }
 }

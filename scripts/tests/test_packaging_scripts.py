@@ -623,6 +623,106 @@ class TestPackagingScripts(unittest.TestCase):
             self.assertFalse(fake_home.exists(), f"{fake_home} was created during verify-install.ps1 -DryRun!")
             self.assertEqual(list(temp_root.iterdir()), [])
 
+    def test_install_preflight_bundle_root_validation(self) -> None:
+        """Verify install.ps1 validates required bundle payload directories before proceeding."""
+        install_ps1 = PACKAGING_DIR / "install.ps1"
+
+        with tempfile.TemporaryDirectory(prefix="camera_bundle_preflight_") as temp_dir:
+            temp_root = Path(temp_dir)
+            bundle_root = temp_root / "bundle"
+            scripts_dir = bundle_root / "scripts"
+            scripts_dir.mkdir(parents=True)
+            temp_install = scripts_dir / "install.ps1"
+            shutil.copy2(install_ps1, temp_install)
+
+            # 1. Missing all payload directories outside repo must exit 1 with clear message
+            res_missing_all = run_packaging_script(
+                [
+                    "powershell.exe",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(temp_install),
+                    "-DryRun",
+                ]
+            )
+            self.assertEqual(res_missing_all.returncode, 1)
+            output_missing_all = res_missing_all.stderr + res_missing_all.stdout
+            self.assertIn("Cannot locate required bundle directories", output_missing_all)
+            self.assertIn("extracted distribution bundle", output_missing_all)
+            self.assertIn("scripts/build_bundle.py", output_missing_all)
+
+            # 2. Incomplete bundle (e.g. python and app present, but frontend/dist missing) must exit 1
+            python_dir = bundle_root / "python"
+            app_dir = bundle_root / "app"
+            python_dir.mkdir()
+            app_dir.mkdir()
+
+            res_incomplete = run_packaging_script(
+                [
+                    "powershell.exe",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(temp_install),
+                    "-DryRun",
+                ]
+            )
+            self.assertEqual(res_incomplete.returncode, 1)
+            output_incomplete = res_incomplete.stderr + res_incomplete.stdout
+            self.assertIn("Cannot locate required bundle directories", output_incomplete)
+
+            # 3. Complete bundle structure (python, app, frontend/dist) must pass pre-flight in DryRun
+            frontend_dist = bundle_root / "frontend" / "dist"
+            frontend_dist.mkdir(parents=True)
+
+            res_complete = run_packaging_script(
+                [
+                    "powershell.exe",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(temp_install),
+                    "-DryRun",
+                ]
+            )
+            self.assertEqual(res_complete.returncode, 0)
+            self.assertIn("[DRY-RUN] Preflight checks and plan validated successfully", res_complete.stdout)
+
+    def test_backup_restore_and_verify_install_syntax_and_variable_safety(self) -> None:
+        """Verify call operator invocation in backup/restore and variable safety in verify-install."""
+        backup_ps1 = PACKAGING_DIR / "backup.ps1"
+        restore_ps1 = PACKAGING_DIR / "restore.ps1"
+        verify_ps1 = PACKAGING_DIR / "verify-install.ps1"
+
+        backup_text = backup_ps1.read_text(encoding="ascii")
+        restore_text = restore_ps1.read_text(encoding="ascii")
+        verify_text = verify_ps1.read_text(encoding="ascii")
+
+        # 1. No Start-Process in backup.ps1 or restore.ps1
+        self.assertNotIn("Start-Process", backup_text, "Start-Process should be replaced with call operator & in backup.ps1")
+        self.assertNotIn("Start-Process", restore_text, "Start-Process should be replaced with call operator & in restore.ps1")
+
+        # 2. Call operator & $pythonExe -c with $LASTEXITCODE check
+        self.assertIn("& $pythonExe -c $backupScript", backup_text)
+        self.assertIn("if ($LASTEXITCODE -ne 0)", backup_text)
+
+        self.assertIn("& $pythonExe -c $verifyScript $BackupFile", restore_text)
+        self.assertIn("if ($LASTEXITCODE -ne 0)", restore_text)
+
+        # 3. Connection closure in restore.ps1
+        self.assertIn("d.close()", restore_text)
+        self.assertNotIn("d2.close()", restore_text)
+
+        # 4. No assignment to $pId in verify-install.ps1 (use $servicePrincipalId to avoid $PID collision)
+        self.assertNotIn("$pId =", verify_text, "Assignment to $pId collides with read-only automatic variable $PID")
+        self.assertNotIn("$pId ", verify_text)
+        self.assertIn("$servicePrincipalId =", verify_text)
+        self.assertIn("$servicePrincipalId -notlike", verify_text)
+
     def test_scanner_enforces_run_packaging_script_and_dry_run(self) -> None:
         """Scan test_packaging_scripts.py to ensure every invocation routes through run_packaging_script with -DryRun."""
         test_file = Path(__file__).resolve()
@@ -634,6 +734,8 @@ class TestPackagingScripts(unittest.TestCase):
             "install.cmd",
             "uninstall.ps1",
             "uninstall.cmd",
+            "backup.ps1",
+            "backup.cmd",
             "restore.ps1",
             "restore.cmd",
             "verify-install.ps1",

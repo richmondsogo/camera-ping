@@ -55,10 +55,10 @@ if (-not (Test-Path $pythonExe)) {
 Write-Info "Executing online backup from $sourceDb to $targetDb..."
 $backupScript = "import sqlite3, sys; s = sqlite3.connect(sys.argv[1]); d = sqlite3.connect(sys.argv[2]); s.backup(d); d.close(); s.close(); d2 = sqlite3.connect(sys.argv[2]); c = d2.cursor(); res = c.execute('PRAGMA integrity_check;').fetchall(); d2.close(); sys.exit(0 if res == [('ok',)] else 1)"
 
-$proc = Start-Process -FilePath $pythonExe -ArgumentList @("-c", $backupScript, $sourceDb, $targetDb) -NoNewWindow -Wait -PassThru
+& $pythonExe -c $backupScript $sourceDb $targetDb
 
-if ($proc.ExitCode -ne 0) {
-    Write-Error "Backup or integrity check failed with exit code $($proc.ExitCode)."
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "Backup or integrity check failed with exit code $LASTEXITCODE."
     if (Test-Path $targetDb) {
         Remove-Item -Path $targetDb -Force -ErrorAction SilentlyContinue
     }
