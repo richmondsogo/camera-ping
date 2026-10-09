@@ -37,3 +37,11 @@ Step 14c hardens the offline installer and maintenance PowerShell scripts agains
 - No backend monitoring logic changes.
 - No frontend UI modifications.
 - No new dependencies.
+
+---
+
+## Verification
+- Targeted packaging test suite (`python -m unittest scripts.tests.test_packaging_scripts`): 19 passed in 89.7s.
+  - Pre-flight bundle root validation tests (missing bundle payload, incomplete bundle, valid bundle layout).
+  - Call operator direct invocation and variable safety tests.
+  - AST scanner enforcing `-DryRun` routing across all 8 packaging script pairs.
