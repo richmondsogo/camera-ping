@@ -50,7 +50,7 @@ Camera Monitor is a self-hosted, offline-capable uptime monitoring application r
 1. Engine wakes up on configured interval (or when triggered by start).
 2. Reads all cameras from SQLite and records `last_cycle_started_at` in UTC.
 3. Submits ICMP ping tasks concurrently to `ThreadPoolExecutor(max_workers=32)`.
-4. Executes Windows OS ping: `ping.exe -n 1 -w 2000 <ip>`.
+4. Executes Windows OS ping: `ping.exe -n 1 -w 1000 <ip>`.
 5. **Online Rule**: A camera is considered **Online** if and only if:
    - The process exit code is `0`, **AND**
    - The stdout contains `"TTL="` (case-insensitive), **AND**
