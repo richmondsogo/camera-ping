@@ -59,14 +59,14 @@
 
 - The admin PC has no internet, so install needs a prebuilt frontend (`pnpm build` on the dev PC), a pre-downloaded wheel folder (`pip download`), an offline Python installer, and auto-start; no network calls at runtime.
 
-### Office acceptance (Step 13 / 15)
+### Field Validation (Step 15 / Help Wanted)
 
-- Unplug one camera and verify Offline after a cycle.
-- Ping an unused camera-subnet address and a router-unreachable address, compare real ping.exe outputs, and replace the synthetic fixtures in `backend/tests/fixtures/ping` with real captures.
+- Unplug a camera and verify Offline after a monitoring cycle.
+- Ping an unused camera-subnet address and a router-unreachable address, compare real `ping.exe` outputs, and replace the synthetic fixtures in `backend/tests/fixtures/ping` with real captures (see [Compatibility](compatibility.md)).
 
 ## Offline bundle (Step 14)
 
-The admin PC has no internet at any time. Plan: one folder or zip containing the 64-bit Python 3.12 embeddable runtime (same minor version as development), runtime dependencies pre-installed from pinned versions on the dev PC, backend code, prebuilt frontend, install/start/stop/uninstall scripts, a scheduled task that starts the app at boot and restarts it on failure, a VERSION file, the operator documentation, and a fresh empty database (no test cameras). Nothing is downloaded at install time.
+The host PC may have no internet at any time. Plan: one folder or zip containing the 64-bit Python 3.12 embeddable runtime (same minor version as development), runtime dependencies pre-installed from pinned versions on the dev PC, backend code, prebuilt frontend, install/start/stop/uninstall scripts, a scheduled task that starts the app at boot and restarts it on failure, a VERSION file, the operator documentation, and a fresh empty database (no test cameras). Nothing is downloaded at install time.
 
 ### Step 14 needs
 - The start script must set the data, log and frontend paths through environment variables.
@@ -86,23 +86,15 @@ The admin PC has no internet at any time. Plan: one folder or zip containing the
 - Standardize operator and administrator documentation to follow the Google Developer Documentation Style Guide:
   - Second-person ("you"), active voice, present tense, clear and direct phrasing without filler words.
   - Action-oriented headings (gerunds or imperative verbs), explicit prerequisites, numbered procedures, and expected outcomes.
-- Target admin PC specifications verified: Windows 10 Pro, Version 10.0.19045 (22H2), 64-bit architecture.
+- Target host PC specifications verified: Windows 10 Pro / Windows 11, 64-bit architecture.
 - Document operator quick card constraint: `docs/operator-card.md` strictly under 40 lines to fit on a single printed index card.
 - Scoped files: `docs/operator-guide.md`, `docs/operator-card.md`, `docs/install-guide.md`, `docs/maintenance.md`, `docs/troubleshooting.md`, `README.md`, `docs/roadmap.md`, `docs/backlog.md`.
 - No code, script, or test logic changes.
 
-## Questions for the office visit
-
-- `winver` / `systeminfo` output: Verified on target admin PC — Windows 10 Pro, Version 10.0.19045 (22H2), 64-bit architecture.
-- Whether the Windows account has administrator rights
-- Whether Python is already installed on the admin PC
-- Whether the PC is set to sleep or hibernate
-- Whether the cameras are on the same subnet or another VLAN
-
 ## Decided against / deferred
 
 - Sorting offline cameras first (rows would jump under the cursor every 5 seconds)
-- Audible alert (decide after the office test; browsers block sound until the page has been clicked once)
+- Audible alert (decide after field testing; browsers block sound until the page has been clicked once)
 - `httpx2` test-client deprecation (dev-only, not installed)
 - Click the offline count to filter (possible small addition)
 

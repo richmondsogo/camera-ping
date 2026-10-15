@@ -1,10 +1,24 @@
 # Architecture
 
-Camera Monitor is a local web application built for an offline admin PC in an office server room.
+Camera Monitor is a self-hosted, offline-capable uptime monitoring application running on a Windows host PC.
+
+## System Context
+
+```text
++-----------------------+                    +--------------------------------------------+                    +-----------------------+
+|                       |                    |                  Host PC                   |                    |                       |
+|      IP Cameras       |  ICMP Echo (Ping)  |  +--------------------------------------+  |  HTTP (Loopback)   |   Browser Operator    |
+|   (Local LAN/VLAN)    |<------------------>|  |            Camera Monitor            |  |<------------------>|      (Same Host)      |
+|                       |                    |  |  (FastAPI Backend + Built React SPA) |  |   127.0.0.1:8742   |                       |
+|                       |                    |  +--------------------------------------+  |                    |                       |
++-----------------------+                    +--------------------------------------------+                    +-----------------------+
+```
+
+## Component Architecture
 
 ```
 +-----------------------------------------------------------+
-| Admin PC (127.0.0.1)                                      |
+| Host PC (127.0.0.1)                                       |
 |                                                           |
 |  [Vite + React Frontend] <--- HTTP /api ---> [FastAPI]   |
 |         (:5173 dev)                            (:8000)    |
@@ -55,7 +69,7 @@ In production (`python scripts/run_prod.py`), Camera Monitor runs as a **single 
 
 ```text
 +-----------------------------------------------------------+
-| Admin PC (127.0.0.1:8742)                                 |
+| Host PC (127.0.0.1:8742)                                  |
 |                                                           |
 |  [Browser] <--- HTTP ---> [Single FastAPI Process]        |
 |                            ├── Plain ASGI Security Middlewares|

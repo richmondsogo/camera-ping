@@ -1,6 +1,6 @@
 # Camera Monitor Operator Quick Card
 
-Use this quick reference card to operate Camera Monitor on the server room admin PC (Windows 10 Pro 64-bit, Version 10.0.19045).
+Use this quick reference card to operate Camera Monitor on the Windows host PC.
 
 ## Accessing the Dashboard
 - **Desktop shortcut**: Double-click the **Camera Monitor** shortcut on the desktop.
@@ -26,3 +26,7 @@ Run Command Prompt or PowerShell as Administrator in `C:\Program Files\CameraMon
 - **OFFLINE (red)**: Camera fails consecutive echo requests. Inspect physical cabling and switch power.
 - **UNKNOWN (gray)**: Camera is newly added or edited; awaiting the next monitoring cycle.
 - **Server unreachable**: Verify service status with `status.cmd` or inspect `camera-monitor.log`.
+
+## Support Contacts
+- **Primary Administrator**: ____________________  Phone: ____________________
+- **Secondary Contact**:     ____________________  Phone: ____________________

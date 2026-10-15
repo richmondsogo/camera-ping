@@ -1,6 +1,6 @@
 # Troubleshooting Guide
 
-This guide shows you how to diagnose and resolve issues with Camera Monitor on the server room administration PC (Windows 10 Pro 64-bit, Version 10.0.19045, 22H2).
+This guide shows you how to diagnose and resolve issues with Camera Monitor on the Windows host PC.
 
 ## Diagnosing Dashboard Banners and Alerts
 
@@ -45,14 +45,14 @@ When the dashboard detects an operational abnormality, it displays a colored ban
 ### Resolving "Every camera is offline" Banner
 
 - **Symptom**: A banner displays: `Every camera is offline. If that's unexpected, check this PC's network connection.`
-- **Cause**: All monitored cameras failed ICMP reachability checks simultaneously. This typically indicates a local network disconnection at the administration PC or a failed network switch.
+- **Cause**: All monitored cameras failed ICMP reachability checks simultaneously. This typically indicates a local network disconnection at the host PC or a failed network switch.
 - **Resolution**:
-  1. Verify the physical Ethernet cable connection on the administration PC.
+  1. Verify the physical Ethernet cable connection on the host PC.
   2. Open Command Prompt and test reachability to the default network gateway:
      ```cmd
      ping <gateway-ip>
      ```
-  3. Check power and link lights on the server room network switch.
+  3. Check power and link lights on the local network switch.
 
 **Result**: Once network connectivity is restored, cameras transition to **Online** during the next monitoring cycle.
 
@@ -64,6 +64,30 @@ When the dashboard detects an operational abnormality, it displays a colored ban
   1. Click **Start** in the dashboard monitoring panel.
 
 **Result**: Background probing resumes immediately.
+
+## Resolving Camera Reachability & Offline Status Issues
+
+### A Camera Shows Offline but It Works
+
+- **Symptom**: The dashboard reports a camera as **Offline** (with an increasing consecutive failure count), but the camera is known to be powered on and its RTSP video feed or web management interface functions normally.
+- **Cause**: Camera Monitor determines reachability strictly using ICMP echo requests (ping). It does not test video streams, RTSP, HTTP, or ONVIF. If ping fails from the host PC, Camera Monitor reports Offline regardless of whether video works. Common reasons include:
+  - Network routing or VLAN configuration prevents the host PC from reaching the camera IP.
+  - A firewall between the host PC and the camera blocks ICMP echo requests (type 8) or echo replies (type 0).
+  - The camera, switch, or NVR firmware has ICMP ping responses disabled in its security settings.
+  - The host PC itself has lost its local network connection or default gateway route.
+- **Resolution**:
+  1. Open Command Prompt or PowerShell on the host PC.
+  2. Ping the camera IP address directly:
+     ```cmd
+     ping -n 1 -w 2000 <camera-ip>
+     ```
+  3. Analyze the result:
+     - **Request timed out** or **Destination host unreachable**: The host PC cannot reach the camera via ICMP. Verify physical network cabling, switch ports, and subnet routing.
+     - **Reply from `<camera-ip>`: bytes=32 time=... TTL=...**: The host PC *can* reach the camera. If Camera Monitor still shows Offline, allow one check interval cycle to complete, or inspect `C:\ProgramData\CameraMonitor\logs\camera-monitor.log` for execution errors.
+     - **Reply from `<gateway-ip>`: Destination host unreachable**: A router replied on behalf of the camera; this is treated as Offline by design.
+  4. If the camera web UI is accessible in a browser on the host PC but ping fails, check the camera's network security settings to ensure ICMP/Ping response is enabled.
+
+**Result**: Once the host PC can receive ICMP echo replies with a TTL value from the camera, Camera Monitor marks the camera **Online** on the next check cycle.
 
 ## Resolving CSV Import Errors
 
@@ -239,7 +263,7 @@ Camera Monitor parses output from the native Windows `ping.exe` utility, checkin
 
 To test reachability parsing directly from the command line:
 
-1. Run `ping.exe` against a known camera IP on the office subnet:
+1. Run `ping.exe` against a known camera IP on the camera subnet:
    ```cmd
    ping.exe -n 1 -w 1000 192.0.2.10
    ```
