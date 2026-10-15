@@ -88,35 +88,35 @@ Platform: Windows (11)
 ============================================================
 
 ---> [Backend: Ruff Lint]
-     CMD: C:\Users\Richmond\Desktop\Open Source Projects\camera-ping\backend\.venv\Scripts\ruff.exe check .
+     CMD: backend\.venv\Scripts\ruff.exe check .
      PASS (0.05s)
 
 ---> [Backend: Ruff Format Check]
-     CMD: C:\Users\Richmond\Desktop\Open Source Projects\camera-ping\backend\.venv\Scripts\ruff.exe format --check .
+     CMD: backend\.venv\Scripts\ruff.exe format --check .
      PASS (0.05s)
 
 ---> [Backend: mypy (Strict)]
-     CMD: C:\Users\Richmond\Desktop\Open Source Projects\camera-ping\backend\.venv\Scripts\mypy.exe .
+     CMD: backend\.venv\Scripts\mypy.exe .
      PASS (1.10s)
 
 ---> [Backend: pytest]
-     CMD: C:\Users\Richmond\Desktop\Open Source Projects\camera-ping\backend\.venv\Scripts\pytest.exe
+     CMD: backend\.venv\Scripts\pytest.exe
      PASS (2.13s)
 
 ---> [Frontend: ESLint]
-     CMD: C:\Users\Richmond\AppData\Roaming\npm\pnpm.CMD run lint
+     CMD: pnpm run lint
      PASS (3.45s)
 
 ---> [Frontend: Prettier Format Check]
-     CMD: C:\Users\Richmond\AppData\Roaming\npm\pnpm.CMD run format:check
+     CMD: pnpm run format:check
      PASS (1.35s)
 
 ---> [Frontend: tsc (Strict)]
-     CMD: C:\Users\Richmond\AppData\Roaming\npm\pnpm.CMD exec tsc -b
+     CMD: pnpm exec tsc -b
      PASS (4.42s)
 
 ---> [Frontend: Vitest]
-     CMD: C:\Users\Richmond\AppData\Roaming\npm\pnpm.CMD run test
+     CMD: pnpm run test
      PASS (7.77s)
 
 ============================================================
@@ -132,7 +132,7 @@ Platform: Windows (11)
 ============================================================
 
 ---> [E2E: Playwright Smoke Test]
-     CMD: C:\Users\Richmond\AppData\Roaming\npm\pnpm.CMD run test:e2e
+     CMD: pnpm run test:e2e
 $ playwright test
 [WebServer] INFO:     Started server process [2104]
 [WebServer] INFO:     Waiting for application startup.
