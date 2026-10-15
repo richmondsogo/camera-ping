@@ -7,8 +7,9 @@ This directory contains technical and operational documentation for the Camera M
 - [Operator Guide](operator-guide.md): Daily dashboard usage, camera management, CSV import/export, and troubleshooting alarms.
 - [Installation Guide](install-guide.md): Offline Windows installer instructions, Task Scheduler setup, and upgrade procedures.
 - [Operations & Maintenance Guide](maintenance.md): Service control, automated and manual backups, database restoration, and log inspection.
-- [Operator Quick Card](operator-card.md): Printable concise reference card for server room administrators.
+- [Operator Quick Card](operator-card.md): Printable concise reference card for host PC operators.
 - [Troubleshooting](troubleshooting.md): Diagnosing banner warnings, CSV validation problems, and network reachability issues.
+- [Compatibility & Tested Environments](compatibility.md): Supported cameras and host systems, tested environments, network requirements, and contributing test results.
 - [CSV Format Specification](csv-format.md): Strict CSV column schema, encoding guidelines, and example camera records.
 
 ## For Developers

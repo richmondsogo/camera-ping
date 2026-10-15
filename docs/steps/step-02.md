@@ -93,7 +93,7 @@ To evaluate current process teardown and port cleanliness, `python scripts/check
   ============================================================
 
   ---> [E2E: Playwright Smoke Test]
-       CMD: C:\Users\Richmond\AppData\Roaming\npm\pnpm.CMD run test:e2e
+       CMD: pnpm run test:e2e
        PASS (18.32s)
 
   ============================================================
@@ -117,7 +117,7 @@ To evaluate current process teardown and port cleanliness, `python scripts/check
   ============================================================
 
   ---> [E2E: Playwright Smoke Test]
-       CMD: C:\Users\Richmond\AppData\Roaming\npm\pnpm.CMD run test:e2e
+       CMD: pnpm run test:e2e
        PASS (18.32s)
 
   ============================================================
@@ -141,7 +141,7 @@ To evaluate current process teardown and port cleanliness, `python scripts/check
   ============================================================
 
   ---> [E2E: Playwright Smoke Test]
-       CMD: C:\Users\Richmond\AppData\Roaming\npm\pnpm.CMD run test:e2e
+       CMD: pnpm run test:e2e
        PASS (17.76s)
 
   ============================================================

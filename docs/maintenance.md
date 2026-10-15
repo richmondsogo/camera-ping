@@ -1,6 +1,13 @@
 # Operations & Maintenance Guide
 
-This guide shows you how to manage the background service, perform backups, restore databases, monitor logs, and uninstall Camera Monitor on the server room administration PC (Windows 10 Pro 64-bit, Version 10.0.19045, 22H2).
+This guide shows you how to manage the background service, perform backups, restore databases, monitor logs, and uninstall Camera Monitor on the Windows host PC.
+
+> [!IMPORTANT]
+> **Before You Install**
+> - **Operating system**: Windows 10 or Windows 11 (64-bit x64).
+> - **Account privileges**: Local Administrator permissions (required for service management scripts, task scheduling, and uninstall only).
+> - **Network connectivity**: The host PC must have IP reachability to the monitored cameras.
+> - **Internet access**: No internet access is required.
 
 ## Understanding the Directory Structure
 

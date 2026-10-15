@@ -1,10 +1,24 @@
 # Architecture
 
-Camera Monitor is a local web application built for an offline admin PC in an office server room.
+Camera Monitor is a self-hosted, offline-capable uptime monitoring application running on a Windows host PC.
+
+## System Context
+
+```text
++-----------------------+                    +--------------------------------------------+                    +-----------------------+
+|                       |                    |                  Host PC                   |                    |                       |
+|      IP Cameras       |  ICMP Echo (Ping)  |  +--------------------------------------+  |  HTTP (Loopback)   |   Browser Operator    |
+|   (Local LAN/VLAN)    |<------------------>|  |            Camera Monitor            |  |<------------------>|      (Same Host)      |
+|                       |                    |  |  (FastAPI Backend + Built React SPA) |  |   127.0.0.1:8742   |                       |
+|                       |                    |  +--------------------------------------+  |                    |                       |
++-----------------------+                    +--------------------------------------------+                    +-----------------------+
+```
+
+## Component Architecture
 
 ```
 +-----------------------------------------------------------+
-| Admin PC (127.0.0.1)                                      |
+| Host PC (127.0.0.1)                                       |
 |                                                           |
 |  [Vite + React Frontend] <--- HTTP /api ---> [FastAPI]   |
 |         (:5173 dev)                            (:8000)    |
@@ -36,7 +50,7 @@ Camera Monitor is a local web application built for an offline admin PC in an of
 1. Engine wakes up on configured interval (or when triggered by start).
 2. Reads all cameras from SQLite and records `last_cycle_started_at` in UTC.
 3. Submits ICMP ping tasks concurrently to `ThreadPoolExecutor(max_workers=32)`.
-4. Executes Windows OS ping: `ping.exe -n 1 -w 2000 <ip>`.
+4. Executes Windows OS ping: `ping.exe -n 1 -w 1000 <ip>`.
 5. **Online Rule**: A camera is considered **Online** if and only if:
    - The process exit code is `0`, **AND**
    - The stdout contains `"TTL="` (case-insensitive), **AND**
@@ -55,7 +69,7 @@ In production (`python scripts/run_prod.py`), Camera Monitor runs as a **single 
 
 ```text
 +-----------------------------------------------------------+
-| Admin PC (127.0.0.1:8742)                                 |
+| Host PC (127.0.0.1:8742)                                  |
 |                                                           |
 |  [Browser] <--- HTTP ---> [Single FastAPI Process]        |
 |                            ├── Plain ASGI Security Middlewares|

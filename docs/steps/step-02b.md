@@ -168,31 +168,31 @@ Platform: Windows (11)
 ============================================================
 
 ---> [Backend: Ruff Linter]
-     CMD: C:\Users\Richmond\Desktop\Open Source Projects\camera-ping\backend\.venv\Scripts\ruff.exe check .
+     CMD: backend\.venv\Scripts\ruff.exe check .
      PASS (0.16s)
 
 ---> [Backend: Mypy Strict Typecheck]
-     CMD: C:\Users\Richmond\Desktop\Open Source Projects\camera-ping\backend\.venv\Scripts\mypy.exe .
+     CMD: backend\.venv\Scripts\mypy.exe .
      PASS (0.43s)
 
 ---> [Backend: Pytest Unit Tests]
-     CMD: C:\Users\Richmond\Desktop\Open Source Projects\camera-ping\backend\.venv\Scripts\pytest.exe -v
+     CMD: backend\.venv\Scripts\pytest.exe -v
      PASS (0.42s)
 
 ---> [Frontend: ESLint]
-     CMD: C:\Users\Richmond\AppData\Roaming\npm\pnpm.CMD run lint
+     CMD: pnpm run lint
      PASS (1.00s)
 
 ---> [Frontend: Prettier Formatting Check]
-     CMD: C:\Users\Richmond\AppData\Roaming\npm\pnpm.CMD run format:check
+     CMD: pnpm run format:check
      PASS (0.28s)
 
 ---> [Frontend: TypeScript Typecheck]
-     CMD: C:\Users\Richmond\AppData\Roaming\npm\pnpm.CMD run typecheck
+     CMD: pnpm run typecheck
      PASS (1.11s)
 
 ---> [Frontend: Vitest Unit Tests]
-     CMD: C:\Users\Richmond\AppData\Roaming\npm\pnpm.CMD run test:unit --run
+     CMD: pnpm run test:unit --run
      PASS (1.81s)
 
 ============================================================
@@ -207,7 +207,7 @@ Platform: Windows (11)
 ============================================================
 
 ---> [E2E: Playwright Smoke Test]
-     CMD: C:\Users\Richmond\AppData\Roaming\npm\pnpm.CMD run test:e2e
+     CMD: pnpm run test:e2e
      Running 4 tests using 1 worker
      ok 1 [chromium] › e2e\contrast.spec.ts:597:3 › WCAG 2.1 Contrast Measurements › measures all design system pairs in Light mode (2.9s)
      ok 2 [chromium] › e2e\contrast.spec.ts:597:3 › WCAG 2.1 Contrast Measurements › measures all design system pairs in Dark mode (2.8s)

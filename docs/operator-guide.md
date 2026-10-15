@@ -1,10 +1,10 @@
 # Operator Guide
 
-This guide shows you how to operate Camera Monitor to track office network camera availability from the administration PC in the server room (Windows 10 Pro 64-bit, Version 10.0.19045, 22H2).
+This guide shows you how to operate Camera Monitor to track network camera availability from the host PC.
 
 ## Accessing the Dashboard
 
-You can access the Camera Monitor dashboard locally on the server room PC:
+You can access the Camera Monitor dashboard locally on the host PC:
 
 - **Desktop shortcut**: Double-click the **Camera Monitor** shortcut on the Windows desktop.
 - **Web browser**: Open any modern browser and navigate to `http://127.0.0.1:8742`.
@@ -14,7 +14,7 @@ You can access the Camera Monitor dashboard locally on the server room PC:
 
 ## Navigating the Dashboard
 
-The dashboard provides a real-time overview of camera reachability across the office network.
+The dashboard provides a real-time overview of camera reachability across the monitored network.
 
 ### Interpreting Camera Statuses
 
@@ -48,7 +48,7 @@ The dashboard displays situational banners when attention is required:
   - **Action**: Monitoring is marked as active, but no cycle completed recently. Click **Stop**, wait 3 seconds, and click **Start** to restart the monitoring thread.
 - **All offline banner**:
   `Every camera is offline. If that's unexpected, check this PC's network connection.`
-  - **Action**: Verify that the admin PC network cable is connected and that the local network switch is powered on.
+  - **Action**: Verify that the host PC network cable is connected and that the local network switch is powered on.
 
 ## Controlling Monitoring Cycles
 
@@ -203,6 +203,6 @@ Each camera state transition is logged with failure metrics:
 
 ### Handling System Restarts
 
-The monitoring engine records its operational state in SQLite (`monitoring_state`). When the admin PC reboots, the service starts automatically at boot with a 30-second delay. If monitoring was running prior to shutdown, the engine automatically resumes probing without requiring operator intervention.
+The monitoring engine records its operational state in SQLite (`monitoring_state`). When the host PC reboots, the service starts automatically at boot with a 30-second delay. If monitoring was running prior to shutdown, the engine automatically resumes probing without requiring operator intervention.
 
-For quick reference on index cards in the server room, consult the [Operator Quick Card](operator-card.md). For unexpected behavior and error codes, consult the [Troubleshooting Guide](troubleshooting.md).
+For quick reference on printed index cards, consult the [Operator Quick Card](operator-card.md). For unexpected behavior and error codes, consult the [Troubleshooting Guide](troubleshooting.md).

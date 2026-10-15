@@ -1,16 +1,23 @@
 # Installation Guide
 
-This guide shows you how to install or upgrade Camera Monitor on an offline Windows administration PC in the office server room.
+This guide shows you how to install or upgrade Camera Monitor on an offline Windows host PC.
+
+> [!IMPORTANT]
+> **Before You Install**
+> - **Operating system**: Windows 10 or Windows 11 (64-bit x64).
+> - **Account privileges**: Local Administrator permissions (required for installation and Task Scheduler registration only; normal operator dashboard usage requires no elevated privileges).
+> - **Network connectivity**: The host PC must be able to reach the cameras by IP address over the network (same LAN, subnet, or routed VLAN).
+> - **Internet access**: No internet connection is needed at any time.
 
 ## Reviewing Prerequisites
 
 Before installing Camera Monitor, verify that your target system meets the following specifications:
 
-- **Operating system**: Windows 10 Pro 64-bit, Version 10.0.19045 (22H2) (also supports Windows 11 64-bit and Windows Server 2016+ 64-bit).
+- **Operating system**: Windows 10 (64-bit x64, version 1809+ / build 17763+) or Windows 11 (64-bit x64) (also supports Windows Server 2016+ 64-bit).
 - **Architecture**: 64-bit (x64) architecture only.
 - **Disk space**: At least 2 GB of available storage on the primary OS drive (`C:`).
 - **Account privileges**: Local Administrator permissions (required to register Windows Scheduled Tasks and write to `C:\Program Files`).
-- **Network connectivity**: Local network Ethernet connection to target camera subnets. No internet access is required.
+- **Network connectivity**: Local network connection to target camera subnets. No internet access is required.
 
 ## Inspecting the Distribution Package
 

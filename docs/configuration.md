@@ -1,6 +1,6 @@
 # Configuration Reference
 
-This document describes all environment variables used across Camera Monitor backend, development scripts, and frontend test harnesses, as well as data storage paths.
+This document describes all environment variables used across Camera Monitor backend, development scripts, and frontend test harnesses, as well as data storage paths. All example and test IP addresses referenced throughout the documentation and test suites use reserved RFC 5737 documentation blocks (`192.0.2.0/24`).
 
 ## Backend Runtime Settings
 
